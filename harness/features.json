@@ -55,7 +55,7 @@
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
       "status": "passing",
-      "evidence": "2026-10-19 scripts/verify.sh PASS after B1–B3 corrections (122 unit, 130 e2e, 8 perf). Regression checks in Chromium + WebKit: iPhone/iPad touch Highlight/Remove with reopen; repeated activation stores one record and removes fully; quota-failure retry; stale offers clear on resize, panel relayout and page eviction without selectionchange. Each blocker reproduced red before its fix. Existing alignment, PDF-coordinate and reload checks still pass. See build-log 15:15 and review correction appendix. Phase remains In progress pending CI and the user's real-book/device check; independent re-review not yet run."
+      "evidence": "2026-10-19 scripts/verify.sh PASS after B1–B3 and fixture-metadata corrections (122 unit, 130 e2e, 8 perf; local WebKit p95 37 ms). CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897 (same test counts; Chromium budgets enforced, Linux WebKit report-only by existing policy). User confirmed the real-book/device check works as expected. Browser regressions cover touch Highlight/Remove, repeated activation/retry, stale offers after text release, alignment, PDF coordinates and reload. Each blocker reproduced red before its fix. See build-log close-out and review correction appendix; phase 06 Complete. No new independent evaluator verdict."
     },
     {
       "id": "F-008",

@@ -805,3 +805,26 @@ Template:
   Chromium firstPage 174 ms, jump 32, p95 16.8; WebKit firstPage 157, jump 83, p95 37;
   canvas 67.1 MB. Budgets and runtime code unchanged. Both the failed run and this pass are retained.
 - Ready to commit and push the fixture generator/manifest fix for another CI run.
+
+### 2026-10-19 16:37 EDT | Phase 06 | Codex | Fixture correction pushed; CI rerunning
+- Pushed 7ac8b1ecc404119ed3230a598dc2bc0f63ee7948 to phase-06-highlights. CI run:
+  https://github.com/himmannshu/book-reader/actions/runs/39320769897 (in progress).
+- Watching this run to completion; phase remains In progress until contract item 13 has a green run.
+
+### 2026-10-19 16:47 EDT | Phase 06 | Codex | CI PASS; phase Complete
+- CI run https://github.com/himmannshu/book-reader/actions/runs/39320769897 completed successfully
+  on 7ac8b1ecc404119ed3230a598dc2bc0f63ee7948. gh run watch --exit-status exited 0; gh run view
+  confirmed status completed and conclusion success for that exact SHA.
+- Observed scripts/verify.sh PASS in CI: lint, format, types, 122 unit, 130 browser (Chromium + WebKit),
+  8 perf. Chromium firstPage 362 ms, jump 35, p95 33.3, blank 0%, canvas 67.1 MB (budgets enforced
+  with the existing CI time multiplier). Linux WebKit firstPage 1176, jump 697, p95 396, blank 80%,
+  canvas 67.1 MB: report-only in CI under the existing user-approved phase-02 policy. Budgets unchanged.
+- Contract close-out: items 1–11 have evidence in the phase build/correction entries and the latest
+  passing unit/browser suites; item 12 local enforced perf PASS at 16:32 (WebKit p95 37); item 13
+  local verify plus the CI URL above; item 14 the user's real-book/device report recorded at 15:18.
+  Every contract item now has observed evidence. Set phase file and PLANS.md to Complete, retained
+  F-007 passing with updated evidence, and appended author close-out to the historical review.
+- Final closure commit contains only PLANS.md and harness documentation/feature evidence. It uses
+  [skip ci] to avoid retriggering CI for its own result record; all source, generator, fixture, test,
+  dependency and workflow files remain exactly those verified on 7ac8b1e. Formatting and diff checks
+  validate the closure records. No merge or deployment; phase 07 has not started.

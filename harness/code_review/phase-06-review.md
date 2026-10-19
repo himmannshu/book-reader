@@ -134,3 +134,17 @@ The observer exists only while a create offer is visible; idle scrolling adds no
 An existing viewer test's fixed 5 ms wait failed during verification; it now waits for its actual result.
 N4's duplicate import is consolidated. N1–N3 remain open. F-007 is passing again on local evidence.
 Contract item 13 still needs CI after an authorized push; item 14 needs the real-book/device user check.
+
+### Contract close-out (Codex, 2026-10-19)
+
+The user reported completing the real-book/device check and that it works as expected (item 14).
+Local verification passed with 122 unit, 130 browser and 8 perf checks; WebKit p95 37 ms.
+CI on 7ac8b1e passed the same checks: https://github.com/himmannshu/book-reader/actions/runs/39320769897
+(item 13). CI enforces Chromium budgets; Linux WebKit is report-only under the existing user-approved policy.
+
+The first CI run exposed incorrect fixture metadata: the PDF draws unkerned Tj text, while the manifest
+used pdf-lib's kerned string measurement. The generator now sums individual advances; Charlie's actual
+width is 333.80 pt, superseding the old 331.91 pt reference above. PDF bytes, runtime code, assertion
+tolerances and budgets are unchanged. One local p95 failure at 51 ms and its passing rerun are recorded.
+All contract items now have evidence; phase 06 is Complete. This remains author close-out evidence,
+not a replacement independent evaluator verdict.
