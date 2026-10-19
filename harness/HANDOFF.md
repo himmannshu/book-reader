@@ -38,20 +38,11 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - `scripts/verify.sh` reports NOT CONFIGURED until phase 00 adds scripts/verify.local.sh.
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 22:28 EDT
+Snapshot 2026-10-18 22:29 EDT
 - Branch: planning
-- HEAD: no commits
-- Uncommitted files: 9
+- HEAD: 128f52e planning: architecture decisions and phase roadmap
+- Uncommitted files: 0
 - Last verify: NOT CONFIGURED at 2026-10-18 22:25 EDT (commit none)
 - Recent commits:
-- Changed files:
-    ?? .claude/
-    ?? .gitignore
-    ?? AGENTS.md
-    ?? CLAUDE.md
-    ?? GOALS.md
-    ?? PLANS.md
-    ?? PROMPTS.md
-    ?? harness/
-    ?? scripts/
+    128f52e planning: architecture decisions and phase roadmap
 <!-- AUTO:END -->
