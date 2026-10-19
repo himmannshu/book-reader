@@ -78,4 +78,38 @@ describe('note drafts', () => {
     expect(put).not.toHaveBeenCalled();
     expect(result.current.editor).not.toBeNull();
   });
+
+  it('prevents creation while a read is pending, after failure, and for an unsaved book', async () => {
+    let rejectRead: (failure: unknown) => void = () => {};
+    const list = vi.fn(
+      () =>
+        new Promise<never>((_, reject) => {
+          rejectRead = reject;
+        }),
+    );
+    const put = vi.fn(async () => {});
+    const store = { list, put, remove: async () => {} };
+    const { result, rerender } = renderHook(
+      ({ bookId }: { bookId: string | null }) =>
+        useNotes({ bookId, store, highlights: [], now: () => 1 }),
+      { initialProps: { bookId: 'book' as string | null } },
+    );
+    expect(result.current.unavailableReason).toBe('Loading notes…');
+    act(() => result.current.open(target));
+    expect(result.current.editor).toBeNull();
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await act(async () => rejectRead(new Error('Read failed')));
+      expect(result.current.unavailableReason).toContain("couldn't be read");
+      act(() => result.current.open(target));
+      expect(result.current.editor).toBeNull();
+      rerender({ bookId: null });
+      expect(result.current.unavailableReason).toContain('saved on this device');
+      act(() => result.current.open(target));
+      expect(result.current.editor).toBeNull();
+      expect(put).not.toHaveBeenCalled();
+    } finally {
+      logged.mockRestore();
+    }
+  });
 });

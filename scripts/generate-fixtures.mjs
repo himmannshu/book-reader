@@ -171,6 +171,8 @@ function addOutline(doc, entries, namedDests = {}) {
 mkdirSync(outDir, { recursive: true });
 const manifest = {
   'basic-3-pages': await makePdf('basic-3-pages', [LETTER, LETTER, LETTER]),
+  // Image-like/vector-only page: page notes must not require selectable text (phase 07).
+  'no-text-1-page': await makePdf('no-text-1-page', [LETTER], undefined, { labels: false }),
   'mixed-sizes': await makePdf('mixed-sizes', [LETTER, [792, 612], [300, 400]]),
   'long-300-pages': await makePdf(
     'long-300-pages',

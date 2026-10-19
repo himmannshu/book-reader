@@ -42,22 +42,25 @@ export function ConfirmDialog({
           }
           if (event.key === 'Tab') {
             const buttons = [...(ref.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
-            const first = buttons[0];
-            const last = buttons.at(-1);
-            if (event.shiftKey && document.activeElement === first) {
-              event.preventDefault();
-              last?.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-              event.preventDefault();
-              first?.focus();
-            }
+            event.preventDefault();
+            const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+            buttons[
+              (current + (event.shiftKey ? -1 : 1) + buttons.length) % buttons.length
+            ]?.focus();
           }
         }}
       >
         <h2 id={title}>{question.title}</h2>
         <p id={description}>{question.message}</p>
         <div className="note-buttons">
-          <button type="button" className="button" onClick={onConfirm}>
+          <button
+            type="button"
+            className="button"
+            onClick={() => {
+              if (previous.current?.isConnected) previous.current.focus();
+              onConfirm();
+            }}
+          >
             {question.label}
           </button>
           <button ref={cancel} type="button" className="button secondary" onClick={dismiss}>

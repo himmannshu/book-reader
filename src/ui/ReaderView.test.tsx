@@ -48,6 +48,22 @@ function fakeDoc() {
 }
 
 describe('ReaderView contents', () => {
+  it('shows a visible loading reason and disables note creation until notes arrive', () => {
+    const { doc } = fakeDoc();
+    render(
+      <Reader
+        doc={doc}
+        bookId="book"
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+        notes={{ ...noNotes, list: () => new Promise(() => {}) }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Notes' }));
+    expect(screen.getByText('Loading notes…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
+  });
+
   it('reads the outline only when Contents first opens, and only once per book', async () => {
     const { doc, outline } = fakeDoc();
     render(

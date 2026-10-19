@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Highlight } from '../core/highlights';
 import { validNoteText, type Note, type NoteTarget } from '../core/notes';
 import type { useNotes } from './useNotes';
-import { usePanelKeys } from './usePanelKeys';
+import { PANEL_ENTRY, usePanelKeys } from './usePanelKeys';
 
 function NoteEditor({
   notes,
@@ -20,6 +20,19 @@ function NoteEditor({
   return (
     <form
       className="note-editor"
+      onKeyDown={(event) => {
+        if (event.key !== 'Tab') return;
+        // Safari may skip buttons in its native tab order. Keep editor controls reachable there too.
+        const controls = [
+          ...event.currentTarget.querySelectorAll<HTMLElement>('textarea, button:not(:disabled)'),
+        ];
+        const next =
+          controls.indexOf(document.activeElement as HTMLElement) + (event.shiftKey ? -1 : 1);
+        if (controls[next]) {
+          event.preventDefault();
+          controls[next].focus();
+        }
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         void notes.save();
@@ -89,6 +102,11 @@ export function NotesPanel({
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
   );
+  useEffect(() => {
+    // A confirmed deletion can remove the focused row. Do not leave focus on the document body.
+    if (!notes.editor && !notes.confirmation && document.activeElement === document.body)
+      ref.current?.querySelector<HTMLButtonElement>(PANEL_ENTRY)?.focus();
+  }, [notes.items, notes.editor, notes.confirmation, ref]);
   const quoteFor = (target: NoteTarget) =>
     target.kind === 'highlight'
       ? highlights.find((highlight) => highlight.id === target.highlightId)?.quote

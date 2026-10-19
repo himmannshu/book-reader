@@ -892,3 +892,20 @@ Template:
   saved row/editor dismissal resolves that test race. No product persistence change needed.
 - These are development checks, not canonical phase evidence. Full verify and broader contract
   cases remain pending; no feature marked passing. No push/deploy/main merge.
+
+### 2026-10-19 | Phase 07 | Codex | Contract edge coverage green
+- Expanded focused browser suite to 34 passing cases across Chromium/WebKit: independent targets,
+  multiline/Unicode/blank edits, cancellation, edits/reopening, book isolation/removal, atomic
+  highlight+note failure/cancel/retry, note-only deletion, unsaved/read/save failures and Retry,
+  dirty guards on every navigation path, PDF association/reading order, non-first-page/current-page
+  selection, multiline/cross-page and foot-of-page jumps, keyboard and iPhone/iPad tap workflows.
+- Red keyboard checks exposed Safari skipping editor Save and dialog buttons in native Tab order,
+  and focus dropping to body after confirmed row deletion. Explicit internal Tab navigation and
+  focus restoration fix these; keyboard case now passes both engines.
+- Test synchronization fixes: wait for editor dismissal before reloading after save; wait for
+  viewer relayout/text rebuild after closing a wide panel; wait for new highlight boxes rather than
+  an older existing box. Page jump assertion uses the existing page-top check (layout has 24px padding),
+  not an incorrect scrollTop=0 assumption. No delays, relaxed budgets or product changes for those.
+- Added deterministic vector-only fixture for no-text page notes. Lint passed; all 137 units pass.
+  A newly added loading-state test had a type-only unsupported Testing Library `exact` option;
+  removed it. Full canonical verify and screenshot inspection next. F-008 not yet changed.

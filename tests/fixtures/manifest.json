@@ -16,6 +16,15 @@
       }
     ]
   },
+  "no-text-1-page": {
+    "file": "no-text-1-page.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792
+      }
+    ]
+  },
   "mixed-sizes": {
     "file": "mixed-sizes.pdf",
     "pages": [
