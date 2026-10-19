@@ -17,7 +17,8 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "fixtures": "node scripts/generate-fixtures.mjs",
-    "test:perf": "playwright test -c playwright.perf.config.ts; status=$?; node scripts/perf-report.mjs; exit $status"
+    "test:perf": "playwright test -c playwright.perf.config.ts; status=$?; node scripts/perf-report.mjs; exit $status",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",

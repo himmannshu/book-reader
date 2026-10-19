@@ -5,8 +5,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { crc32, deflateSync } from 'node:zlib';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { encodePng } from './png.mjs';
 
 export const HEAVY_FIXTURE_NAME = 'heavy-600-v1.pdf';
 const PAGE_COUNT = 600;
@@ -42,40 +42,20 @@ function paragraphLine(random, maxChars) {
   return line.slice(0, maxChars);
 }
 
-function pngChunk(type, data) {
-  const typeAndData = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(data.length);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(typeAndData));
-  return Buffer.concat([length, typeAndData, crc]);
-}
-
 /** A photo-like RGB PNG: smooth gradients plus seeded grain, so it compresses only partly. */
 function makePng(width, height, seed) {
   const random = prng(seed);
-  const raw = Buffer.alloc((width * 3 + 1) * height);
+  const pixels = Buffer.alloc(width * height * 3);
   let offset = 0;
   for (let y = 0; y < height; y++) {
-    raw[offset++] = 0; // filter: none
     for (let x = 0; x < width; x++) {
       const grain = Math.floor(random() * 6);
-      raw[offset++] = (x * 255) / width / 1.5 + grain + (seed % 40);
-      raw[offset++] = (y * 255) / height / 1.5 + grain;
-      raw[offset++] = ((x + y) * 255) / (width + height) / 1.5 + grain;
+      pixels[offset++] = (x * 255) / width / 1.5 + grain + (seed % 40);
+      pixels[offset++] = (y * 255) / height / 1.5 + grain;
+      pixels[offset++] = ((x + y) * 255) / (width + height) / 1.5 + grain;
     }
   }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 2; // color type: RGB
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    pngChunk('IHDR', ihdr),
-    pngChunk('IDAT', deflateSync(raw, { level: 6 })),
-    pngChunk('IEND', Buffer.alloc(0)),
-  ]);
+  return encodePng(width, height, 3, pixels);
 }
 
 function vectorPath(random) {

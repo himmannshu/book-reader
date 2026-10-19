@@ -1049,3 +1049,13 @@ Contract evidence from this final canonical run (contract unchanged after approv
   jump 19, p95 16.7; WebKit first 198, jump 48, p95 32; blank 0%/1%; canvas 67.1 MB. Budgets unchanged.
 - Pushed main (user-authorized). GitHub Actions run 39334209183 on 5ba0694 → completed, success.
   https://github.com/himmannshu/book-reader/actions/runs/39334209183
+
+### 2026-10-19 18:58 EDT | Phase 08 | Claude Code (Opus 5.5) | Contract and icons
+- Planning: probe (scratchpad, read-only for the repo) showed both Playwright browsers register a service worker,
+  take control, and reload a cached page offline. User decisions: Cloudflare Pages Git integration, Access with
+  email one-time code, update prompt before reload. Contract approved.
+- Changes: branch phase-08-installable-and-hosted; contract; scripts/png.mjs (shared PNG encoder);
+  scripts/generate-heavy-fixture.mjs uses it (output byte-identical: SHA-1 10240f7… before and after);
+  scripts/generate-icons.mjs + `npm run icons` → public/icons/ (192, 512, maskable 512, apple-touch 180, favicon 32).
+- Verification: icons generated twice → identical hashes; inspected 512, maskable 512 and 192 visually (fixed a
+  thin line sliver at the top of each page).
