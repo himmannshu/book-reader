@@ -998,3 +998,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Restored F-006/F-008 passing using the observed checks plus withdrawn failure report. Prior
   entries remain historical evidence. Phase 07 stays In progress for authorized CI and confirmation
   of the full real-book/device checklist; this clarification does not confirm every contract-18 action.
+
+### 2026-10-19 | Phase 07 | Codex | Authorized push/CI preflight
+- User: "Ok,next is CI and then push the code." Authorized pushing phase-07-notes and observing CI;
+  explained GitHub CI requires the commit to be pushed first. No merge/deployment authorized.
+- Clean preflight at 43c3efa. `scripts/verify.sh` PASS: lint, format, types, 137 unit, 166 browser,
+  8 perf. Chromium firstPage 166 ms, jump 18, p95 16.8; WebKit firstPage 155, jump 91, p95 29;
+  blank frames 0%/1%, maxCanvas 67.1 MB. Budgets unchanged; no application code changed.
+- Inspected verify.yml: push-triggered verification, no deployment. Remote branch absent (read-only
+  git ls-remote; initial sandbox DNS failure resolved by escalated retry). First push/CI next.

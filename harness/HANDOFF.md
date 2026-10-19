@@ -6,21 +6,23 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Codex, 2026-10-19
-- Current session: user withdrew the Notes/Bookmarks jump report: printed book numbers differed
-  from physical PDF numbering. Closed issue #1 with clarification; no application code changed.
+- Current session: user authorized Phase 07 CI and pushing the code. Local verify at 43c3efa
+  PASS (137 unit, 166 browser, 8 perf; WebKit p95 29). Push/CI starting; no merge/deploy authorized.
 - Phase: 07 (notes) In progress. Earlier local implementation verify at 117ed45 passed
   (137 unit, 166 browser, 8 perf; WebKit p95 35 ms; unchanged budgets).
   Latest baseline at 04da1da PASS (137/166/8, WebKit p95 34). F-006/F-008 restored to passing.
-  Contract 17 still needs authorized CI; full contract-18 user checklist confirmation remains pending.
+  Contract 17 CI is now authorized and starting; full contract-18 checklist confirmation remains pending.
 - Phase 06 Complete (all 14 items observed), F-007 passing.
   CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897.
   User confirmed the real-book/device check works as expected (contract 14).
-- Branch: phase-07-notes (not pushed), based on completed phase 06 at 8372a99.
+- Branch: phase-07-notes (first push starting), based on completed phase 06 at 8372a99.
   main lacks phase 06; the new branch carries that required dependency without a main-branch merge.
   main is one commit ahead of origin (a9c3832, handoff only).
 
 ## Done this session
 
+- User authorized CI/push. Clean preflight at 43c3efa; full verify PASS (137/166/8). Workflow
+  verify.yml triggers on push and does not deploy. Remote phase-07-notes does not yet exist.
 - User clarification resolves the apparent navigation failure. Closed/verified issue #1 as
   NOT_PLANNED with explanatory comment; retained numbering clarity as a local UX follow-up.
 - Full verification PASS at 04da1da (137/166/8). No app code changed. F-006/F-008 restored to passing;
@@ -46,9 +48,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Get authorization to push/run Phase 07 CI and confirm the remaining real-book/device checklist
-   (both note types: create/edit/reopen/jump/delete). Keep phase In progress until both are observed.
-   Numbering clarity can be scoped separately if the user requests it. No push/deploy/main merge authorized.
+1. Push phase-07-notes, identify the run by pushed commit, monitor CI and record its observed result.
+   Keep phase In progress until CI and the full real-book/device checklist are observed. Push/CI
+   authorized; no deployment/main merge. Numbering clarity is only an unimplemented UX follow-up.
 
 ## Decisions worth remembering
 
@@ -93,20 +95,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:53 EDT
+Snapshot 2026-10-19 17:57 EDT
 - Branch: phase-07-notes
-- HEAD: 04da1da handoff: record reported notes and bookmark jump failures
-- Uncommitted files: 4
-- Last verify: PASS at 2026-10-19 17:52 EDT (commit 04da1da)
+- HEAD: 43c3efa handoff: clarify PDF versus printed page numbering
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-19 17:57 EDT (commit 43c3efa)
 - Recent commits:
+    43c3efa handoff: clarify PDF versus printed page numbering
     04da1da handoff: record reported notes and bookmark jump failures
     798c536 handoff: Codex 2026-10-19 phase 07 locally verified
     117ed45 phase 07: keep highlight note actions inside reader bounds
     e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
-    52a80c0 phase 07: add notes editor and guarded reader navigation
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/build/phase-07-notes.md
-     M harness/features.json
 <!-- AUTO:END -->
