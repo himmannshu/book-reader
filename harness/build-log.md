@@ -760,3 +760,15 @@ Template:
   only evidence/handoff files changed afterward, and their formatting plus git diff --check pass.
 - Handoff refreshed with the correction commits and pending contract items 13–14. Phase remains
   In progress; no push or deployment. A fresh agent should start with harness/prompts/00-orient.md.
+
+### 2026-10-19 15:18 EDT | Phase 06 | Codex | User check passed; CI authorized
+- User report: "I completed the real-book/device check. It's working as expected." Contract item 14
+  now has user-observed evidence. The user also authorized CI, including pushing the phase branch.
+- Clean working tree at ad3ec91 on phase-06-highlights before this evidence update. GitHub Actions
+  has no existing runs on this branch. Fresh local verification is running; CI remains pending.
+
+### 2026-10-19 15:19 EDT | Phase 06 | Codex | Local pre-push verification PASS
+- `scripts/verify.sh` at ad3ec91 plus the user-check evidence update: PASS, exit 0. Lint, format,
+  types, 122 unit, 130 e2e (Chromium + WebKit), 8 perf. Chromium firstPage 171 ms, jump 31,
+  p95 16.8; WebKit firstPage 161, jump 63, p95 38; canvas 67.1 MB. Budgets unchanged.
+- Ready to push the user's check evidence and the existing B1–B3 fixes to phase-06-highlights.

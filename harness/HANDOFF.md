@@ -7,8 +7,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Codex, 2026-10-19
 - Phase: 06 (highlights) In progress. User authorized fixing review blockers B1–B3.
-  B1–B3 fixed; latest `scripts/verify.sh` PASS (122 unit, 130 e2e, 8 perf; WebKit p95 31 ms).
-  F-007 passing again. Contract 13 (CI) and 14 (real-book/device user check) still pending.
+  B1–B3 fixed; latest `scripts/verify.sh` PASS at ad3ec91 (122 unit, 130 e2e, 8 perf; WebKit p95 38 ms).
+  F-007 passing again. Contract 14 passed by the user's real-book/device report on 2026-10-19.
+  Contract 13 (CI) remains pending; the user authorized pushing the phase branch and running CI.
 - Branch: phase-06-highlights (not pushed). main is one commit ahead of origin (a9c3832, handoff only).
 
 ## Done this session
@@ -32,12 +33,13 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## In flight
 
 - No code is half done. B1 committed as 4341f7c; B2 as 1c5834c; B3 as 57fa6ad, all verified locally.
+  Fresh local verification PASS; the authorized push and CI run are next. User reports the real-book/device
+  check works as expected (contract item 14).
 
 ## Next action
 
-1. Obtain permission to push phase-06-highlights and run CI for contract item 13. The user must also
-   report the real-book check (item 14), including iPhone/iPad if possible. Leave the phase In progress
-   until those checks have evidence. Do not start phase 07.
+1. Push phase-06-highlights (authorized) and monitor GitHub Actions.
+   If CI passes, record its run URL and close phase 06. Do not merge or start phase 07.
 
 ## Decisions worth remembering
 
@@ -57,8 +59,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Blockers and doubts
 
 - Phase 06:
-  - B1–B3 corrected and verified locally; physical-device confirmation remains part of item 14.
-  - CI has not run for this branch; no real-book user report yet (contract items 13 and 14).
+  - B1–B3 corrected and verified locally; the user confirmed the real-book/device check works.
+  - CI has not run for this branch (contract item 13).
   - N1 Highlight before highlights load silently does nothing; N2 WebKit has thin performance headroom
     (budget 40 ms) and the benchmark never measures text layers; N3 unsaved note touches the edge at 320 px.
     N4 duplicate import cleaned up with B2.
@@ -78,17 +80,17 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 15:17 EDT
+Snapshot 2026-10-19 15:20 EDT
 - Branch: phase-06-highlights
-- HEAD: 57fa6ad phase 06: dismiss stale highlight offers when text is released
+- HEAD: ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
 - Uncommitted files: 2
-- Last verify: PASS at 2026-10-19 15:15 EDT (commit 1c5834c)
+- Last verify: PASS at 2026-10-19 15:19 EDT (commit ad3ec91)
 - Recent commits:
+    ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
     57fa6ad phase 06: dismiss stale highlight offers when text is released
     1c5834c phase 06: prevent duplicate pending highlight saves
     4341f7c phase 06: restore touch highlight actions in WebKit
     db28d3c handoff: build-log times match their commits
-    f30eb4c handoff: correct build-log timestamp
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
