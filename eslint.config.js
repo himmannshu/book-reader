@@ -15,6 +15,24 @@ export default tseslint.config(
     },
   },
   {
+    // Only the engine adapter may touch PDF.js, so the engine stays swappable (D2/D3).
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/engine/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['pdfjs-dist', 'pdfjs-dist/*'],
+              message: 'Import PDF.js only inside src/engine. Use the PdfEngine interface instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['*.config.{js,ts}', 'e2e/**', 'scripts/**'],
     languageOptions: {
       globals: globals.node,

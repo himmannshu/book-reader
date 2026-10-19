@@ -120,3 +120,9 @@ Template:
   All breaks reverted with `git checkout`.
 - Green: `npx playwright test e2e/open-pdf.spec.ts` → 14 passed (7 tests × chromium, webkit).
 - Next: lint import boundary (item 8), then close-out checks.
+
+### 2026-10-18 23:35 EDT | Phase 01 | Claude Code (Opus 5.5) | PDF.js import boundary (item 8)
+- Changes: eslint.config.js `no-restricted-imports` for pdfjs-dist in src/** except src/engine/**.
+- Red: probe file src/ui/boundary-probe.ts importing pdfjs-dist → `npm run lint` exit 0 (no rule yet).
+- Green: with the rule, the probe → lint exit 1 ("'pdfjs-dist' import is restricted… Import PDF.js
+  only inside src/engine"); probe deleted → lint exit 0.
