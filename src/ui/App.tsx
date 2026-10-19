@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
@@ -8,6 +8,8 @@ import { Library } from './Library';
 import { ReaderView } from './ReaderView';
 
 interface OpenBook {
+  /** New for every opened book, so the reader (and its panels) start fresh. */
+  id: number;
   doc: PdfDoc;
   fileName: string;
 }
@@ -58,6 +60,7 @@ export function App({
   store?: BookStore;
 }) {
   const [book, setBook] = useState<OpenBook | null>(null);
+  const nextBookId = useRef(0);
   const [books, setBooks] = useState<BookRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -107,7 +110,8 @@ export function App({
     try {
       const doc = await engine.open(await load());
       markOpened();
-      setBook({ doc, fileName });
+      nextBookId.current += 1;
+      setBook({ id: nextBookId.current, doc, fileName });
       return true;
     } catch (err) {
       logUnexpected(err, 'Opening the PDF failed');
@@ -204,7 +208,7 @@ export function App({
         </p>
       )}
       {book ? (
-        <ReaderView doc={book.doc} />
+        <ReaderView key={book.id} doc={book.doc} />
       ) : (
         <Library
           books={books}

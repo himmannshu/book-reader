@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { PdfDoc } from '../engine/types';
 import { Viewer } from '../viewer/viewer';
 import { ContentsPanel, type OutlineState } from './ContentsPanel';
@@ -51,14 +51,21 @@ export function ReaderView({ doc }: { doc: PdfDoc }) {
 
   function choose(pageIndex: number) {
     viewerRef.current?.scrollToPage(pageIndex);
-    if (window.matchMedia(NARROW_QUERY).matches) {
-      setContentsOpen(false);
-      scrollerRef.current?.focus({ preventScroll: true });
+    if (window.matchMedia(NARROW_QUERY).matches) setContentsOpen(false);
+    // Focus the pages, so Space and Page Down scroll the book instead of repeating the jump.
+    scrollerRef.current?.focus({ preventScroll: true });
+  }
+
+  // Escape closes Contents wherever focus is: in the panel, on the button, or in the pages.
+  function onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && contentsOpen) {
+      event.stopPropagation();
+      closeContents();
     }
   }
 
   return (
-    <div className="reader">
+    <div className="reader" onKeyDown={onKeyDown}>
       <div className="reader-tools">
         <button
           ref={contentsButtonRef}
@@ -72,14 +79,7 @@ export function ReaderView({ doc }: { doc: PdfDoc }) {
         </button>
       </div>
       <div className="reader-body">
-        {contentsOpen && (
-          <ContentsPanel
-            id={CONTENTS_ID}
-            outline={outline}
-            onChoose={choose}
-            onClose={closeContents}
-          />
-        )}
+        {contentsOpen && <ContentsPanel id={CONTENTS_ID} outline={outline} onChoose={choose} />}
         <div
           ref={scrollerRef}
           className="reader-scroller"

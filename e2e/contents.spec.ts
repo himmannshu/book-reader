@@ -162,3 +162,57 @@ test('in a narrow window the panel covers the pages and closes after a choice', 
   await expect(contents(page)).toHaveCount(0);
   await expectPageAtTop(page, 8);
 });
+
+test('opening another book while Contents is open shows the new book, not a stuck panel', async ({
+  page,
+}) => {
+  await openFixture(page, 'outline-12-pages.pdf');
+  await page.getByRole('button', { name: 'Contents' }).click();
+  await expect(entry(page, 'Chapter 1')).toBeVisible();
+
+  await openFixture(page, 'basic-3-pages.pdf');
+  await expect(page.getByTestId('book-info')).toHaveText('basic-3-pages.pdf · 3 pages');
+  // Either the panel closed with the old book, or it shows the new book's contents; never "Loading".
+  if ((await contents(page).count()) === 0) {
+    await page.getByRole('button', { name: 'Contents' }).click();
+  }
+  await expect(contents(page)).toContainText('This book has no table of contents.');
+  await expect(contents(page)).not.toContainText('Loading contents');
+});
+
+test('Escape closes Contents even when no entry has focus', async ({ page }) => {
+  // A book without an outline: the panel has no entries to focus.
+  await openFixture(page, 'basic-3-pages.pdf');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  const button = page.getByRole('button', { name: 'Contents' });
+  await button.focus();
+  await page.keyboard.press('Enter');
+  await expect(contents(page)).toContainText('This book has no table of contents.');
+  await page.keyboard.press('Escape');
+  await expect(contents(page)).toHaveCount(0);
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await expect(button).toBeFocused();
+
+  // With focus in the pages, Escape still closes the open panel.
+  await button.click();
+  await expect(contents(page)).toBeVisible();
+  await page.getByTestId('reader').focus();
+  await page.keyboard.press('Escape');
+  await expect(contents(page)).toHaveCount(0);
+});
+
+test('after choosing an entry in a wide window, the keyboard scrolls the book', async ({
+  page,
+}) => {
+  await openFixture(page, 'outline-12-pages.pdf');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  await page.getByRole('button', { name: 'Contents' }).click();
+  await entry(page, 'Chapter 1').click();
+  await expectPageAtTop(page, 1);
+
+  const reader = page.getByTestId('reader');
+  await expect(reader).toBeFocused();
+  const before = await reader.evaluate((el) => el.scrollTop);
+  await page.keyboard.press('PageDown');
+  await expect.poll(() => reader.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
+});

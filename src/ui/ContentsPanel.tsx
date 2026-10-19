@@ -8,7 +8,6 @@ interface ContentsPanelProps {
   id: string;
   outline: OutlineState;
   onChoose(pageIndex: number): void;
-  onClose(): void;
 }
 
 function OutlineList({
@@ -40,8 +39,8 @@ function OutlineList({
   );
 }
 
-/** The book's table of contents. Escape closes it; focus moves to the first entry on open. */
-export function ContentsPanel({ id, outline, onChoose, onClose }: ContentsPanelProps) {
+/** The book's table of contents. Focus moves to the first entry on open. */
+export function ContentsPanel({ id, outline, onChoose }: ContentsPanelProps) {
   const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -50,13 +49,9 @@ export function ContentsPanel({ id, outline, onChoose, onClose }: ContentsPanelP
   }, [outline.status]);
 
   // Arrow keys, Home and End move between entries. Tab alone isn't enough: Safari skips buttons
-  // when tabbing unless the reader has changed a system setting.
+  // when tabbing unless the reader has changed a system setting. (Escape is handled by ReaderView,
+  // so it also works when no entry has focus.)
   function onKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      onClose();
-      return;
-    }
     const entries = [
       ...(panelRef.current?.querySelectorAll<HTMLButtonElement>('.contents-entry:not(:disabled)') ??
         []),
