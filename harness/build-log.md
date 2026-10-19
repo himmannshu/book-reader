@@ -828,3 +828,47 @@ Template:
   [skip ci] to avoid retriggering CI for its own result record; all source, generator, fixture, test,
   dependency and workflow files remain exactly those verified on 7ac8b1e. Formatting and diff checks
   validate the closure records. No merge or deployment; phase 07 has not started.
+
+### 2026-10-19 16:55 EDT | Phase 07 planning | Codex | Read-only audit; first questions pending
+- User requested prompt 01 planning, with questions/options before phase proposals, decisions and
+  reasoning recorded in architecture-decisions.md as chosen. Explicitly no application code or commits.
+- Read AGENTS.md, GOALS.md, PLANS.md, prompt 01, architecture-decisions.md, phase 06 and its contract,
+  and the phase 07 outline. GOALS.md's major architecture questions are already resolved; confirm whether
+  to retain those choices rather than silently reopening them. Phase 07 is Not started; no contract exists.
+- Code audit: existing selection/anchors/highlight persistence/floating actions are reusable foundation;
+  no note model/store/editor/panel is implemented. CSS classes named selection-note/panel-note are
+  status messages, not reader annotations. The current outline includes notes on highlights and pages.
+- `scripts/verify.sh` at 8372a99: PASS (lint, format, types, 122 unit, 130 browser, 8 perf).
+  Chromium firstPage 166 ms, jump 19, p95 16.8; WebKit firstPage 166, jump 34, p95 30; canvas 67.1 MB.
+- Asked two initial questions with options/tradeoffs: retain or revisit architecture; highlight/page/both
+  note targets. Waiting for choices. No new decisions recorded, phase proposals made, or application
+  files changed. Handoff/log updated without committing, per the user's instruction.
+
+### 2026-10-19 17:03 EDT | Phase 07 | Codex | Direction confirmed; plan and contract drafted
+- User chose to retain the architecture and support notes on highlights and pages, emphasizing
+  progress along the original direction unless a change offers a substantial improvement. Recorded
+  the choices, considered alternatives and reasoning as D7/D8 in architecture-decisions.md.
+- User invoked prompt 02 for phase 07. Read the phase outline, contract template and run prompt.
+  Preflight `scripts/verify.sh` at 8372a99: PASS (lint, format, types, 122 unit, 130 browser, 8 perf).
+  Chromium firstPage 170 ms, jump 19, p95 16.7; WebKit firstPage 174, jump 83, p95 30; canvas 67.1 MB.
+  The two pre-existing planning edits (handoff/log, from the preceding turn) were preserved.
+- Branch-base conflict: prompt 02 says create a phase branch from main, but main does not contain
+  completed phase 06, and phase 07 explicitly depends on 06. Created phase-07-notes at completed
+  phase-06-highlights (8372a99, a descendant of main) so the required highlights code is present.
+  No main merge, history rewrite, commit or push performed.
+- Posted the plan (scope, files, first failing checks, risks), expanded the existing phase-07 plan,
+  and drafted phase-07-contract.md from the template. Proposed interaction defaults are explicitly
+  awaiting approval: one note per anchor, explicit Save/Cancel, draft-discard guards, and confirmed
+  deletion of a highlight with its note. These are not recorded as accepted architecture decisions.
+- Stopping at prompt 02 step 6 for plan/contract approval. No application code or tests changed;
+  no feature marked passing, no Phase 07 context file created, and no commits made.
+
+### 2026-10-19 17:07 EDT | Phase 07 | Codex | Contract approved; build started
+- User: "Approved!" in response to the concrete plan, interaction defaults and contract. Approval
+  recorded by append-only Amendment 01; phase/roadmap In progress. D9 records the accepted defaults.
+- Baseline `scripts/verify.sh` at 8372a99 PASS: 122 unit, 130 browser, 8 perf; Chromium firstPage
+  172 ms, jump 17, p95 16.8; WebKit firstPage 156, jump 57, p95 31; canvas 67.1 MB.
+- Preserved the uncommitted planning records. Recorded material storage/association, draft-guard
+  and navigation decisions in phase-07-notes-context.md. Starting core/storage/browser checks red first.
+- No push, deployment or main merge authorized. Contract items 17 (CI) and 18 (user check) will
+  remain open until separately observed; do not mark the phase Complete based on local tests alone.

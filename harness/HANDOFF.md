@@ -6,15 +6,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Codex, 2026-10-19
+- Current session: Phase 07 implementation, following prompt 02. User approved the plan, contract
+  and all interaction defaults. Implementation/normal local commits are authorized; no push/deploy.
 - Phase: 06 (highlights) Complete. All 14 contract items have observed evidence in the build log.
   Local `scripts/verify.sh` PASS (122 unit, 130 e2e, 8 perf; WebKit p95 37 ms); F-007 passing.
   CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897.
   User confirmed the real-book/device check works as expected (contract 14).
-- Branch: phase-06-highlights, tracking origin/phase-06-highlights; verified source pushed at 7ac8b1e.
+- Branch: phase-07-notes (not pushed), based on completed phase 06 at 8372a99.
+  main lacks phase 06; the new branch carries that required dependency without a main-branch merge.
   main is one commit ahead of origin (a9c3832, handoff only).
 
 ## Done this session
 
+- Recorded accepted choices and reasoning as D7/D8 in architecture-decisions.md: keep the established
+  direction unless evidence shows a major improvement; support notes on highlights and whole pages.
+- Preflight `scripts/verify.sh` at 8372a99 PASS (122 unit, 130 browser, 8 perf; WebKit p95 30 ms).
+  Existing uncommitted planning handoff/log edits preserved. No application code changed.
+- Created phase-07-notes carrying completed phase 06. Updated the phase plan and drafted
+  harness/contracts/phase-07-contract.md, explicitly Pending approval. Phase 07 stays Not started.
 - User confirmed the real-book/device check (9463bfc) and authorized pushing/running CI.
 - First CI run failed one Chromium width check: fixture metadata used kerned widths for plain Tj
   text. Fixed the generator and regenerated ten manifest widths (7ac8b1e); PDF bytes unchanged.
@@ -28,14 +37,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## In flight
 
 - Nothing half done. B1 fixed in 4341f7c, B2 in 1c5834c, B3 in 57fa6ad; fixture metadata in 7ac8b1e.
+- Phase 07: plan/contract approved; implementation starting. Approved defaults:
+  one editable note per highlight/page, explicit Save/Cancel in Notes, guarded draft navigation, and
+  confirmation before removing a highlight together with its note. Baseline verify PASS (122/130/8).
 
 ## Next action
 
-1. Await the user's merge instruction. CI/push was authorized; merging was not. Do not start phase 07.
-   A fresh agent should follow harness/prompts/00-orient.md.
+1. Write failing note core/storage/browser checks, then implement the approved contract test-first.
+   Keep D7–D9 and phase-07-notes-context.md. Phase 07 push/deploy and main merge remain unauthorized.
 
 ## Decisions worth remembering
 
+- Phase 07 direction: D7–D9; contract approved by the user (Amendment 01 records approval).
 - Engine API and memory bounds: harness/context/phase-01-open-and-read-pdf-context.md.
 - Layout uses page 1's size as an estimate, then corrects after loadPageSizes() (anchor kept).
 - pdfjs-dist 6.4 → minimum Safari/iOS 17.4.
@@ -53,6 +66,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Blockers and doubts
 
+- Phase 07: approved, not built yet. Main lacks the completed Phase 06 dependency; the Phase 07
+  branch deliberately starts at 8372a99 instead of main.
 - Phase 06:
   - No blocking contract items remain. B1–B3 corrected, user check confirmed, CI green.
   - N1 Highlight before highlights load silently does nothing; N2 WebKit has thin performance headroom
@@ -74,22 +89,23 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   this session). An occasional ~2.4 s WebKit scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 16:48 EDT
-- Branch: phase-06-highlights
-- HEAD: 7ac8b1e phase 06: measure fixture widths without kerning
-- Uncommitted files: 6
-- Last verify: PASS at 2026-10-19 16:32 EDT (commit 9463bfc)
+Snapshot 2026-10-19 17:08 EDT
+- Branch: phase-07-notes
+- HEAD: 8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
+- Uncommitted files: 7
+- Last verify: PASS at 2026-10-19 17:06 EDT (commit 8372a99)
 - Recent commits:
+    8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
     7ac8b1e phase 06: measure fixture widths without kerning
     9463bfc phase 06: record user device check and pre-CI verification
     ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
     57fa6ad phase 06: dismiss stale highlight offers when text is released
-    1c5834c phase 06: prevent duplicate pending highlight saves
 - Changed files:
      M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/build/phase-06-highlights.md
-     M harness/code_review/phase-06-review.md
-     M harness/features.json
+     M harness/build/phase-07-notes.md
+     M harness/context/architecture-decisions.md
+    ?? harness/context/phase-07-notes-context.md
+    ?? harness/contracts/phase-07-contract.md
 <!-- AUTO:END -->

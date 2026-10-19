@@ -216,3 +216,47 @@ very large books would need a different layout, such as chunked records.
 
 **Revisit if:** opening very large books becomes slow or memory-heavy, especially on iPhone.
 That is the time to consider chunked storage.
+
+---
+
+## D7 (2026-10-19). Retain the established architecture for Phase 07
+
+**Options considered:** retain the current architecture; reopen one specific component; re-evaluate
+the whole architecture, accepting possible rework of completed phases.
+
+**Decision (user):** retain the existing direction. D1–D6 and their superseding storage entries remain
+in force. Do not revisit them for speculative improvements; a change should offer a demonstrated,
+substantial improvement before it competes with progress on the agreed roadmap.
+
+**Reasoning:** the user explicitly prioritized steady progress and continuity with the original
+decisions. The current reader has working, verified PDF reading, persistence, bookmarks and highlights;
+Phase 07 can extend those foundations without changing platform, framework, renderer or storage strategy.
+
+**Revisit if:** concrete evidence shows a major improvement in the user's reading experience or an
+existing decision prevents an agreed outcome. Record any future superseding decision with that evidence.
+
+---
+
+## D8 (2026-10-19). Notes attach to highlights and pages
+
+**Options considered:** notes on both highlighted passages and whole pages; highlights only (fewer
+creation flows, but requires selecting text); pages only (simpler anchoring, but loses passage context).
+
+**Decision (user):** both highlights and pages, as already described in Phase 07 of the roadmap.
+
+**Reasoning:** the user confirmed the original scope rather than narrowing or redirecting it. This
+supports passage-specific thoughts and page-level thoughts, including pages without selectable text,
+using the existing local-first reader and highlight anchors.
+
+**Still to approve:** the Phase 07 contract's interaction and lifecycle defaults are proposals, not
+accepted architecture decisions. The two choices above do not approve application implementation yet.
+
+---
+
+## D9 (2026-10-19). Phase 07 interaction defaults approved
+
+The user approved the Phase 07 plan and contract, including one editable plain-text note per
+highlight/page, explicit Save/Cancel in Notes, guarded draft navigation and confirmation before
+removing a highlight with its note. This supersedes D8's pending-approval statement. Reasoning:
+these defaults deliver the original note workflow with clear persistence and deletion behavior,
+using the existing architecture. The approved contract is the implementation boundary.
