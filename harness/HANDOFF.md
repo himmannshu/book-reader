@@ -37,11 +37,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - CI has never run on GitHub (no remote yet).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 22:29 EDT
-- Branch: planning
-- HEAD: 128f52e planning: architecture decisions and phase roadmap
+Snapshot 2026-10-18 22:38 EDT
+- Branch: phase-00-repository-foundation
+- HEAD: b72230c phase 00: CI workflow, commands, evidence; phase complete
 - Uncommitted files: 0
-- Last verify: NOT CONFIGURED at 2026-10-18 22:25 EDT (commit none)
+- Last verify: PASS at 2026-10-18 22:38 EDT (commit 28a4c32)
 - Recent commits:
-    128f52e planning: architecture decisions and phase roadmap
+    b72230c phase 00: CI workflow, commands, evidence; phase complete
+    28a4c32 phase 00: verify.local.sh wires all checks into scripts/verify.sh
+    69a9679 phase 00: unit tests, lint, format and typecheck
+    1cc12b6 phase 00: app shell with browser test
+    ee95f98 planning: refresh handoff snapshot
 <!-- AUTO:END -->
