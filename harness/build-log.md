@@ -8,6 +8,8 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 07 | Complete | phase-07-notes | verify PASS at 26875e4 (137/166/8); items 1–16 per Codex entries; CI 39331468496 green; 18 user-checked | none |
+| 06 | Complete | phase-06-highlights | per Codex entries: all 14 items observed; CI 39320769897 green on 7ac8b1e; user check confirmed | none (row added later by Claude Code) |
 | 05 | Complete | phase-05-bookmarks | verify PASS at aa73b5c; items 1–13 observed (B1 fixed after review FAIL); 14 user-checked; CI 39291151035 green | none |
 | 04 | Complete | phase-04-table-of-contents | verify PASS at ca5c0dc; items 1–9 observed (evaluator re-review); 11 user-checked; CI 39279260419 green | none |
 | 03 | Complete | phase-03-local-book-persistence | verify PASS; items 1–11 observed, 12 user-checked in Safari; CI 39200828535 green | none |
@@ -1007,3 +1009,35 @@ Contract evidence from this final canonical run (contract unchanged after approv
   blank frames 0%/1%, maxCanvas 67.1 MB. Budgets unchanged; no application code changed.
 - Inspected verify.yml: push-triggered verification, no deployment. Remote branch absent (read-only
   git ls-remote; initial sandbox DNS failure resolved by escalated retry). First push/CI next.
+- First push succeeded: origin/phase-07-notes now tracks local branch at 26875e4. Exact SHA matched
+  queued verify run 39331468496: https://github.com/himmannshu/book-reader/actions/runs/39331468496 .
+  Monitoring with gh run watch --exit-status; no result claimed yet. No PR, merge or deployment.
+- While CI runs, user confirms trying jumps, deletion and reopening for both highlight/page notes.
+  Clarified my phrase "cover creating" meant checking note creation, not making book covers. Do not
+  infer that editing was checked from this report. Full acceptance record remains partial.
+- User separately requests an issue for incomplete Contents: local The Hundred Page ML Book lists
+  only Preface. Read engine mapping and Phase 04 contract: current behavior reads embedded outline;
+  generation from page content is explicitly out of scope. Cause unconfirmed without the PDF;
+  no private book accessed/copied/uploaded, no TOC implementation work added to Phase 07.
+- Writing-style skill used for the requested issue; retrieval tools unavailable, so the supplied
+  user wording is the style basis without a claim of retrieved examples.
+- Created requested Contents issue #2, https://github.com/himmannshu/book-reader/issues/2 , with
+  the Preface-only example and explicit embedded-outline versus TOC-generation distinction.
+
+### 2026-10-19 18:16 EDT | Phase 07 | Claude Code (Opus 5.5) | Takeover after Codex hit its limit; phase complete
+- Took over from Codex (usage limit). Its uncommitted HANDOFF.md/build-log.md edits were harness notes only,
+  consistent with git and CI; kept and committed here.
+- Item 17: GitHub Actions run 39331468496 on 26875e4 → completed, success (all steps, including scripts/verify.sh).
+  https://github.com/himmannshu/book-reader/actions/runs/39331468496
+  Local: `scripts/verify.sh` at 26875e4 → PASS: 137 unit, 166 browser, 8 perf. Chromium first 181, jump 27,
+  p95 16.8; WebKit first 183, jump 83, p95 33; blank 0%/1%; canvas 67.1 MB. Budgets unchanged.
+- Item 18: user-observed. Earlier: creating, jumping, deleting and reopening both highlight and page notes.
+  Now (chat, answer to "did you also try editing a note"): "Yes, editing works". iPhone/iPad not reported
+  (the contract says "if possible").
+- All contract items 1–18 have evidence. Phase 07 → Complete. No independent review of phase 07 yet.
+- Issue #2 (Contents shows only Preface for The Hundred-Page Machine Learning Book): with the user's permission,
+  read the local PDF's outline with PDF.js in Node (read-only; nothing copied or uploaded). 152 pages; the
+  embedded outline has 5 entries in total: "Preface.pdf" (no destination) > "Preface" (page index 2) > 3 Preface
+  sections; no page labels. So the app shows the embedded outline faithfully. The source outline is incomplete
+  (likely merged per-chapter PDFs). Not a parser or mapping bug. Chapters would need contents generation,
+  which phase 04 left out of scope.

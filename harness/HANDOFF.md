@@ -5,52 +5,34 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Codex, 2026-10-19
-- Current session: user authorized Phase 07 CI and pushing the code. Local verify at 43c3efa
-  PASS (137 unit, 166 browser, 8 perf; WebKit p95 29). Push/CI starting; no merge/deploy authorized.
-- Phase: 07 (notes) In progress. Earlier local implementation verify at 117ed45 passed
-  (137 unit, 166 browser, 8 perf; WebKit p95 35 ms; unchanged budgets).
-  Latest baseline at 04da1da PASS (137/166/8, WebKit p95 34). F-006/F-008 restored to passing.
-  Contract 17 CI is now authorized and starting; full contract-18 checklist confirmation remains pending.
-- Phase 06 Complete (all 14 items observed), F-007 passing.
-  CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897.
-  User confirmed the real-book/device check works as expected (contract 14).
-- Branch: phase-07-notes (first push starting), based on completed phase 06 at 8372a99.
-  main lacks phase 06; the new branch carries that required dependency without a main-branch merge.
-  main is one commit ahead of origin (a9c3832, handoff only).
+- Last agent: Claude Code (Opus 5.5), 2026-10-19, taking over from Codex (usage limit).
+- Phase 07 (notes) Complete: CI run 39331468496 green on 26875e4; local verify PASS (137/166/8);
+  item 18 user-checked including editing. No independent review of phase 07 yet.
+- Phase 06 Complete (CI 39320769897). Neither 06 nor 07 is merged into main.
+- Branch: phase-07-notes (contains phases 04–06). origin/phase-07-notes is at 26875e4; later commits
+  here are harness docs only, not pushed. main has phases 00–05; local main is one handoff commit
+  (a9c3832) ahead of origin/main.
 
-## Done this session
+## Done (this session)
 
-- User authorized CI/push. Clean preflight at 43c3efa; full verify PASS (137/166/8). Workflow
-  verify.yml triggers on push and does not deploy. Remote phase-07-notes does not yet exist.
-- User clarification resolves the apparent navigation failure. Closed/verified issue #1 as
-  NOT_PLANNED with explanatory comment; retained numbering clarity as a local UX follow-up.
-- Full verification PASS at 04da1da (137/166/8). No app code changed. F-006/F-008 restored to passing;
-  clarification alone is not confirmation of every action in the full real-book/device checklist.
-- Recorded accepted choices and reasoning as D7/D8 in architecture-decisions.md: keep the established
-  direction unless evidence shows a major improvement; support notes on highlights and whole pages.
-- Contract approved (Amendment 01), phase/roadmap In progress. Core/schema v4 implemented with
-  transactional note cascades and a populated v3 migration test (3381801).
-- Notes hook/editor/panel, App navigation guard and passage jumps implemented (52a80c0).
-- Comprehensive lifecycle/error/keyboard/touch checks and focus fixes (e4a8e58); floating-menu
-  lower-edge overflow reproduced/fixed (117ed45). Final full verify PASS (137/166/8).
-- Browser checks exposed Safari editor/confirmation Tab skips and focus lost after deletion; fixed.
-  Covers iPhone/iPad taps, cross-page/foot-of-page jumps, isolation, cascades, failure/retry and drafts.
-- Touch editor screenshots inspected; deterministic vector-only fixture added. Detailed contract
-  evidence in build-log. CI/user report from Phase 06 is NOT counted for Phase 07.
+- Recorded CI, the user's editing confirmation and phase 07 completion; added the missing build-log
+  summary rows for phases 06 and 07; committed Codex's pending harness notes.
+- Issue #2 diagnosed (with the user's permission to read the local PDF's outline): the book's
+  embedded outline really contains only "Preface.pdf" > "Preface" + 3 sections (5 entries, 152
+  pages). The app shows it faithfully. Not a parser bug. Chapters for such books need contents
+  generation (out of scope since phase 04).
 
 ## In flight
 
-- No half-edited app code or outstanding navigation defect from this report. Issue #1 CLOSED.
-- UX follow-up: make physical PDF numbering distinct from printed book numbering. No label-support,
-  manual-offset, OCR or UI change has been approved or implemented; do not infer a fixed offset.
-- No independent Phase 07 review yet. A different agent can use prompt 03 after prompt 00.
+- Nothing running.
 
 ## Next action
 
-1. Push phase-07-notes, identify the run by pushed commit, monitor CI and record its observed result.
-   Keep phase In progress until CI and the full real-book/device checklist are observed. Push/CI
-   authorized; no deployment/main merge. Numbering clarity is only an unimplemented UX follow-up.
+1. Ask the user before merging phase 06 + 07 into main and pushing main.
+2. Optional: independent review of phase 07 (`/evaluate 07`), as done for earlier phases.
+3. Issue #2: with the user's OK, comment the diagnosis on the issue. Contents generation would be a
+   new phase or enhancement to plan, not a bug fix.
+4. Then plan the next phase (08, installable and hosted), after asking.
 
 ## Decisions worth remembering
 
@@ -95,17 +77,17 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:57 EDT
+Snapshot 2026-10-19 18:07 EDT
 - Branch: phase-07-notes
-- HEAD: 43c3efa handoff: clarify PDF versus printed page numbering
+- HEAD: 26875e4 phase 07: record verified push and CI authorization
 - Uncommitted files: 2
 - Last verify: PASS at 2026-10-19 17:57 EDT (commit 43c3efa)
 - Recent commits:
+    26875e4 phase 07: record verified push and CI authorization
     43c3efa handoff: clarify PDF versus printed page numbering
     04da1da handoff: record reported notes and bookmark jump failures
     798c536 handoff: Codex 2026-10-19 phase 07 locally verified
     117ed45 phase 07: keep highlight note actions inside reader bounds
-    e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md

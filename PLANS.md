@@ -28,7 +28,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 04 | Table of contents | A panel shows the book's outline; choosing a chapter jumps to it | 01 | Complete |
 | 05 | Bookmarks | Add and remove bookmarks, see them in a list, jump to them; they survive a reload | 03 | Complete |
 | 06 | Highlights | Select text and highlight it; highlights stay in place at any zoom and survive a reload | 03 | Complete |
-| 07 | Notes | Attach a note to a highlight or a page; a notes panel lists them and jumps to them; they survive a reload | 06 | In progress |
+| 07 | Notes | Attach a note to a highlight or a page; a notes panel lists them and jumps to them; they survive a reload | 06 | Complete |
 | 08 | Installable and hosted | The app installs to Dock and Home Screen, opens offline, and is hosted behind a personal login | 03 | Not started |
 | 09 | Cloud library | A book and its annotations added on one device appear on another | 05, 06, 07, 08 | Not started |
 | 10 | Reading comfort | Dark and sepia themes, zoom and fit modes, and each book reopens where I left off | 01 | Not started |
