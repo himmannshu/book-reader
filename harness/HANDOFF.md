@@ -36,15 +36,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - None. CI is green on GitHub (run 39191648738).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 22:38 EDT
-- Branch: phase-00-repository-foundation
-- HEAD: b72230c phase 00: CI workflow, commands, evidence; phase complete
+Snapshot 2026-10-18 22:49 EDT
+- Branch: main
+- HEAD: 0912b2c phase 00: record first green CI run
 - Uncommitted files: 0
 - Last verify: PASS at 2026-10-18 22:38 EDT (commit 28a4c32)
 - Recent commits:
+    0912b2c phase 00: record first green CI run
+    812f49d phase 00: refresh handoff snapshot
     b72230c phase 00: CI workflow, commands, evidence; phase complete
     28a4c32 phase 00: verify.local.sh wires all checks into scripts/verify.sh
     69a9679 phase 00: unit tests, lint, format and typecheck
-    1cc12b6 phase 00: app shell with browser test
-    ee95f98 planning: refresh handoff snapshot
 <!-- AUTO:END -->
