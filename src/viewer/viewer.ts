@@ -160,22 +160,13 @@ export class Viewer {
    * text in the pages. Only text in the text layers counts, never line breaks or other elements.
    */
   selectionRects(range: Range): HighlightRect[] | null {
-    if (this.#destroyed) return null;
-    const root = range.commonAncestorContainer;
-    if (!this.#content.contains(root)) return null;
-    const rects: ScreenRect[] = [];
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    for (let node = walker.currentNode; node; node = walker.nextNode() as Node) {
-      if (node.nodeType !== Node.TEXT_NODE || !range.intersectsNode(node)) continue;
-      if (!node.parentElement?.closest('.textLayer')) continue;
-      const part = document.createRange();
-      part.selectNodeContents(node);
-      if (node === range.startContainer) part.setStart(node, range.startOffset);
-      if (node === range.endContainer) part.setEnd(node, range.endOffset);
-      rects.push(...part.getClientRects());
-    }
-    const found = toPageRects(rects, this.#pagesOnScreen());
+    const found = toPageRects(this.#textRectsIn(range), this.#pagesOnScreen());
     return found.length > 0 ? found : null;
+  }
+
+  /** The screen box of the last selected piece of page text (to place a button by), or null. */
+  selectionEnd(range: Range): ScreenRect | null {
+    return this.#textRectsIn(range).at(-1) ?? null;
   }
 
   /** The id of the newest highlight under a point on screen (client coordinates), or null. */
@@ -327,6 +318,25 @@ export class Viewer {
     slot.textTask = undefined;
     slot.text?.remove();
     slot.text = undefined;
+  }
+
+  /** Screen boxes of the page text inside a range, in document order. Ignores other elements. */
+  #textRectsIn(range: Range): ScreenRect[] {
+    const rects: ScreenRect[] = [];
+    const root = range.commonAncestorContainer;
+    if (this.#destroyed || !this.#content.contains(root)) return rects;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node: Node | null = walker.currentNode; node; node = walker.nextNode()) {
+      if (node.nodeType !== Node.TEXT_NODE || !range.intersectsNode(node)) continue;
+      if (!node.parentElement?.closest('.textLayer')) continue;
+      const part = document.createRange();
+      part.selectNodeContents(node);
+      if (node === range.startContainer) part.setStart(node, range.startOffset);
+      if (node === range.endContainer) part.setEnd(node, range.endOffset);
+      for (const rect of part.getClientRects())
+        if (rect.width > 0 && rect.height > 0) rects.push(rect);
+    }
+    return rects;
   }
 
   /** Where each page with a canvas is on screen, and its scale (CSS px per point). */

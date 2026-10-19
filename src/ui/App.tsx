@@ -8,6 +8,7 @@ import {
   type BookRecord,
   type BookStore,
   type BookmarkStore,
+  type HighlightStore,
 } from '../storage/types';
 import { Library } from './Library';
 import { ReaderView } from './ReaderView';
@@ -63,10 +64,12 @@ export function App({
   engine = pdfjsEngine,
   store = defaultStores.books,
   bookmarks = defaultStores.bookmarks,
+  highlights = defaultStores.highlights,
 }: {
   engine?: PdfEngine;
   store?: BookStore;
   bookmarks?: BookmarkStore;
+  highlights?: HighlightStore;
 }) {
   const [book, setBook] = useState<OpenBook | null>(null);
   const nextBookId = useRef(0);
@@ -229,7 +232,13 @@ export function App({
         </p>
       )}
       {book ? (
-        <ReaderView key={book.id} doc={book.doc} bookId={book.bookId} bookmarks={bookmarks} />
+        <ReaderView
+          key={book.id}
+          doc={book.doc}
+          bookId={book.bookId}
+          bookmarks={bookmarks}
+          highlights={highlights}
+        />
       ) : (
         <Library
           books={books}

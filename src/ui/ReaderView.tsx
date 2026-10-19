@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
 import type { OutlineItem, PdfDoc } from '../engine/types';
-import { StorageError, type BookmarkStore } from '../storage/types';
+import type { BookmarkStore, HighlightStore } from '../storage/types';
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
+import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
 import { ContentsPanel, type OutlineState } from './ContentsPanel';
+import { SelectionActions } from './SelectionActions';
+import { useHighlights } from './useHighlights';
 
 /** Below this width a side panel covers the pages instead of sitting beside them. */
 const NARROW_QUERY = '(max-width: 699px)';
@@ -17,32 +20,29 @@ type Panel = 'contents' | 'bookmarks';
 type LoadedBookmarks =
   { bookId: string; status: 'failed' } | { bookId: string; status: 'ready'; items: Bookmark[] };
 
-function bookmarkMessage(error: unknown, action: 'save' | 'remove'): string {
-  const kind = error instanceof StorageError ? error.kind : 'unknown';
-  switch (kind) {
-    case 'quota':
-      return "There isn't enough storage space to save this bookmark.";
-    case 'not-found':
-      return "This book is no longer stored on this device, so its bookmarks can't be changed.";
-    case 'unavailable':
-    case 'unknown':
-      return action === 'save'
-        ? "This bookmark couldn't be saved."
-        : "This bookmark couldn't be removed.";
-  }
-}
-
 interface ReaderViewProps {
   doc: PdfDoc;
   /** The stored book's id, or null while the book isn't saved on this device. */
   bookId: string | null;
   bookmarks: BookmarkStore;
+  highlights: HighlightStore;
   now?: () => number;
+  newId?: () => string;
 }
 
+const randomId = () => crypto.randomUUID();
+
 /** Hosts the plain-TS Viewer. React owns only this element; the viewer owns everything inside. */
-export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderViewProps) {
+export function ReaderView({
+  doc,
+  bookId,
+  bookmarks,
+  highlights,
+  now = Date.now,
+  newId = randomId,
+}: ReaderViewProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
   const bookmarksButtonRef = useRef<HTMLButtonElement>(null);
@@ -56,7 +56,8 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
 
   const [marks, setMarks] = useState<LoadedBookmarks | null>(null);
   const [changing, setChanging] = useState(false);
-  const [marksError, setMarksError] = useState<string | null>(null);
+  /** A readable message about a bookmark or highlight that couldn't be saved or removed. */
+  const [annotationError, setAnnotationError] = useState<string | null>(null);
   const bookmarksState: BookmarksState =
     bookId === null
       ? { status: 'unsaved' }
@@ -148,15 +149,13 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
   }
 
   function reportFailure(error: unknown, action: 'save' | 'remove') {
-    if (!(error instanceof StorageError) || error.kind === 'unknown') {
-      console.error(`Could not ${action} the bookmark`, error);
-    }
-    setMarksError(bookmarkMessage(error, action));
+    logUnexpectedAnnotationError(error, `Could not ${action} the bookmark`);
+    setAnnotationError(annotationMessage(error, 'bookmark', action));
   }
 
   async function removeBookmark(mark: Bookmark): Promise<boolean> {
     setChanging(true);
-    setMarksError(null);
+    setAnnotationError(null);
     try {
       await bookmarks.remove(mark.id);
       updateItems(mark.bookId, (list) => list.filter((m) => m.id !== mark.id));
@@ -177,7 +176,7 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
     }
     const pageIndex = currentPage;
     setChanging(true);
-    setMarksError(null);
+    setAnnotationError(null);
     try {
       // A table of contents that can't be read only costs the chapter name (and is logged).
       const entries = await loadOutline().catch((): OutlineItem[] => []);
@@ -197,18 +196,32 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
     }
   }
 
-  // While a panel is open, Escape closes it wherever focus is: in the panel, on a button, in the
-  // pages, or on the page body (in Safari a mouse click does not focus the button it clicks).
+  const marked = useHighlights({
+    bookId,
+    store: highlights,
+    viewer: viewerRef,
+    scroller: scrollerRef,
+    body: bodyRef,
+    now,
+    newId,
+    onError: setAnnotationError,
+  });
+  const dismissHighlightAction = marked.dismiss;
+
+  // Escape first hides a floating highlight button. Otherwise, while a panel is open, it closes the
+  // panel wherever focus is: in the panel, on a button, in the pages, or on the page body (in
+  // Safari a mouse click does not focus the button it clicks).
   useEffect(() => {
-    if (!openPanel) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      if (dismissHighlightAction()) return;
+      if (!openPanel) return;
       setOpenPanel(null);
       (openPanel === 'contents' ? contentsButtonRef : bookmarksButtonRef).current?.focus();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel]);
+  }, [openPanel, dismissHighlightAction]);
 
   return (
     <div className="reader">
@@ -245,12 +258,12 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
           Bookmark page
         </button>
       </div>
-      {marksError && (
+      {annotationError && (
         <p className="error" role="alert">
-          {marksError}
+          {annotationError}
         </p>
       )}
-      <div className="reader-body">
+      <div ref={bodyRef} className="reader-body">
         {openPanel === 'contents' && (
           <ContentsPanel id={CONTENTS_ID} outline={outline} onChoose={choose} />
         )}
@@ -269,6 +282,13 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
           tabIndex={0}
           role="region"
           aria-label="Book pages"
+          onClick={marked.onPagesClick}
+        />
+        <SelectionActions
+          action={marked.action}
+          unsavedReason={marked.unavailableReason}
+          onHighlight={() => void marked.highlightSelection()}
+          onRemove={(id) => void marked.removeHighlight(id)}
         />
       </div>
     </div>
