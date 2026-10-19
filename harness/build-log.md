@@ -257,3 +257,12 @@ Template:
 - Fix: budget checks use `expect.soft`, so all metrics in a test are recorded even when one misses.
   Checked by forcing chromium p95 budget to 1 (temporary copy): test failed, and both p95FrameMs and
   blankFramePct files were written; budgets.json restored unchanged.
+
+### 2026-10-19 03:20 EDT | Phase 02 | Claude Code (Opus 5.5) | CI policy: Chromium enforced, WebKit reported (contract amendment 1)
+- User decision (chat): "in CI enforce only Chromium perf budgets (×4); report WebKit numbers without
+  failing. Keep strict WebKit budgets locally." Recorded as Amendment 1 to phase-02-contract.md item 10.
+- Changes: budgets.json `ciEnforcedProjects: ["perf-chromium"]`; perf-helpers skips enforcement in CI for
+  other projects (still records and uploads the numbers). Budget values unchanged.
+- Verification: simulated `CI=1` with both firstPage budgets temporarily 1 ms → chromium failed
+  ("exceeds budget 4"), webkit passed (report-only); budgets.json restored. Local `scripts/verify.sh`
+  (both browsers enforced) → PASS.

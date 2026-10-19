@@ -1,8 +1,9 @@
 {
-  "note": "Agreed by the user on 2026-10-19 after the baseline in harness/build-log.md. Budget = measured median plus headroom. CI multiplies time budgets by ciTimeMultiplier; memory is deterministic and never multiplied.",
+  "note": "Agreed by the user on 2026-10-19 after the baseline in harness/build-log.md. Budget = measured median plus headroom. CI multiplies time budgets by ciTimeMultiplier; memory is deterministic and never multiplied. In CI only ciEnforcedProjects are enforced (user decision 2026-10-19: Linux CI WebKit is ~8-14x slower than Apple WebKit, so it is report-only there).",
   "machine": "Apple M2, 8 GB, macOS (Playwright headless, device scale factor 2)",
   "measuredOn": "2026-10-19",
   "ciTimeMultiplier": 4,
+  "ciEnforcedProjects": ["perf-chromium"],
   "perf-chromium": {
     "firstPageMs": 250,
     "jumpMs": 100,

@@ -33,4 +33,10 @@ phase by replacing the 8-page cap with a canvas memory budget.
 
 ## Amendments
 
-(none)
+### Amendment 1 (2026-10-19, user decision)
+
+Item 10 is changed. CI enforces the ×4 time budgets and the memory budget for Chromium only.
+WebKit's numbers are measured and uploaded in CI, but they are not enforced there. Reason: the
+first CI baseline (run 39196422528) showed Linux CI WebKit at about 8× slower on time and 14×
+on frames than WebKit on the M2. Strict WebKit budgets stay enforced by local
+`scripts/verify.sh`.

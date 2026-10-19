@@ -18,6 +18,8 @@ const timeMetrics: ReadonlySet<Metric> = new Set(['firstPageMs', 'jumpMs', 'p95F
 
 interface Budgets {
   ciTimeMultiplier: number;
+  /** Projects whose budgets CI enforces; others are measured and reported only. */
+  ciEnforcedProjects: string[];
   [project: string]: unknown;
 }
 const budgets = JSON.parse(
@@ -57,6 +59,10 @@ export function record(
   );
   testInfo.annotations.push({ type: metric, description: String(value) });
   if (reportOnly) return;
+  if (process.env.CI && !budgets.ciEnforcedProjects.includes(project)) {
+    testInfo.annotations.push({ type: 'not enforced in CI', description: metric });
+    return;
+  }
 
   const projectBudgets = budgets[project] as Partial<Record<Metric, number>> | undefined;
   const base = projectBudgets?.[metric];
