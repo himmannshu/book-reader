@@ -243,3 +243,17 @@ Template:
   AGENTS.md commands and the speed convention (budgets change only with user agreement).
 - Verification: `npm run test:perf` enforced → 8 passed (chromium first 142, jump 19, p95 16.8, blank 0,
   canvas 67.1; webkit 156, 101, 29, 1, 67.1). `scripts/verify.sh` → all six steps, "--- PASS".
+
+### 2026-10-19 03:05 EDT | Phase 02 | Claude Code (Opus 5.5) | CI baseline: Linux WebKit far slower than budgets ×4
+- Pushed branch phase-02-performance-baseline (user-authorized). GitHub Actions run 39196422528 → failure
+  at the perf step only (lint/format/types/unit/26 e2e passed). Heavy fixture generated in CI (14.3 s).
+  https://github.com/himmannshu/book-reader/actions/runs/39196422528
+- CI numbers (ubuntu-latest), from the perf-results artifact:
+  chromium firstPage 394 [408,386,394], jump 41 [35,53,41], p95 frame 50, blank 0, canvas 67.1 → all within ×4.
+  webkit firstPage 1221 [1207,1229,1221] (> 1200), jump 766 [1012,759,766], p95 frame 411 (> 160),
+  canvas 67.1; blank not recorded (the p95 assertion stopped the test).
+- WebKit on Linux CI is ~8× slower on time and ~14× on frames than the M2, so ×4 does not fit it.
+  Budgets left unchanged pending the user's decision (AGENTS.md: budgets change only with agreement).
+- Fix: budget checks use `expect.soft`, so all metrics in a test are recorded even when one misses.
+  Checked by forcing chromium p95 budget to 1 (temporary copy): test failed, and both p95FrameMs and
+  blankFramePct files were written; budgets.json restored unchanged.

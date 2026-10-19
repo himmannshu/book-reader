@@ -32,7 +32,10 @@ export function median(values: number[]): number {
     : ((sorted[mid - 1] ?? NaN) + (sorted[mid] ?? NaN)) / 2;
 }
 
-/** Writes the measurement to perf-results/ and, unless report-only, checks it against its budget. */
+/**
+ * Writes the measurement to perf-results/ and, unless report-only, checks it against its budget.
+ * A miss marks the test failed but lets the remaining measurements run.
+ */
 export function record(
   testInfo: TestInfo,
   metric: Metric,
@@ -59,9 +62,10 @@ export function record(
   const base = projectBudgets?.[metric];
   if (base === undefined) throw new Error(`No budget for ${metric} in project ${project}`);
   const limit = process.env.CI && timeMetrics.has(metric) ? base * budgets.ciTimeMultiplier : base;
-  expect(value, `${metric} = ${value} exceeds budget ${limit} (${project})`).toBeLessThanOrEqual(
-    limit,
-  );
+  // Soft, so every metric in a test is still recorded when an earlier one is over budget.
+  expect
+    .soft(value, `${metric} = ${value} exceeds budget ${limit} (${project})`)
+    .toBeLessThanOrEqual(limit);
 }
 
 /** Opens the benchmark book through the app's file input; returns ms from choice to page 1 drawn. */
