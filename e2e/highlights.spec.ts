@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { importBook, manifest, pageSlot } from './helpers';
+import { fixturePath, importBook, manifest, pageSlot } from './helpers';
 
 const BOOK = 'text-4-pages.pdf';
 
@@ -441,4 +441,22 @@ test('Highlight and Remove work from the keyboard; Escape hides them', async ({ 
   await page.keyboard.press('Enter');
   await expect(page.locator('.highlight-box')).toHaveCount(0);
   expect(await stored(page)).toHaveLength(0);
+});
+
+test.describe('when this browser cannot store books', () => {
+  test.beforeEach(async ({ page }) => {
+    // Like a private window that refuses storage: the app reads but can't save.
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'indexedDB', { value: undefined });
+    });
+    await page.goto('/');
+  });
+
+  test('Highlight is disabled and says why', async ({ page }) => {
+    await page.getByLabel('Open PDF').setInputFiles(fixturePath(BOOK));
+    await textReady(page, 0, 'Charlie three');
+    await selectText(page, { page: 0, text: 'Alpha one' });
+    await expect(highlightButton(page)).toBeDisabled();
+    await expect(page.getByText('Highlights need this book saved on this device.')).toBeVisible();
+  });
 });
