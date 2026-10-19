@@ -54,8 +54,8 @@
       "id": "F-007",
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 e2e/highlights.spec.ts (exact text, mouse-drag multi-line, across a page break, aligned after resize 1280->700, reload, stored PDF points + quote at two window sizes, remove, book removal, no button for whitespace/outside, unsaved reason, failed save, keyboard) passes in chromium+webkit; scripts/verify.sh PASS at c4be6a2 (122 unit, 110 e2e, 8 perf). CI, user check and review pending."
     },
     {
       "id": "F-008",

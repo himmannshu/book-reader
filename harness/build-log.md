@@ -681,3 +681,18 @@ Template:
 - `npx vitest run`: 121 passed. `npm run test:e2e`: 108 passed (22 new highlight tests, Chromium + WebKit).
 - Early perf check with text layers on (before UI): `npm run test:perf` 8/8 twice; webkit firstPage 208 ms
   (budget 300), p95 35 ms (budget 40).
+
+### 2026-10-19 14:45 EDT | Phase 06 | Claude Code (Opus 5.5) | Perf headroom restored; verify PASS; items 1–12 observed
+- First full verify after the UI (ac5f44d): PASS but WebKit p95FrameMs = 40 (budget 40, zero headroom); two
+  more perf runs: 40, then 42 (FAIL). Cause: the highlight hook's scroll listener set React state on every scroll
+  event. Fix: it does nothing unless a floating button is showing; text layers also wait for a 200 ms scroll
+  pause (unit test with fake timers: red → green). Perf after: p95 32, 38 (two runs). Budgets unchanged.
+- `scripts/verify.sh` at c4be6a2: PASS (exit 0). Unit 122/122; browser 110/110 (Chromium + WebKit); perf 8/8:
+  chromium firstPage 169, jump 19, p95 16.7; webkit firstPage 187, jump 120 (budget 200; was 61–88 before),
+  p95 36, blank 1; maxCanvasMB 67.1.
+- Contract evidence: items 1–8 and 10 by e2e/highlights.spec.ts in both browsers; item 9 by e2e (whitespace,
+  toolbar text, unsaved book with indexedDB removed, failed save after the book record vanished) and
+  SelectionActions unit tests; item 11 by core/highlights, store and viewer unit tests; item 12 above.
+- Ran the dev server myself (browser pane): a selection from "two:" to "the fourth" over three lines became one
+  highlight drawn over exactly that text (screenshot).
+- Open: 13 (CI, needs a push), 14 (user's real-book check, iPhone/iPad if possible), evaluator review.

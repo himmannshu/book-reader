@@ -6,26 +6,26 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 05 Complete. All 14 items have evidence: verify PASS at aa73b5c, CI 39291151035 green on fdaa254,
-  item 14 user-checked. The B1 fix (after the evaluator's FAIL) is tested but not re-reviewed.
-- Branch: main (fast-forwarded to phase-05-bookmarks at be88ca0; both pushed, user-approved 2026-10-19).
+- Phase: 06 In progress. Highlights built; `scripts/verify.sh` PASS; items 1–12 observed (build log 14:45).
+  Open: 13 (CI, needs a push the user approves), 14 (user's real-book check), evaluator review.
+- Branch: phase-06-highlights (from main at a9c3832; not pushed). main has one unpushed commit (a9c3832).
 
 ## Done
 
 - Phases 00–05 complete and on main (pushed at be88ca0).
-- Phase 05: page bookmarks (toggle follows the page in view; ties within 1 px go to the earlier page),
-  own Bookmarks panel, "Page N · <chapter>" names, IndexedDB v2 `bookmarks` store, bookmarks removed with
-  their book. Fixed: App destroyed the open document when a saved file got its id.
-- Evaluator reviews: 01–03 PASS, 04 FAIL only on 10/11 (since done), 05 FAIL on B1 (since fixed, not re-reviewed).
+- Phase 06: PDF.js text layer through the engine (visible pages, after a scroll pause), floating Highlight
+  button, Remove highlight on click, highlights in PDF points + quote, may span pages, IndexedDB v3.
+- Evaluator reviews: 01–03 PASS, 04 FAIL only on 10/11 (since done), 05 FAIL on B1 (fixed, not re-reviewed).
 
 ## In flight
 
-- Nothing. (This handoff refresh is committed on main locally, not pushed.)
+- Nothing running.
 
 ## Next action
 
-1. Ask the user whether to re-review phase 05 or fix the open minor findings (below), then plan phase 06
-   (highlights) in plan mode.
+1. Ask the user to push phase-06-highlights (CI, item 13) and to check item 14 on a real book.
+2. Run the evaluator review (`/evaluate 06`) if the user wants it before closing.
+3. When 13 and 14 have evidence: set phase 06 Complete, ask before merging.
 
 ## Decisions worth remembering
 
@@ -52,17 +52,19 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 13:17 EDT
-- Branch: main
-- HEAD: be88ca0 phase 05: item 14 user-checked; phase complete
-- Uncommitted files: 1
-- Last verify: PASS at 2026-10-19 13:05 EDT (commit aa73b5c)
+Snapshot 2026-10-19 14:09 EDT
+- Branch: phase-06-highlights
+- HEAD: c4be6a2 phase 06: keep scrolling cheap: text layers wait for a scroll pause; scroll listener idle without a button
+- Uncommitted files: 3
+- Last verify: PASS at 2026-10-19 14:09 EDT (commit c4be6a2)
 - Recent commits:
-    be88ca0 phase 05: item 14 user-checked; phase complete
-    c0ad137 phase 05: item 13 CI green; handoff
-    fdaa254 phase 05: log B1 fix and verify PASS; F-006 passing; handoff
-    aa73b5c phase 05: fix B1 (current page ties within 1 px go to the earlier page); T1/T2 tests; comment
-    c9cd68b phase 05: evaluator review (FAIL on B1); F-006 failing until fixed
+    c4be6a2 phase 06: keep scrolling cheap: text layers wait for a scroll pause; scroll listener idle without a button
+    ac5f44d phase 06: e2e for the unsaved-book Highlight reason
+    f7e4871 phase 06: log build progress
+    7195126 phase 06: highlights e2e (Chromium + WebKit); quote spaces across lines and pages; line height from the text box; keep the offered selection when focus moves (Safari)
+    1fd619a phase 06: Highlight button under a selection, Remove highlight on click; highlights load with the book
 - Changed files:
      M harness/HANDOFF.md
+     M harness/build-log.md
+     M harness/features.json
 <!-- AUTO:END -->
