@@ -598,3 +598,19 @@ Template:
   10 (above), 11 (user-checked). Phase 04 set Complete in the build file, PLANS.md and the summary row.
   The re-review's FAIL rested only on items 10/11; no new review was run.
 - Not yet merged into main or pushed past aaafd9f; waiting on the user.
+
+### 2026-10-19 12:35 EDT | Phase 05 | Claude Code (Opus 5.5) | Phase 04 merged; phase 05 built test-first
+- User-approved: main fast-forwarded to phase-04-table-of-contents (71a46b6), both pushed; branch
+  phase-05-bookmarks created from main. Contract written from the approved plan (14 items) and context file added.
+- Red → green, unit (Vitest): currentPageAt (6 failing → pass), Viewer onPageChange (3 failing → pass),
+  core/bookmarks label/id/sort (import failed → 8 pass), IndexedDB bookmarks + v1→v2 upgrade + cascade on book
+  removal (all failing on missing factory → 17 pass), ReaderView bookmarks incl. unsaved reason, quota message
+  and unreadable list (4 failing → pass). `npx vitest run`: 91 passed.
+- Bug found by the new e2e tests: App's doc-cleanup effect was keyed on the book object, so setting bookId after
+  a save destroyed the document on screen (pages stuck "rendering", Contents stuck "Loading"). jsdom hid it (the
+  save landed in the same React batch); regression test now holds the save until the reader shows: red
+  (destroy called once) → green after keying the effect on the document (0ffbfed).
+- e2e/bookmarks.spec.ts (12 tests) + shared helpers: `npm run test:e2e`: 82 passed (Chromium + WebKit).
+- Panel classes renamed (contents-panel → side-panel, contents-entry → panel-entry); shared keyboard hook
+  src/ui/usePanelKeys.ts used by both panels. Added a `prod-preview` entry to .claude/launch.json (port 4180)
+  for checking the production build in the browser pane.
