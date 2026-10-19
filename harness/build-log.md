@@ -1086,3 +1086,13 @@ Contract evidence from this final canonical run (contract unchanged after approv
   service worker's first-visit install.
 - Item 7: `npm run dev` in the Claude browser pane (port 5174; 5173 was held by an existing dev server from this
   repo, left running): navigator.serviceWorker.getRegistrations() → 0, controller false, no manifest link.
+
+### 2026-10-19 19:11 EDT | Phase 08 | Claude Code (Opus 5.5) | Deploy guide, AGENTS notes, context
+- New folder docs/ (user-facing guides; explained here as AGENTS.md requires): docs/deploy.md with the Cloudflare
+  Pages project settings, Access (Zero Trust Free, one-time PIN, production + preview domains, email policy),
+  install steps (iPhone/iPad, Mac), the offline check, and how updates appear.
+- AGENTS.md: every push is also a deploy (main → production, branches → previews); `npm run icons`; no deploy
+  command; folder layout gains tests/config/, public/ and docs/.
+- harness/context/phase-08-installable-and-hosted-context.md written.
+- Remaining: user's Cloudflare setup (docs/deploy.md 1–2), then with the user's OK: push branch (CI + preview),
+  check logged-out requests reach Access (item 11), merge/push main (production), user install + offline check (12).

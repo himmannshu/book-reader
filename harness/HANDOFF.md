@@ -6,26 +6,28 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phases 00–07 Complete and merged into main (5ba0694); main pushed; CI run 39334209183 green.
-- Branch: main. No phase in progress.
+- Phase 08 (installable and hosted) In progress on branch phase-08-installable-and-hosted (not pushed).
+  Items 1–9 observed locally (verify PASS 142/175+1 skipped/8). Waiting on the user's Cloudflare setup.
+- Phases 00–07 Complete and on main.
 
-## Done (this session)
+## Done (phase 08)
 
-- Took over phase 07 from Codex; recorded CI and the user's check; phase 07 Complete.
-- Merged phase-07-notes (with phase 06) into main; verify PASS (137/166/8); CI green on main.
-- Issue #2 diagnosed: the book's embedded outline only contains the Preface (5 entries, 152 pages);
-  the app shows it faithfully. Contents generation would be a new enhancement.
+- PWA: vite-plugin-pwa (prompt mode), manifest, generated icons, iOS meta tags, UpdateNotice,
+  public/_headers; offline shell and offline book opening tested in both browsers; installability
+  tested in full Chromium (the default headless shell can't evaluate it).
+- docs/deploy.md (user's Cloudflare steps); AGENTS.md: every push is also a deploy.
 
 ## In flight
 
-- Nothing running.
+- User to follow docs/deploy.md steps 1–2 (Pages project with Git integration; Access with one-time PIN).
 
 ## Next action
 
-1. Ask the user what comes next. Options already raised: an independent review of phase 07
-   (`/evaluate 07`, never done); commenting the issue #2 diagnosis on GitHub (needs OK); a
-   contents-generation enhancement for books with incomplete outlines; the printed page-number UX
-   follow-up; open review findings (below); then plan phase 08 (installable and hosted).
+1. When the user reports the Pages project URL: with their OK, push the branch (CI run + preview
+   deploy). Check item 11 with `curl -sI https://<branch>.<project>.pages.dev` (expect a redirect to
+   <team>.cloudflareaccess.com), record the CI run (item 10).
+2. With their OK, merge into main and push (production deploy). Check production with curl the same way.
+3. User installs on iPhone/iPad and Mac and checks offline reading (item 12, docs/deploy.md 3–4).
 
 ## Decisions worth remembering
 
