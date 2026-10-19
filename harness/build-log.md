@@ -306,3 +306,24 @@ Template:
   clears perf-results/<book> each run and the report prints only the measured book. Checked by planting a
   fake 99999 ms result: cleared, fresh table printed.
 - All contract items 1–11 have evidence. Phase 02 → Complete.
+
+### 2026-10-19 00:40 EDT | After phase 02 | Claude Code (Opus 5.5) | First-page investigation on a real book; viewer fix
+- Branch perf-first-page-investigation (from phase-02-performance-baseline). Baseline `scripts/verify.sh` → PASS
+  (heavy firstPage chromium 142, webkit 134).
+- Reproduced on DDIA (24 MB, 613 pages, read in place, not copied): `PERF_BOOK=… playwright -g "first page"` →
+  chromium 469 [468,469,469], webkit 393 [408,393,382].
+- In-app marks (dev build, 3 runs): DDIA chromium opened@154–200, p1@522–600, p0@540–621; heavy opened@183–199,
+  p0@221–242. Opening is not the difference. Page 0 finishes after its overscan neighbour.
+- Ad-hoc PDF.js script (scratchpad, not committed), chromium/webkit medians: arrayBuffer 10/10, getDocument 144/162,
+  page 1 alone 23–31/35–41, page 2 alone 311/252, page 2 operator list only 308/253 (worker-bound; DPR 1: 333/263),
+  pages 1+2 together → page 1 at 382/312, plus loadPageSizes → 403/322. Page 2 = only CMYK+ICC JPEG in the book
+  (`pdfimages -list`). Cover's 6841×5203 CCITT masks are not the cost.
+- Fix (test-first): viewer starts overscan pages after the visible ones finish. src/viewer/viewer.test.ts: 2 of 3
+  new tests failed before the change, all pass after; `vitest run` 28 passed.
+- After (production `npm run test:perf`): DDIA chromium firstPage 133 [133,135,123], webkit 129 [130,129,120];
+  heavy chromium 142, webkit 123.
+- Scroll check: first interleaved A/B (6 pairs, hot machine) looked worse for the fix (webkit p95 before 32–36,
+  after 27–57). Changed the resume call to fire only while overscan is held. Clean interleaved A/B, 8 pairs,
+  alternating order: before 28,32,33×6 / after 31,33×7 (medians 33 = 33). Chromium p95 16.7–16.8 throughout.
+- `scripts/verify.sh` after fix → PASS (unit 28, browser 26, perf 8; heavy webkit p95 29).
+- Findings: harness/context/first-page-investigation-context.md.
