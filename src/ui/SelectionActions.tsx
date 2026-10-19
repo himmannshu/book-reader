@@ -13,7 +13,8 @@ interface SelectionActionsProps {
   onRemove(id: string): void;
 }
 
-// Pressing the button must not move focus or clear the reader's text selection.
+// Keep desktop selections on mouse press. Touch pointerdown must remain uncancelled so WebKit
+// dispatches the tap's click; useHighlights keeps a range copy if touch focus clears selection.
 const keepSelection = (event: SyntheticEvent) => event.preventDefault();
 
 /** The floating "Highlight" button under a selection, or "Remove highlight" for a chosen one. */
@@ -28,7 +29,6 @@ export function SelectionActions({
     <div
       className="selection-actions"
       style={{ left: action.left, top: action.top }}
-      onPointerDown={keepSelection}
       onMouseDown={keepSelection}
     >
       {action.kind === 'create' ? (

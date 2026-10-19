@@ -706,3 +706,17 @@ Template:
 - Not pushed. Waiting on the user: fix B1–B3 first, or push now.
 - Correction: the headers of this session's entries from 12:13 on were estimated when written; they now match
   the commits that wrote them (git log). Only the times changed.
+
+### 2026-10-19 14:58 EDT | Phase 06 | Codex | B1 touch actions fixed
+- User authorized the B1–B3 correction pass under prompt 02; the approved phase contract is unchanged.
+  Orientation at db28d3c: clean tree; `scripts/verify.sh` PASS (122 unit, 110 e2e, 8 perf; WebKit p95 39 ms).
+  The first sandboxed run could not bind ::1:4173; the authorized rerun with server access passed.
+- Red: revised SelectionActions unit assertion failed; all four new WebKit touch checks failed:
+  iPhone 13 and iPad (gen 7), Highlight stored nothing and Remove left its record behind.
+- Fix: remove onPointerDown preventDefault, retain onMouseDown preventDefault for desktop; Safari touch
+  uses the existing offeredRange copy. Corrected the interaction description in the phase context.
+- `scripts/verify.sh`: first attempt caught two forbidden non-null assertions in the new tests (fixed).
+  Rerun PASS, exit 0: 122 unit, 118 e2e, 8 perf. The eight new touch checks pass in Chromium + WebKit,
+  including reopening after creation/removal. Chromium firstPage 236 ms, jump 31, p95 16.8;
+  WebKit firstPage 166, jump 74, p95 31; canvas 67.1 MB. Budgets unchanged.
+- B2 and B3 still open; F-007 remains failing. CI and the real-device user check remain pending.

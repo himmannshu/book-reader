@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { devices, expect, test, type Page } from '@playwright/test';
 import { fixturePath, importBook, manifest, pageSlot } from './helpers';
 
 const BOOK = 'text-4-pages.pdf';
@@ -231,6 +231,52 @@ test('selecting text and pressing Highlight highlights exactly that text', async
   expect(await page.evaluate(() => document.getSelection()?.isCollapsed)).toBe(true);
   await expect(highlightButton(page)).toHaveCount(0);
 });
+
+for (const deviceName of ['iPhone 13', 'iPad (gen 7)']) {
+  test.describe(`touch on ${deviceName}`, () => {
+    const device = devices[deviceName];
+    if (!device) throw new Error(`no device profile ${deviceName}`);
+    test.use({
+      hasTouch: true,
+      isMobile: true,
+      viewport: device.viewport,
+      deviceScaleFactor: device.deviceScaleFactor,
+      userAgent: device.userAgent,
+    });
+
+    test('tapping Highlight saves the selected text and survives reopening', async ({ page }) => {
+      await openBook(page);
+      const words = { page: 0, text: 'Bravo two' };
+      await selectText(page, words);
+      await highlightButton(page).tap();
+      await expect(page.locator('.highlight-box')).toHaveCount(1);
+      expect((await stored(page)).map((h) => h.quote)).toEqual([words.text]);
+      expectAligned(await highlightBoxes(page), await textBoxes(page, words));
+      await expect(highlightButton(page)).toHaveCount(0);
+
+      await reloadAndReopen(page);
+      await expect(page.locator('.highlight-box')).toHaveCount(1);
+    });
+
+    test('tapping Remove deletes the highlight and stays deleted after reopening', async ({
+      page,
+    }) => {
+      await openBook(page);
+      // Mouse creation isolates the Remove tap, even if the Highlight tap is broken.
+      await highlight(page, { page: 0, text: 'Bravo two' });
+      const box = (await highlightBoxes(page))[0];
+      if (!box) throw new Error('no highlight box to tap');
+      await page.touchscreen.tap((box.left + box.right) / 2, (box.top + box.bottom) / 2);
+      await removeButton(page).tap();
+      await expect(page.locator('.highlight-box')).toHaveCount(0);
+      expect(await stored(page)).toHaveLength(0);
+      await expect(removeButton(page)).toHaveCount(0);
+
+      await reloadAndReopen(page);
+      await expect(page.locator('.highlight-box')).toHaveCount(0);
+    });
+  });
+}
 
 test('dragging over several lines makes one highlight with one box per line', async ({ page }) => {
   await openBook(page);

@@ -16,7 +16,8 @@ describe('SelectionActions', () => {
     const button = screen.getByRole('button', { name: 'Highlight' });
     const pointerDown = createEvent.pointerDown(button);
     fireEvent(button, pointerDown);
-    expect(pointerDown.defaultPrevented).toBe(true);
+    // Cancelling pointerdown suppresses WebKit's synthesized click after a touch tap.
+    expect(pointerDown.defaultPrevented).toBe(false);
     const mouseDown = createEvent.mouseDown(button);
     fireEvent(button, mouseDown);
     expect(mouseDown.defaultPrevented).toBe(true);

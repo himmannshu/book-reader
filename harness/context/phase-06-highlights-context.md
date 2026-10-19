@@ -5,7 +5,8 @@ Material decisions only. The user chose the interaction choices in chat on 2026-
 ## Interaction
 
 - Selecting text in the pages shows a floating "Highlight" button below the selection. Pressing it
-  keeps the selection (its pointerdown is prevented), saves the highlight and clears the selection.
+  saves the highlight and clears the selection. Mouse presses preserve selection with mousedown
+  preventDefault; touch presses use the offered range copy if moving focus clears selection.
 - Clicking or tapping a highlight shows a "Remove highlight" button. A single tap never deletes.
 - One highlight may span a page break: one quote, with rectangles on each page it covers.
 - Overlapping highlights are allowed. Clicking where several overlap picks the newest.
@@ -33,3 +34,9 @@ Material decisions only. The user chose the interaction choices in chat on 2026-
   since a page can hold many highlights. `pageIndex` is the first page the highlight touches.
 - IndexedDB schema version 3 adds a `highlights` store (keyPath `id`, index `bookId`). Removing a book
   deletes its highlights in the same transaction.
+
+## Review correction (2026-10-19)
+
+- Do not prevent pointerdown on the floating actions: WebKit suppresses the subsequent touch click,
+  breaking both Highlight and Remove on iPhone/iPad. Keep only the mouse-specific prevention. The
+  touch regression checks run in both browsers with iPhone and iPad device settings and real tap events.
