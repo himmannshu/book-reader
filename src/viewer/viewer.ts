@@ -6,6 +6,7 @@ import { RenderCancelledError, type PageSize, type PdfDoc, type RenderTask } fro
 import {
   anchorAt,
   computeLayout,
+  currentPageAt,
   pageAt,
   planRender,
   scrollTopFor,
@@ -24,6 +25,8 @@ export interface ViewerOptions {
   maxCanvasBytes: number;
   /** Cap on device pixel ratio for canvas resolution, to bound memory on high-DPI screens. */
   maxPixelRatio: number;
+  /** Called with the current page (see currentPageAt) on open and whenever it changes. */
+  onPageChange?: (pageIndex: number) => void;
 }
 
 export const defaultViewerOptions: ViewerOptions = {
@@ -59,6 +62,7 @@ export class Viewer {
   #destroyed = false;
   /** True while overscan pages wait for the visible pages to finish drawing. */
   #overscanHeld = false;
+  #currentPage = -1;
 
   /** `scroller` must be a scrollable element (overflow: auto) that the viewer may fill. */
   constructor(scroller: HTMLElement, doc: PdfDoc, options: ViewerOptions = defaultViewerOptions) {
@@ -104,6 +108,11 @@ export class Viewer {
         console.error('Could not load page sizes; keeping estimated layout', error);
       },
     );
+  }
+
+  /** The page covering the most of the reader (0-based). */
+  get currentPage(): number {
+    return Math.max(this.#currentPage, 0);
   }
 
   /** Brings page `index` (0-based, clamped to the book) to the top of the reader. */
@@ -164,6 +173,7 @@ export class Viewer {
   #update(): void {
     if (this.#destroyed) return;
     this.#viewportHeight = this.#scroller.clientHeight;
+    this.#reportCurrentPage();
     const plan = planRender(this.#layout, this.#scroller.scrollTop, this.#scroller.clientHeight, {
       overscan: this.#options.overscan,
       pixelRatio: Math.min(window.devicePixelRatio || 1, this.#options.maxPixelRatio),
@@ -192,6 +202,13 @@ export class Viewer {
       const slot = this.#slots[i];
       if (slot?.state === 'placeholder') this.#render(slot, i, plan.pixelRatio);
     }
+  }
+
+  #reportCurrentPage(): void {
+    const page = currentPageAt(this.#layout, this.#scroller.scrollTop, this.#viewportHeight);
+    if (page === null || page === this.#currentPage) return;
+    this.#currentPage = page;
+    this.#options.onPageChange?.(page);
   }
 
   #render(slot: Slot, index: number, pixelRatio: number): void {

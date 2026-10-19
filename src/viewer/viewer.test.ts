@@ -159,3 +159,59 @@ describe('Viewer.scrollToPage', () => {
     expect(element.scrollTop).toBe(24);
   });
 });
+
+describe('Viewer current page', () => {
+  let viewer: Viewer | undefined;
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    viewer?.destroy();
+    viewer = undefined;
+    document.body.replaceChildren();
+    vi.unstubAllGlobals();
+  });
+
+  it('reports the first page on open, then each new page once', () => {
+    const { doc } = fakeDoc(10);
+    const onPageChange = vi.fn();
+    viewer = new Viewer(scroller(1000, 600), doc, { ...defaultViewerOptions, onPageChange });
+    expect(onPageChange.mock.calls).toEqual([[0]]);
+    expect(viewer.currentPage).toBe(0);
+
+    viewer.scrollToPage(3);
+    viewer.scrollToPage(3);
+    expect(onPageChange.mock.calls).toEqual([[0], [3]]);
+    expect(viewer.currentPage).toBe(3);
+  });
+
+  it('follows scrolling', async () => {
+    const { doc } = fakeDoc(10);
+    const onPageChange = vi.fn();
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, { ...defaultViewerOptions, onPageChange });
+
+    // Pages are 1260 px tall, 16 px apart, 24 px padding: at 2000 page 1 fills the viewport.
+    element.scrollTop = 2000;
+    element.dispatchEvent(new Event('scroll'));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(onPageChange).toHaveBeenLastCalledWith(1);
+  });
+
+  it('stops reporting after destroy', () => {
+    const { doc } = fakeDoc(10);
+    const onPageChange = vi.fn();
+    viewer = new Viewer(scroller(1000, 600), doc, { ...defaultViewerOptions, onPageChange });
+    viewer.destroy();
+    viewer.scrollToPage(5);
+    expect(onPageChange.mock.calls).toEqual([[0]]);
+  });
+});

@@ -157,6 +157,29 @@ export function planRender(
   return { first: lo, last: hi, visibleFirst: first, visibleLast: last, pixelRatio };
 }
 
+/** The page covering the most of the viewport; ties go to the earlier page. Null if there are none. */
+export function currentPageAt(
+  layout: Layout,
+  scrollTop: number,
+  viewportHeight: number,
+): number | null {
+  const { pages } = layout;
+  if (pages.length === 0) return null;
+  const viewBottom = scrollTop + viewportHeight;
+  let best = Math.min(firstPageEndingAfter(layout, scrollTop), pages.length - 1);
+  let bestShown = -1;
+  for (let i = best; i < pages.length; i++) {
+    const page = pageAt(layout, i);
+    if (page.top >= viewBottom && bestShown >= 0) break;
+    const shown = Math.min(page.top + page.height, viewBottom) - Math.max(page.top, scrollTop);
+    if (shown > bestShown) {
+      best = i;
+      bestShown = shown;
+    }
+  }
+  return best;
+}
+
 /** The reading position at vertical offset y. Gaps belong to the page that follows them. */
 export function anchorAt(layout: Layout, y: number): Anchor | null {
   const { pages } = layout;

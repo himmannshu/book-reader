@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   anchorAt,
   computeLayout,
+  currentPageAt,
   pageAt,
   planRender,
   scrollTopFor,
@@ -159,6 +160,40 @@ describe('anchorAt / scrollTopFor', () => {
 
   it('returns null for an empty layout', () => {
     expect(anchorAt({ pages: [], totalHeight: 0 }, 0)).toBeNull();
+  });
+});
+
+describe('currentPageAt', () => {
+  // Square pages 100px tall, 10px gaps, 20px padding: page i spans [20 + 110i, 120 + 110i].
+  const square = Array.from({ length: 5 }, () => ({ width: 100, height: 100 }));
+  const layout = computeLayout(square, 140, { gap: 10, padding: 20, maxPageWidth: 100 });
+
+  it('is the first page at the top of the book', () => {
+    expect(currentPageAt(layout, 0, 150)).toBe(0);
+  });
+
+  it('is the page covering most of the viewport', () => {
+    // Viewport [100, 200]: page 0 shows 20px, page 1 shows 70px.
+    expect(currentPageAt(layout, 100, 100)).toBe(1);
+    // Viewport [60, 160]: page 0 shows 60px, page 1 shows 30px.
+    expect(currentPageAt(layout, 60, 100)).toBe(0);
+  });
+
+  it('is the page whose top is at the top of the viewport after a jump', () => {
+    expect(currentPageAt(layout, pageAt(layout, 3).top, 150)).toBe(3);
+  });
+
+  it('gives a tie to the earlier page', () => {
+    // Viewport [70, 170]: page 0 shows 50px, page 1 shows 50px.
+    expect(currentPageAt(layout, 70, 100)).toBe(0);
+  });
+
+  it('is the last page at the bottom of the book', () => {
+    expect(currentPageAt(layout, layout.totalHeight - 150, 150)).toBe(4);
+  });
+
+  it('returns null for an empty layout', () => {
+    expect(currentPageAt({ pages: [], totalHeight: 0 }, 0, 100)).toBeNull();
   });
 });
 
