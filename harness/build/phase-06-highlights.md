@@ -1,6 +1,6 @@
 # Phase 06: Highlights
 
-- Status: Not started
+- Status: In progress
 - Branch: phase-06-highlights
 - Depends on: 03
 
