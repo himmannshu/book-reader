@@ -2,8 +2,13 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'reac
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
-import { createIndexedDBBookStore } from '../storage/indexeddb-book-store';
-import { StorageError, type BookRecord, type BookStore } from '../storage/types';
+import { createIndexedDBStores } from '../storage/indexeddb-book-store';
+import {
+  StorageError,
+  type BookRecord,
+  type BookStore,
+  type BookmarkStore,
+} from '../storage/types';
 import { Library } from './Library';
 import { ReaderView } from './ReaderView';
 
@@ -12,9 +17,11 @@ interface OpenBook {
   id: number;
   doc: PdfDoc;
   fileName: string;
+  /** The stored book's id; null until a newly opened file is saved (and if saving fails). */
+  bookId: string | null;
 }
 
-const defaultStore = createIndexedDBBookStore();
+const defaultStores = createIndexedDBStores();
 
 function openMessage(error: unknown): string {
   if (error instanceof StorageError) return storageMessage(error);
@@ -54,10 +61,12 @@ function logUnexpected(error: unknown, what: string) {
 
 export function App({
   engine = pdfjsEngine,
-  store = defaultStore,
+  store = defaultStores.books,
+  bookmarks = defaultStores.bookmarks,
 }: {
   engine?: PdfEngine;
   store?: BookStore;
+  bookmarks?: BookmarkStore;
 }) {
   const [book, setBook] = useState<OpenBook | null>(null);
   const nextBookId = useRef(0);
@@ -101,8 +110,12 @@ export function App({
     };
   }, [store]);
 
-  /** Opens bytes in the engine and shows the reader. Returns false if opening failed. */
-  async function show(load: () => Promise<Uint8Array>, fileName: string): Promise<boolean> {
+  /** Opens bytes in the engine and shows the reader. Returns the opened book's id, or null. */
+  async function show(
+    load: () => Promise<Uint8Array>,
+    fileName: string,
+    bookId: string | null,
+  ): Promise<number | null> {
     markOpenStart();
     setBusy(true);
     setError(null);
@@ -111,12 +124,13 @@ export function App({
       const doc = await engine.open(await load());
       markOpened();
       nextBookId.current += 1;
-      setBook({ id: nextBookId.current, doc, fileName });
-      return true;
+      const id = nextBookId.current;
+      setBook({ id, doc, fileName, bookId });
+      return id;
     } catch (err) {
       logUnexpected(err, 'Opening the PDF failed');
       setError(openMessage(err));
-      return false;
+      return null;
     } finally {
       setBusy(false);
     }
@@ -128,12 +142,18 @@ export function App({
     input.value = ''; // Allow choosing the same file again.
     if (!file) return;
 
-    const opened = await show(async () => new Uint8Array(await file.arrayBuffer()), file.name);
-    if (!opened) return; // Never keep a file that isn't a readable PDF.
+    const opened = await show(
+      async () => new Uint8Array(await file.arrayBuffer()),
+      file.name,
+      null,
+    );
+    if (opened === null) return; // Never keep a file that isn't a readable PDF.
 
     // Save in the background; reading never waits for it.
     try {
-      await store.add(file, file.name);
+      const record = await store.add(file, file.name);
+      // Bookmarks need the stored id. Skip it if another book was opened meanwhile.
+      setBook((current) => (current?.id === opened ? { ...current, bookId: record.id } : current));
       setNotice('Saved on this device.');
       await refreshBooks();
     } catch (err) {
@@ -143,8 +163,8 @@ export function App({
   }
 
   async function onOpenFromLibrary(record: BookRecord) {
-    const opened = await show(() => store.getBytes(record.id), record.fileName);
-    if (!opened) return;
+    const opened = await show(() => store.getBytes(record.id), record.fileName, record.id);
+    if (opened === null) return;
     try {
       await store.markOpened(record.id);
       await refreshBooks();
@@ -208,7 +228,7 @@ export function App({
         </p>
       )}
       {book ? (
-        <ReaderView key={book.id} doc={book.doc} />
+        <ReaderView key={book.id} doc={book.doc} bookId={book.bookId} bookmarks={bookmarks} />
       ) : (
         <Library
           books={books}

@@ -1,4 +1,6 @@
-// The storage interface for books. UI and viewer code depend only on these types; the
+import type { Bookmark } from '../core/bookmarks';
+
+// The storage interface for books and their bookmarks. UI and viewer code depend only on these types; the
 // IndexedDB adapter (and later the cloud adapter, phase 09) sits behind them.
 
 export interface BookRecord {
@@ -20,7 +22,15 @@ export interface BookStore {
   /** The book's bytes, fresh for each call (PDF.js may take ownership of the buffer). */
   getBytes(id: string): Promise<Uint8Array>;
   markOpened(id: string): Promise<void>;
-  /** Deletes the book and its file. */
+  /** Deletes the book, its file and its bookmarks. */
+  remove(id: string): Promise<void>;
+}
+
+export interface BookmarkStore {
+  /** The book's bookmarks, in page order. */
+  list(bookId: string): Promise<Bookmark[]>;
+  /** Saves a bookmark, replacing one with the same id. Fails with not-found if the book isn't stored. */
+  put(bookmark: Bookmark): Promise<void>;
   remove(id: string): Promise<void>;
 }
 

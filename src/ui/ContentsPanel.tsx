@@ -1,5 +1,5 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
 import type { OutlineItem } from '../engine/types';
+import { usePanelKeys } from './usePanelKeys';
 
 export type OutlineState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; items: OutlineItem[] };
@@ -23,7 +23,7 @@ function OutlineList({
         <li key={index}>
           <button
             type="button"
-            className="contents-entry"
+            className="panel-entry"
             disabled={item.pageIndex === null}
             title={item.pageIndex === null ? 'This entry does not point to a page' : undefined}
             onClick={() => {
@@ -41,55 +41,24 @@ function OutlineList({
 
 /** The book's table of contents. Focus moves to the first entry on open. */
 export function ContentsPanel({ id, outline, onChoose }: ContentsPanelProps) {
-  const panelRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (outline.status !== 'ready') return;
-    panelRef.current?.querySelector<HTMLButtonElement>('.contents-entry:not(:disabled)')?.focus();
-  }, [outline.status]);
-
-  // Arrow keys, Home and End move between entries. Tab alone isn't enough: Safari skips buttons
-  // when tabbing unless the reader has changed a system setting. (Escape is handled by ReaderView,
-  // so it also works when no entry has focus.)
-  function onKeyDown(event: KeyboardEvent) {
-    const entries = [
-      ...(panelRef.current?.querySelectorAll<HTMLButtonElement>('.contents-entry:not(:disabled)') ??
-        []),
-    ];
-    if (entries.length === 0) return;
-    const current = entries.indexOf(document.activeElement as HTMLButtonElement);
-    const last = entries.length - 1;
-    const next =
-      event.key === 'ArrowDown'
-        ? Math.min(current + 1, last)
-        : event.key === 'ArrowUp'
-          ? Math.max(current - 1, 0)
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? last
-              : null;
-    if (next === null) return;
-    event.preventDefault();
-    entries[next]?.focus();
-  }
+  const { ref, onKeyDown } = usePanelKeys<HTMLElement>(outline.status === 'ready');
 
   return (
     <nav
       id={id}
-      ref={panelRef}
-      className="contents-panel"
+      ref={ref}
+      className="side-panel"
       aria-label="Table of contents"
       onKeyDown={onKeyDown}
     >
       <h2>Contents</h2>
-      {outline.status === 'loading' && <p className="contents-note">Loading contents…</p>}
+      {outline.status === 'loading' && <p className="panel-note">Loading contents…</p>}
       {outline.status === 'failed' && (
-        <p className="contents-note">This book's table of contents couldn't be read.</p>
+        <p className="panel-note">This book's table of contents couldn't be read.</p>
       )}
       {outline.status === 'ready' &&
         (outline.items.length === 0 ? (
-          <p className="contents-note">This book has no table of contents.</p>
+          <p className="panel-note">This book has no table of contents.</p>
         ) : (
           <OutlineList items={outline.items} onChoose={onChoose} />
         ))}

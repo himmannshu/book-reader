@@ -1,15 +1,18 @@
-// IndexedDB adapter for the book store (D5a in harness/context/architecture-decisions.md).
+// IndexedDB adapter for the book and bookmark stores (D5a in harness/context/architecture-decisions.md).
 // Metadata and files live in separate object stores, so listing books never loads the PDFs.
 // Files are stored as ArrayBuffers, not Blobs: Safari's private browsing (and Playwright's WebKit)
 // refuses Blobs in IndexedDB but accepts ArrayBuffers, at similar speed.
+import { sortByPage, type Bookmark } from '../core/bookmarks';
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
-import { StorageError, type BookRecord, type BookStore } from './types';
+import { StorageError, type BookRecord, type BookStore, type BookmarkStore } from './types';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
+const BOOKMARKS = 'bookmarks';
+const BY_BOOK = 'bookId';
 
 export interface IndexedDBBookStoreOptions {
   /** Defaults to the browser's `indexedDB`. Tests pass a fake. */
@@ -57,6 +60,9 @@ function upgrade(db: IDBDatabase, oldVersion: number): void {
     db.createObjectStore(BOOKS, { keyPath: 'id' });
     db.createObjectStore(FILES);
   }
+  if (oldVersion < 2) {
+    db.createObjectStore(BOOKMARKS, { keyPath: 'id' }).createIndex(BY_BOOK, 'bookId');
+  }
 }
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -68,7 +74,13 @@ function defaultPersistence(): Promise<boolean> {
   return navigator.storage?.persist?.() ?? Promise.resolve(false);
 }
 
-export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}): BookStore {
+export interface IndexedDBStores {
+  books: BookStore;
+  bookmarks: BookmarkStore;
+}
+
+/** Both stores share one database connection. */
+export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): IndexedDBStores {
   const now = options.now ?? Date.now;
   const requestPersistence = options.requestPersistence ?? defaultPersistence;
   let opening: Promise<IDBDatabase> | undefined;
@@ -109,7 +121,7 @@ export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}
     }
   }
 
-  return {
+  const books: BookStore = {
     add: (file, fileName) =>
       guard(async () => {
         const bytes = await file.arrayBuffer();
@@ -173,10 +185,47 @@ export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}
     remove: (id) =>
       guard(async () => {
         const database = await db();
-        const tx = database.transaction([BOOKS, FILES], 'readwrite');
+        const tx = database.transaction([BOOKS, FILES, BOOKMARKS], 'readwrite');
         tx.objectStore(BOOKS).delete(id);
         tx.objectStore(FILES).delete(id);
+        const marks = tx.objectStore(BOOKMARKS);
+        const keys = await request(marks.index(BY_BOOK).getAllKeys(id));
+        keys.forEach((key) => marks.delete(key));
         await done(tx);
       }),
   };
+
+  const bookmarks: BookmarkStore = {
+    list: (bookId) =>
+      guard(async () => {
+        const database = await db();
+        const all = (await request(
+          database.transaction(BOOKMARKS).objectStore(BOOKMARKS).index(BY_BOOK).getAll(bookId),
+        )) as Bookmark[];
+        return sortByPage(all);
+      }),
+
+    put: (bookmark) =>
+      guard(async () => {
+        const database = await db();
+        const tx = database.transaction([BOOKS, BOOKMARKS], 'readwrite');
+        const book = await request(tx.objectStore(BOOKS).getKey(bookmark.bookId));
+        if (book === undefined) {
+          tx.abort();
+          throw new StorageError('not-found', `No book ${bookmark.bookId}`);
+        }
+        tx.objectStore(BOOKMARKS).put(bookmark);
+        await done(tx);
+      }),
+
+    remove: (id) =>
+      guard(async () => {
+        const database = await db();
+        const tx = database.transaction(BOOKMARKS, 'readwrite');
+        tx.objectStore(BOOKMARKS).delete(id);
+        await done(tx);
+      }),
+  };
+
+  return { books, bookmarks };
 }

@@ -1,19 +1,15 @@
 // @vitest-environment node
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
-import {
-  DB_NAME,
-  DB_VERSION,
-  createIndexedDBBookStore,
-  toStorageError,
-} from './indexeddb-book-store';
+import type { Bookmark } from '../core/bookmarks';
+import { DB_NAME, DB_VERSION, createIndexedDBStores, toStorageError } from './indexeddb-book-store';
 import { StorageError } from './types';
 
 function setup() {
   const factory = new IDBFactory();
   let clock = 1_000;
   let persistCalls = 0;
-  const store = createIndexedDBBookStore({
+  const stores = createIndexedDBStores({
     factory,
     now: () => ++clock,
     requestPersistence: async () => {
@@ -21,7 +17,12 @@ function setup() {
       return true;
     },
   });
-  return { store, factory, persistCalls: () => persistCalls };
+  return {
+    store: stores.books,
+    bookmarks: stores.bookmarks,
+    factory,
+    persistCalls: () => persistCalls,
+  };
 }
 
 const pdf = (text: string) => new Blob([`%PDF-1.7 ${text}`], { type: 'application/pdf' });
@@ -84,18 +85,105 @@ describe('IndexedDB book store', () => {
     expect(persistCalls()).toBe(1);
   });
 
-  it('creates schema version 1 with separate metadata and file stores', async () => {
+  it('creates schema version 2 with separate metadata, file and bookmark stores', async () => {
     const { store, factory } = setup();
     await store.list();
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = factory.open(DB_NAME);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const db = await openRaw(factory);
     expect(db.version).toBe(DB_VERSION);
-    expect(DB_VERSION).toBe(1);
-    expect([...db.objectStoreNames].sort()).toEqual(['bookFiles', 'books']);
+    expect(DB_VERSION).toBe(2);
+    expect([...db.objectStoreNames].sort()).toEqual(['bookFiles', 'bookmarks', 'books']);
     db.close();
+  });
+
+  it('keeps books saved under schema version 1 when upgrading', async () => {
+    const factory = new IDBFactory();
+    const old = await openRaw(factory, 1, (db) => {
+      db.createObjectStore('books', { keyPath: 'id' });
+      db.createObjectStore('bookFiles');
+    });
+    const record = {
+      id: 'v1',
+      fileName: 'old.pdf',
+      title: 'old',
+      byteSize: 4,
+      addedAt: 1,
+      lastOpenedAt: 1,
+    };
+    const tx = old.transaction(['books', 'bookFiles'], 'readwrite');
+    tx.objectStore('books').put(record);
+    tx.objectStore('bookFiles').put(new TextEncoder().encode('%PDF').buffer, 'v1');
+    await new Promise((resolve) => (tx.oncomplete = resolve));
+    old.close();
+
+    const { books, bookmarks } = createIndexedDBStores({ factory });
+    expect(await books.list()).toEqual([record]);
+    expect(new TextDecoder().decode(await books.getBytes('v1'))).toBe('%PDF');
+    await bookmarks.put(mark('v1', 2));
+    expect(await bookmarks.list('v1')).toEqual([mark('v1', 2)]);
+  });
+});
+
+function openRaw(
+  factory: IDBFactory,
+  version?: number,
+  upgrade?: (db: IDBDatabase) => void,
+): Promise<IDBDatabase> {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = factory.open(DB_NAME, version);
+    if (upgrade) request.onupgradeneeded = () => upgrade(request.result);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function mark(bookId: string, pageIndex: number, label = `Page ${pageIndex + 1}`): Bookmark {
+  return { id: `${bookId}:${pageIndex}`, bookId, pageIndex, label, createdAt: 5 };
+}
+
+describe('IndexedDB bookmark store', () => {
+  it("lists a book's bookmarks in page order, and only that book's", async () => {
+    const { store, bookmarks } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    const b = await store.add(pdf('b'), 'b.pdf');
+    await bookmarks.put(mark(a.id, 9));
+    await bookmarks.put(mark(a.id, 2));
+    await bookmarks.put(mark(b.id, 4));
+    expect((await bookmarks.list(a.id)).map((m) => m.pageIndex)).toEqual([2, 9]);
+    expect(await bookmarks.list(b.id)).toEqual([mark(b.id, 4)]);
+  });
+
+  it('keeps one bookmark per id', async () => {
+    const { store, bookmarks } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    await bookmarks.put(mark(a.id, 3, 'first'));
+    await bookmarks.put(mark(a.id, 3, 'second'));
+    expect(await bookmarks.list(a.id)).toEqual([mark(a.id, 3, 'second')]);
+  });
+
+  it('removes a bookmark', async () => {
+    const { store, bookmarks } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    await bookmarks.put(mark(a.id, 3));
+    await bookmarks.put(mark(a.id, 4));
+    await bookmarks.remove(mark(a.id, 3).id);
+    expect(await bookmarks.list(a.id)).toEqual([mark(a.id, 4)]);
+  });
+
+  it("removes a book's bookmarks together with the book", async () => {
+    const { store, bookmarks } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    const b = await store.add(pdf('b'), 'b.pdf');
+    await bookmarks.put(mark(a.id, 1));
+    await bookmarks.put(mark(b.id, 1));
+    await store.remove(a.id);
+    expect(await bookmarks.list(a.id)).toEqual([]);
+    expect(await bookmarks.list(b.id)).toEqual([mark(b.id, 1)]);
+  });
+
+  it('refuses a bookmark for a book that is not stored', async () => {
+    const { bookmarks } = setup();
+    await expect(bookmarks.put(mark('nope', 0))).rejects.toMatchObject({ kind: 'not-found' });
+    expect(await bookmarks.list('nope')).toEqual([]);
   });
 });
 
