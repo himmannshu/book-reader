@@ -1,17 +1,28 @@
-// IndexedDB adapter for the book and bookmark stores (D5a in harness/context/architecture-decisions.md).
+// IndexedDB adapter for the book, bookmark and highlight stores (D5a in architecture-decisions.md).
 // Metadata and files live in separate object stores, so listing books never loads the PDFs.
 // Files are stored as ArrayBuffers, not Blobs: Safari's private browsing (and Playwright's WebKit)
 // refuses Blobs in IndexedDB but accepts ArrayBuffers, at similar speed.
 import { sortByPage, type Bookmark } from '../core/bookmarks';
+import { sortByPosition, type Highlight } from '../core/highlights';
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
-import { StorageError, type BookRecord, type BookStore, type BookmarkStore } from './types';
+import {
+  StorageError,
+  type BookRecord,
+  type BookStore,
+  type BookmarkStore,
+  type HighlightStore,
+  type PerBookStore,
+} from './types';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
 const BOOKMARKS = 'bookmarks';
+const HIGHLIGHTS = 'highlights';
+/** Stores of items that belong to a book; each has an index on `bookId`. */
+const PER_BOOK = [BOOKMARKS, HIGHLIGHTS];
 const BY_BOOK = 'bookId';
 
 export interface IndexedDBBookStoreOptions {
@@ -63,6 +74,9 @@ function upgrade(db: IDBDatabase, oldVersion: number): void {
   if (oldVersion < 2) {
     db.createObjectStore(BOOKMARKS, { keyPath: 'id' }).createIndex(BY_BOOK, 'bookId');
   }
+  if (oldVersion < 3) {
+    db.createObjectStore(HIGHLIGHTS, { keyPath: 'id' }).createIndex(BY_BOOK, 'bookId');
+  }
 }
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -77,6 +91,7 @@ function defaultPersistence(): Promise<boolean> {
 export interface IndexedDBStores {
   books: BookStore;
   bookmarks: BookmarkStore;
+  highlights: HighlightStore;
 }
 
 /** Both stores share one database connection. */
@@ -185,47 +200,59 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
     remove: (id) =>
       guard(async () => {
         const database = await db();
-        const tx = database.transaction([BOOKS, FILES, BOOKMARKS], 'readwrite');
+        const tx = database.transaction([BOOKS, FILES, ...PER_BOOK], 'readwrite');
         tx.objectStore(BOOKS).delete(id);
         tx.objectStore(FILES).delete(id);
-        const marks = tx.objectStore(BOOKMARKS);
-        const keys = await request(marks.index(BY_BOOK).getAllKeys(id));
-        keys.forEach((key) => marks.delete(key));
-        await done(tx);
-      }),
-  };
-
-  const bookmarks: BookmarkStore = {
-    list: (bookId) =>
-      guard(async () => {
-        const database = await db();
-        const all = (await request(
-          database.transaction(BOOKMARKS).objectStore(BOOKMARKS).index(BY_BOOK).getAll(bookId),
-        )) as Bookmark[];
-        return sortByPage(all);
-      }),
-
-    put: (bookmark) =>
-      guard(async () => {
-        const database = await db();
-        const tx = database.transaction([BOOKS, BOOKMARKS], 'readwrite');
-        const book = await request(tx.objectStore(BOOKS).getKey(bookmark.bookId));
-        if (book === undefined) {
-          tx.abort();
-          throw new StorageError('not-found', `No book ${bookmark.bookId}`);
+        for (const name of PER_BOOK) {
+          const items = tx.objectStore(name);
+          const keys = await request(items.index(BY_BOOK).getAllKeys(id));
+          keys.forEach((key) => items.delete(key));
         }
-        tx.objectStore(BOOKMARKS).put(bookmark);
-        await done(tx);
-      }),
-
-    remove: (id) =>
-      guard(async () => {
-        const database = await db();
-        const tx = database.transaction(BOOKMARKS, 'readwrite');
-        tx.objectStore(BOOKMARKS).delete(id);
         await done(tx);
       }),
   };
 
-  return { books, bookmarks };
+  /** list/put/remove for one per-book object store, in reading order. */
+  function perBook<T extends { id: string; bookId: string }>(
+    name: string,
+    order: (items: T[]) => T[],
+  ): PerBookStore<T> {
+    return {
+      list: (bookId) =>
+        guard(async () => {
+          const database = await db();
+          const all = (await request(
+            database.transaction(name).objectStore(name).index(BY_BOOK).getAll(bookId),
+          )) as T[];
+          return order(all);
+        }),
+
+      put: (item) =>
+        guard(async () => {
+          const database = await db();
+          const tx = database.transaction([BOOKS, name], 'readwrite');
+          const book = await request(tx.objectStore(BOOKS).getKey(item.bookId));
+          if (book === undefined) {
+            tx.abort();
+            throw new StorageError('not-found', `No book ${item.bookId}`);
+          }
+          tx.objectStore(name).put(item);
+          await done(tx);
+        }),
+
+      remove: (id) =>
+        guard(async () => {
+          const database = await db();
+          const tx = database.transaction(name, 'readwrite');
+          tx.objectStore(name).delete(id);
+          await done(tx);
+        }),
+    };
+  }
+
+  return {
+    books,
+    bookmarks: perBook<Bookmark>(BOOKMARKS, sortByPage),
+    highlights: perBook<Highlight>(HIGHLIGHTS, sortByPosition),
+  };
 }

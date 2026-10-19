@@ -1,6 +1,7 @@
 import type { Bookmark } from '../core/bookmarks';
+import type { Highlight } from '../core/highlights';
 
-// The storage interface for books and their bookmarks. UI and viewer code depend only on these types; the
+// The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
 // IndexedDB adapter (and later the cloud adapter, phase 09) sits behind them.
 
 export interface BookRecord {
@@ -22,17 +23,21 @@ export interface BookStore {
   /** The book's bytes, fresh for each call (PDF.js may take ownership of the buffer). */
   getBytes(id: string): Promise<Uint8Array>;
   markOpened(id: string): Promise<void>;
-  /** Deletes the book, its file and its bookmarks. */
+  /** Deletes the book, its file, and its bookmarks and highlights. */
   remove(id: string): Promise<void>;
 }
 
-export interface BookmarkStore {
-  /** The book's bookmarks, in page order. */
-  list(bookId: string): Promise<Bookmark[]>;
-  /** Saves a bookmark, replacing one with the same id. Fails with not-found if the book isn't stored. */
-  put(bookmark: Bookmark): Promise<void>;
+/** Items that belong to one stored book, such as its bookmarks or highlights. */
+export interface PerBookStore<T extends { id: string; bookId: string }> {
+  /** The book's items, in reading order. */
+  list(bookId: string): Promise<T[]>;
+  /** Saves an item, replacing one with the same id. Fails with not-found if the book isn't stored. */
+  put(item: T): Promise<void>;
   remove(id: string): Promise<void>;
 }
+
+export type BookmarkStore = PerBookStore<Bookmark>;
+export type HighlightStore = PerBookStore<Highlight>;
 
 export type StorageErrorKind = 'quota' | 'unavailable' | 'not-found' | 'unknown';
 
