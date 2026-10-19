@@ -61,8 +61,8 @@
       "id": "F-008",
       "phase": "07",
       "description": "Notes can be attached to a highlight or a page, listed in a panel, and survive a reload",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 scripts/verify.sh PASS at 117ed45: 137 unit, 166 browser, 8 perf. e2e/notes.spec.ts covers both targets, edits/reload, one note per target, Unicode, confirmed deletion/cascades/rollback, isolation, draft guards, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad tap workflows (36 cases across Chromium/WebKit). Schema-v3 migration and storage/core units preserve existing annotations/bytes. Budgets unchanged; WebKit p95 35 ms. Local feature verified; Phase 07 remains In progress pending separately authorized CI and the real-book/device user check. See build-log contract evidence."
     },
     {
       "id": "F-009",

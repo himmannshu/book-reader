@@ -928,3 +928,37 @@ Template:
   pass (2/2); save through the repositioned Add note also succeeds.
 - Full verification will be rerun on the correction. Previous full result is retained above, not
   treated as evidence for code that changed afterward. No budgets changed.
+
+### 2026-10-19 | Phase 07 | Codex | Local implementation ready; external gates pending
+- Final `scripts/verify.sh` PASS at 117ed45: lint, format, typecheck, 137 unit, 166 browser and
+  8 performance checks. Chromium firstPage 201 ms, jump 28, p95 16.8, blank frames 0%; WebKit
+  firstPage 162 ms, jump 54, p95 35, blank frames 1%; both maxCanvas 67.1 MB. Budgets unchanged.
+- The production app was exercised through the picker, reader, panels and Library in both engines;
+  36 Notes browser cases include iPhone/iPad contexts using actual tap events. Touch editor
+  screenshots inspected earlier; no claim of a physical-device check. No independent review yet.
+- F-008 marked locally passing for its observed feature behavior. Phase 07/PLANS stay In progress:
+  no Phase 07 CI run, push, deployment or main merge; the user's Phase 06 report is not reused for
+  Phase 07. No next phase started. App code is committed; handoff records the remaining gates.
+
+Contract evidence from this final canonical run (contract unchanged after approval):
+
+| Item | Observed evidence |
+|---|---|
+| 1 | Notes e2e existing-highlight and multiline/cross-page cases save attached text, page and quote; touch cases tap Add note |
+| 2 | Vector-only fixture accepts a note with zero selectable spans; non-first-page case compares page-note target with Bookmark current-page index 2 |
+| 3 | Same-target Add reopens the editor; independent highlights keep separate notes; hook pending-write test observes one put for duplicate Save |
+| 4 | Browser multiline/Unicode and blank-edit cases; core/store validation rejects whitespace without changing saved content |
+| 5 | New-draft Cancel leaves no note; changed existing note Cancel preserves storage; Save updates row/text |
+| 6 | Page/passage saves and edits survive reload/reopening (including touch workflows); two-book isolation case keeps the books separate |
+| 7 | Browser empty/failure/retry states and page/passage ordering; ReaderView loading-reason unit; core sorting across pages and PDF positions |
+| 8 | Non-first-page jump plus first-box jump near page foot across a page break; wide reader focus and narrow touch panel closure |
+| 9 | Cancel/confirm note-only deletion, persisted absence after reopening, highlight still present; touch deletes both note types |
+| 10 | Explicit Remove both/Cancel; injected notes-delete failure keeps both records, retry removes both while page note stays; storage atomic rollback unit |
+| 11 | Two-target book removal deletes notes/highlights, preserves other book, and reimport starts empty; storage cascade unit |
+| 12 | Dirty draft retained on cancelling close/switch/Escape/other-note edit or jump/Library/file open; confirmed discard opens the chosen file; hook confirms guarded continuation |
+| 13 | Unsaved/failed-read browser cases plus pending-read UI/hook units disable changes visibly; save/delete failures preserve text/records and permit retry |
+| 14 | Populated real-v3 upgrade unit preserves metadata, PDF bytes, bookmarks and highlights; stored target-key assertions contain only page/highlight associations; core/storage validation/order/cascade units |
+| 15 | Keyboard Enter inserts newline, Tab reaches Save, dialog cancel/confirm and deletion restore usable focus; iPhone/iPad tap add/edit/reopen/jump/delete both targets in both engines |
+| 16 | All existing reading/bookmark/highlight browser regressions pass; 8 perf checks pass unchanged |
+| 17 | Local PASS above; CI NOT RUN — requires separately authorized push |
+| 18 | NOT OBSERVED — ask user to create/edit/reopen/jump/delete both note types in a real book, on iPhone/iPad if possible |

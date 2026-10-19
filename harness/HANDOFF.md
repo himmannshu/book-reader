@@ -8,8 +8,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Last agent: Codex, 2026-10-19
 - Current session: Phase 07 implementation, following prompt 02. User approved the plan, contract
   and all interaction defaults. Implementation/normal local commits are authorized; no push/deploy.
-- Phase: 06 (highlights) Complete. All 14 contract items have observed evidence in the build log.
-  Local `scripts/verify.sh` PASS (122 unit, 130 e2e, 8 perf; WebKit p95 37 ms); F-007 passing.
+- Phase: 07 (notes) In progress. Local implementation ready at 117ed45. Final `scripts/verify.sh`
+  PASS: 137 unit, 166 browser, 8 perf; WebKit p95 35 ms; unchanged budgets. F-008 locally passing.
+  Contract 17 needs CI; contract 18 needs the user's Phase 07 real-book/device check.
+- Phase 06 Complete (all 14 items observed), F-007 passing.
   CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897.
   User confirmed the real-book/device check works as expected (contract 14).
 - Branch: phase-07-notes (not pushed), based on completed phase 06 at 8372a99.
@@ -20,36 +22,26 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Recorded accepted choices and reasoning as D7/D8 in architecture-decisions.md: keep the established
   direction unless evidence shows a major improvement; support notes on highlights and whole pages.
-- Preflight `scripts/verify.sh` at 8372a99 PASS (122 unit, 130 browser, 8 perf).
 - Contract approved (Amendment 01), phase/roadmap In progress. Core/schema v4 implemented with
   transactional note cascades and a populated v3 migration test (3381801).
-- Notes hook/editor/panel, App navigation guard and passage jumps implemented. All 137 unit tests
-  and 34 focused notes browser checks pass. Full verify at e4a8e58 PASS: 137 unit, 164 browser,
-  8 perf; WebKit p95 31 ms, budgets unchanged. Touch editor screenshots inspected.
+- Notes hook/editor/panel, App navigation guard and passage jumps implemented (52a80c0).
+- Comprehensive lifecycle/error/keyboard/touch checks and focus fixes (e4a8e58); floating-menu
+  lower-edge overflow reproduced/fixed (117ed45). Final full verify PASS (137/166/8).
 - Browser checks exposed Safari editor/confirmation Tab skips and focus lost after deletion; fixed.
   Covers iPhone/iPad taps, cross-page/foot-of-page jumps, isolation, cascades, failure/retry and drafts.
-- Final menu-boundary check caught a lower-edge overflow in both engines; measured clamp fixes it
-  (red 2/2 → green 2/2). Full verify must be rerun on this correction.
-- User confirmed the real-book/device check (9463bfc) and authorized pushing/running CI.
-- First CI run failed one Chromium width check: fixture metadata used kerned widths for plain Tj
-  text. Fixed the generator and regenerated ten manifest widths (7ac8b1e); PDF bytes unchanged.
-  Assertion tolerance, runtime code and speed budgets unchanged. Red check → green.
-- Local verify of that correction initially hit WebKit p95 51 ms, then full rerun PASS at 37 ms;
-  both outcomes and host load are recorded. CI run 39320769897 PASS: 122 unit, 130 browser, 8 perf.
-  Linux WebKit perf remains report-only under the existing policy; local budgets are enforced for both.
-- Marked phase 06 Complete in the phase file and roadmap; updated F-007 evidence and review appendix.
-  Historical evaluator FAIL is preserved; no new independent evaluator verdict. No merge or deployment.
+- Touch editor screenshots inspected; deterministic vector-only fixture added. Detailed contract
+  evidence in build-log. CI/user report from Phase 06 is NOT counted for Phase 07.
 
 ## In flight
 
-- Phase 07 implementation is not fully verified yet. Approved defaults:
-  one editable note per highlight/page, explicit Save/Cancel in Notes, guarded draft navigation, and
-  confirmation before removing a highlight together with its note. Baseline verify PASS (122/130/8).
+- No half-edited app code. Local implementation is committed/verified; CI and user check remain.
+- No independent Phase 07 review yet. A different agent can use prompt 03 after prompt 00.
 
 ## Next action
 
-1. Rerun full scripts/verify.sh on the menu correction, then record contract evidence and hand off.
-   No push/deploy/main merge; CI and real-book/device check outstanding.
+1. Ask permission to push phase-07-notes and run CI; observe/log its result. Ask the user to create,
+   edit, reopen, jump and delete both note types in a real book (iPhone/iPad if possible).
+   Keep Phase 07 In progress until both gates are observed. No deployment/main merge authorized.
 
 ## Decisions worth remembering
 
@@ -78,7 +70,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   - N1 Highlight before highlights load silently does nothing; N2 WebKit has thin performance headroom
     (budget 40 ms) and the benchmark never measures text layers; N3 unsaved note touches the edge at 320 px.
     N4 duplicate import cleaned up with B2.
-- Open, non-blocking review findings (user to decide):
+- Historical non-blocking review findings (not all rechecked in Phase 07; user to decide):
   - Phase 05 minor: disabled toggle's reason only a tooltip (iOS can't show it); unused Viewer.currentPage;
     toggle ~2 px past the edge at 320 px.
   - Phase 03 F1 (medium, iPhone): book title shrinks to 0 px while confirming removal at 390 px.
@@ -90,25 +82,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   - Phase 02 nits: perf-marks uses `performance` in src/core; page:rendered marks accumulate; stale e2e name.
   - Phase 01 B3 (failed page draw shows a white box), B4 (lint misses dynamic import and .js).
   - Header notice causes 5 px sideways scroll at 320 px.
-- WebKit has thin local perf headroom (latest pass 37 ms against 40; one 51 ms failure under load
-  this session). An occasional ~2.4 s WebKit scroll freeze is pre-existing (phase-03 context file).
+- WebKit has limited local perf headroom (latest pass 35 ms against 40; Phase 06 had a 51 ms
+  failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:29 EDT
+Snapshot 2026-10-19 17:37 EDT
 - Branch: phase-07-notes
-- HEAD: e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
-- Uncommitted files: 5
-- Last verify: PASS at 2026-10-19 17:27 EDT (commit e4a8e58)
+- HEAD: 117ed45 phase 07: keep highlight note actions inside reader bounds
+- Uncommitted files: 4
+- Last verify: PASS at 2026-10-19 17:31 EDT (commit 117ed45)
 - Recent commits:
+    117ed45 phase 07: keep highlight note actions inside reader bounds
     e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
     52a80c0 phase 07: add notes editor and guarded reader navigation
     3381801 wip: phase 07 note core and transactional storage; UI checks red
     b1ceea0 phase 07: record approved notes contract and implementation context
-    8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
 - Changed files:
-     M e2e/notes.spec.ts
      M harness/HANDOFF.md
      M harness/build-log.md
-     M src/ui/SelectionActions.tsx
-     M src/ui/app.css
+     M harness/build/phase-07-notes.md
+     M harness/features.json
 <!-- AUTO:END -->

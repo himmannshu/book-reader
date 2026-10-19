@@ -68,3 +68,10 @@ Mirror these in harness/contracts/phase-07-contract.md as checkable items.
 
 Stop when every contract item has observed evidence in harness/build-log.md.
 Do not start the next phase.
+
+## Observed implementation status (2026-10-19)
+
+- Local implementation ready at 117ed45; `scripts/verify.sh` PASS (137 unit, 166 browser, 8 perf).
+  F-008 locally passing. Detailed contract-item evidence is in harness/build-log.md.
+- Contract 17 remains open for CI (push not authorized); contract 18 awaits the user's Phase 07
+  real-book/device check. Phase remains In progress, not Complete. No independent review yet.
