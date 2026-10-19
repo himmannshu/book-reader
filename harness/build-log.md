@@ -400,3 +400,46 @@ Template:
 - All contract items 1–12 now have evidence. Phase 03 status → Complete.
 - Limitations: no independent review of phase 03 yet. Branch pushed, not merged. The local branch
   perf-first-page-investigation (first-page fix, 47cceaa) is not merged either.
+
+### 2026-10-19 00:40 EDT | After phase 02 | Claude Code (Opus 5.5) | First-page investigation on a real book; viewer fix
+- Branch perf-first-page-investigation (from phase-02-performance-baseline). Baseline `scripts/verify.sh` → PASS
+  (heavy firstPage chromium 142, webkit 134).
+- Reproduced on DDIA (24 MB, 613 pages, read in place, not copied): `PERF_BOOK=… playwright -g "first page"` →
+  chromium 469 [468,469,469], webkit 393 [408,393,382].
+- In-app marks (dev build, 3 runs): DDIA chromium opened@154–200, p1@522–600, p0@540–621; heavy opened@183–199,
+  p0@221–242. Opening is not the difference. Page 0 finishes after its overscan neighbour.
+- Ad-hoc PDF.js script (scratchpad, not committed), chromium/webkit medians: arrayBuffer 10/10, getDocument 144/162,
+  page 1 alone 23–31/35–41, page 2 alone 311/252, page 2 operator list only 308/253 (worker-bound; DPR 1: 333/263),
+  pages 1+2 together → page 1 at 382/312, plus loadPageSizes → 403/322. Page 2 = only CMYK+ICC JPEG in the book
+  (`pdfimages -list`). Cover's 6841×5203 CCITT masks are not the cost.
+- Fix (test-first): viewer starts overscan pages after the visible ones finish. src/viewer/viewer.test.ts: 2 of 3
+  new tests failed before the change, all pass after; `vitest run` 28 passed.
+- After (production `npm run test:perf`): DDIA chromium firstPage 133 [133,135,123], webkit 129 [130,129,120];
+  heavy chromium 142, webkit 123.
+- Scroll check: first interleaved A/B (6 pairs, hot machine) looked worse for the fix (webkit p95 before 32–36,
+  after 27–57). Changed the resume call to fire only while overscan is held. Clean interleaved A/B, 8 pairs,
+  alternating order: before 28,32,33×6 / after 31,33×7 (medians 33 = 33). Chromium p95 16.7–16.8 throughout.
+- `scripts/verify.sh` after fix → PASS (unit 28, browser 26, perf 8; heavy webkit p95 29).
+- Findings: harness/context/first-page-investigation-context.md.
+
+### 2026-10-19 00:50 EDT | After phase 02 | Claude Code (Opus 5.5) | First-page fix: quiet re-measurement
+- The phase-03 session reported its perf runs overlapped mine (about 23:54–00:40 EDT). It held off while I
+  re-ran from 00:41. Each run's exit code was checked, and so was the result JSON's mtime against the run's start
+  (earlier A/B loops read the JSON without checking, so a failed run could have repeated a stale value).
+- DDIA first page (fix): chromium 136 [133,136,138], webkit 142 [142,164,124].
+- WebKit steady p95, 8 interleaved pairs (alternating order): before 30,33,31,29,32,28,44,31 (median 31; one
+  over-budget rc=1); fixed 40,51,29,34,29,31,37,34 (median 34; one over-budget rc=1).
+- Scratch settle spec (scratchpad; temporary config removed), 6 pairs: scroll right after the jump before
+  37,29,29,31,37,33 / fixed 37,36,30,32,33,33; after a 1 s pause before 32,33,28,30,30,33 / fixed 34,31,32,30,31,32.
+  Reading: no clear regression; ≤1–3 ms at most, right after a jump. WebKit p95 can exceed 40 with either version.
+- `scripts/verify.sh` → PASS (unit 28, browser 26, perf 8; heavy chromium firstPage 144, webkit 125, webkit p95 30).
+
+### 2026-10-19 01:03 EDT | After phase 03 | Claude Code (Opus 5.5) | Merged phase 03 and the first-page fix into main
+- User asked: merge phase-03 into main, then perf-first-page-investigation on top, rerun verify, push main.
+- main fast-forwarded to refs/heads/phase-03-local-book-persistence (7837cee). Then merged
+  refs/heads/perf-first-page-investigation (47cceaa) with a merge commit. Code merged cleanly (src/viewer/viewer.ts,
+  new src/viewer/viewer.test.ts); conflicts only in harness/build-log.md (kept both sides' entries) and
+  harness/HANDOFF.md (kept the phase 03 version, recorded the merged fix).
+- Verification on the merged tree: `scripts/verify.sh` → PASS: unit 49 (3 new viewer drawing-order tests),
+  browser 36, perf 8. Perf: chromium first 175, jump 18, p95 16.8; webkit first 175, jump 56 (was 89),
+  p95 36 (samples [36, 2419, 33]: the known pre-existing WebKit freeze appeared in one scroll), canvas 67.1.

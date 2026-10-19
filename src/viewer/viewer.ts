@@ -57,6 +57,8 @@ export class Viewer {
   #viewportHeight = -1;
   #frame = 0;
   #destroyed = false;
+  /** True while overscan pages wait for the visible pages to finish drawing. */
+  #overscanHeld = false;
 
   /** `scroller` must be a scrollable element (overflow: auto) that the viewer may fill. */
   constructor(scroller: HTMLElement, doc: PdfDoc, options: ViewerOptions = defaultViewerOptions) {
@@ -162,15 +164,20 @@ export class Viewer {
       }
     });
     if (!plan) return;
-    // Visible pages first, so the page the reader is looking at never waits behind overscan.
-    const order: number[] = [];
-    for (let i = plan.visibleFirst; i <= plan.visibleLast; i++) order.push(i);
-    for (let i = plan.first; i <= plan.last; i++) {
-      if (i < plan.visibleFirst || i > plan.visibleLast) order.push(i);
+    let visibleDone = true;
+    for (let i = plan.visibleFirst; i <= plan.visibleLast; i++) {
+      const slot = this.#slots[i];
+      if (slot?.state === 'placeholder') this.#render(slot, i, plan.pixelRatio);
+      if (slot?.state === 'rendering') visibleDone = false;
     }
-    for (const index of order) {
-      const slot = this.#slots[index];
-      if (slot?.state === 'placeholder') this.#render(slot, index, plan.pixelRatio);
+    // Overscan pages start only once the visible pages are drawn. PDF.js decodes in a single
+    // worker, so a costly neighbour (one big image) would otherwise delay the page the reader
+    // is looking at by hundreds of ms. The visible page that finishes last resumes them.
+    this.#overscanHeld = !visibleDone;
+    if (this.#overscanHeld) return;
+    for (let i = plan.first; i <= plan.last; i++) {
+      const slot = this.#slots[i];
+      if (slot?.state === 'placeholder') this.#render(slot, i, plan.pixelRatio);
     }
   }
 
@@ -189,12 +196,15 @@ export class Viewer {
         if (slot.task !== task) return;
         this.#setState(slot, 'rendered');
         markPageRendered(index);
+        // Only when needed: #update reads layout, which costs a frame mid-scroll.
+        if (this.#overscanHeld) this.#update();
       },
       (error: unknown) => {
         if (slot.task !== task || error instanceof RenderCancelledError) return;
         if (this.#destroyed || this.#doc.destroyed) return;
         console.error(`Could not draw page ${index + 1}`, error);
         this.#setState(slot, 'error');
+        if (this.#overscanHeld) this.#update();
       },
     );
   }

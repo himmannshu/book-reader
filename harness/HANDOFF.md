@@ -7,10 +7,13 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
 - Phase: 03 Complete; 04 not started
-- Branch: phase-03-local-book-persistence (pushed; CI run 39200828535 green; not merged into main)
+- Branch: main (phase 03 and perf-first-page-investigation merged)
 
 ## Done
 
+- First-page fix merged from perf-first-page-investigation: overscan pages start only after the
+  visible pages are drawn (real-book first page 469 → 136 ms in Chromium). See
+  harness/context/first-page-investigation-context.md.
 - Phases 00–02 complete and on main.
 - Phase 03: IndexedDB book store (D5a; bytes stored as ArrayBuffers), "Your books" list with
   open/remove (confirmed), Library button, storage error messages, lint boundary for browser storage,
@@ -18,14 +21,12 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- Branch `perf-first-page-investigation` (local only, from the first-page investigation session):
-  draws visible pages before starting overscan; real-book first page 469 → 136 ms (Chromium).
-  Not merged. It touches src/viewer, so merge it after phase 03, or ask the user.
+- Nothing
 
 ## Next action
 
-1. Ask the user before merging phase 03 (and separately the investigation branch) into main.
-2. Then plan phase 04 (table of contents).
+1. Run `/start-session` (or harness/prompts/00-orient.md).
+2. Plan phase 04 (table of contents): post the plan and contract, wait for approval.
 
 ## Decisions worth remembering
 
