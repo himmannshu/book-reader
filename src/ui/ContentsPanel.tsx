@@ -49,11 +49,34 @@ export function ContentsPanel({ id, outline, onChoose, onClose }: ContentsPanelP
     panelRef.current?.querySelector<HTMLButtonElement>('.contents-entry:not(:disabled)')?.focus();
   }, [outline.status]);
 
+  // Arrow keys, Home and End move between entries. Tab alone isn't enough: Safari skips buttons
+  // when tabbing unless the reader has changed a system setting.
   function onKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       event.stopPropagation();
       onClose();
+      return;
     }
+    const entries = [
+      ...(panelRef.current?.querySelectorAll<HTMLButtonElement>('.contents-entry:not(:disabled)') ??
+        []),
+    ];
+    if (entries.length === 0) return;
+    const current = entries.indexOf(document.activeElement as HTMLButtonElement);
+    const last = entries.length - 1;
+    const next =
+      event.key === 'ArrowDown'
+        ? Math.min(current + 1, last)
+        : event.key === 'ArrowUp'
+          ? Math.max(current - 1, 0)
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? last
+              : null;
+    if (next === null) return;
+    event.preventDefault();
+    entries[next]?.focus();
   }
 
   return (
