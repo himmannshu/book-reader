@@ -185,3 +185,12 @@ Template:
 - GitHub Actions run 39194398452 on 844e7a5 → success.
   https://github.com/himmannshu/book-reader/actions/runs/39194398452
 - Next: plan phase 02 (performance baseline).
+
+### 2026-10-19 01:10 EDT | Phase 02 | Claude Code (Opus 5.5) | Heavy benchmark fixture
+- Changes: branch phase-02-performance-baseline; contract approved (user decisions: CI ×4, include B2);
+  scripts/generate-heavy-fixture.mjs → tests/fixtures/generated/heavy-600-v1.pdf (gitignored):
+  600 pages, dense Times text, a 400-curve vector drawing every 5th page, a full-page 1000×1294
+  RGB PNG every 20th page; seeded PRNG + fixed metadata.
+- Observed: first attempt was 127.6 MB (grain too random to compress); reduced grain and image size
+  → 57.8 MB, generated in 9.3 s. Two consecutive runs → identical SHA-1.
+- Next: User Timing marks.
