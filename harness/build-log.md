@@ -42,3 +42,14 @@ Template:
 - Limitations: no application code written. Free-tier numbers come from third-party sources
   (cited in the decisions file); confirm them on official pricing pages before phase 08.
 - Next: plan phase 00 (repository foundation) and wait for the user's approval.
+
+### 2026-10-18 23:05 EDT | Phase 00 | Claude Code (Opus 5.5) | App shell with browser test
+- Changes: package.json (exact pins; typescript 6.0.3, see context file), .nvmrc, .gitignore,
+  playwright.config.ts (production build via `vite build` + `vite preview`, Chromium + WebKit),
+  e2e/app-shell.spec.ts, index.html, vite.config.ts, tsconfig.json, src/main.tsx, src/ui/App.tsx.
+  Branch phase-00-repository-foundation created from main (main fast-forwarded to planning, local only).
+- Red: `npx playwright test` → webServer build failed "Cannot resolve entry module index.html" (no app yet).
+- Green: `npx playwright test` → 2 passed (chromium, webkit).
+- Verification: browsers installed with `npx playwright install chromium webkit`.
+- Limitations: lint/format/unit/verify wiring not done yet.
+- Next: unit test, lint, format, typecheck.

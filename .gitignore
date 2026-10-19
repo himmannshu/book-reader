@@ -5,3 +5,9 @@ harness/.last-verify
 .env
 .env.*
 secrets/
+
+# node / build
+node_modules/
+dist/
+playwright-report/
+test-results/
