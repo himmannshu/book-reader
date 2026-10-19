@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(scripts/verify.sh:*)",
+      "Bash(scripts/handoff.sh:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "scripts/handoff.sh --brief"
+          }
+        ]
+      }
+    ]
+  }
+}

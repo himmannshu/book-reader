@@ -1,0 +1,117 @@
+{
+  "_rules": "Agents may change only 'status' and 'evidence'. Never delete or reword 'description'. Set status to 'passing' only after running the check and seeing it pass.",
+  "features": [
+    {
+      "id": "F-000",
+      "phase": "00",
+      "description": "Repository builds and scripts/verify.sh runs end to end",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-001",
+      "phase": "01",
+      "description": "Opening a PDF file renders its pages with continuous scrolling",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-002",
+      "phase": "01",
+      "description": "Only pages near the viewport are drawn while scrolling a long book",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-003",
+      "phase": "02",
+      "description": "Speed budgets for first page, scrolling, jumping and cache memory run in scripts/verify.sh and fail on regression",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-004",
+      "phase": "03",
+      "description": "An imported book is still listed and opens after a page reload, without re-importing",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-005",
+      "phase": "04",
+      "description": "The table of contents panel lists the book's outline and jumps to a chosen chapter",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-006",
+      "phase": "05",
+      "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-007",
+      "phase": "06",
+      "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-008",
+      "phase": "07",
+      "description": "Notes can be attached to a highlight or a page, listed in a panel, and survive a reload",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-009",
+      "phase": "08",
+      "description": "The app installs as a PWA and its shell opens offline",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-010",
+      "phase": "09",
+      "description": "A book and its annotations added on one device appear on another device",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-011",
+      "phase": "10",
+      "description": "Each book reopens at the last reading position",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-012",
+      "phase": "10",
+      "description": "Dark and sepia themes and zoom/fit modes are available and persist",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-013",
+      "phase": "11",
+      "description": "The library shows covers and reading progress, with sort and filter",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-014",
+      "phase": "12",
+      "description": "A book's highlights and notes export to a Markdown file",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-015",
+      "phase": "13",
+      "description": "Full-text search in the open book lists matches and jumps to each one",
+      "status": "failing",
+      "evidence": ""
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+
+# agent harness
+.claude/settings.local.json
+harness/.last-verify
+.env
+.env.*
+secrets/
