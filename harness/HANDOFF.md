@@ -7,7 +7,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-18
 - Phase: 01 Complete; 02 not started
-- Branch: phase-01-open-and-read-pdf (not pushed, not merged)
+- Branch: main (phase 01 merged and pushed; CI run 39194398452 green)
 
 ## Done
 
@@ -23,9 +23,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Evaluator review done (PASS, harness/code_review/phase-01-review.md); B1, B5, B6 fixed.
-2. Ask the user before pushing the branch or merging into main.
-3. Then plan phase 02 (performance baseline): post the plan and contract, wait for approval.
+1. Run `/start-session` (or harness/prompts/00-orient.md).
+2. Plan phase 02 (performance baseline): post the plan and contract, wait for approval.
+   Inputs: the CI WebKit slowness on the 300-page scroll test (build log 2026-10-19 00:40) and
+   deferred finding B2 both bear on budgets and main-thread drawing.
 
 ## Decisions worth remembering
 

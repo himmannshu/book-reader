@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 01 | Complete | phase-01-open-and-read-pdf | verify PASS at 5d07bf2; items 1–10 observed; item 11 user-checked | none |
+| 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
 ## Entries
@@ -179,3 +179,9 @@ Template:
 - Fix: step 5 viewports per stop (~60 stops) and `test.slow()`. Local WebKit time 14.5 s → 4.9 s.
   Mutation check still bites: with canvas release removed → "Expected: <= 8, Received: 300" in both browsers.
 - Verification: `scripts/verify.sh` → PASS (unit 22, browser 22).
+
+### 2026-10-19 00:50 EDT | Phase 01 | Claude Code (Opus 5.5) | Merged to main; CI green
+- phase-01-open-and-read-pdf fast-forwarded into main (844e7a5) and pushed (user-authorized).
+- GitHub Actions run 39194398452 on 844e7a5 → success.
+  https://github.com/himmannshu/book-reader/actions/runs/39194398452
+- Next: plan phase 02 (performance baseline).
