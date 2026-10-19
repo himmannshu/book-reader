@@ -1,101 +1,101 @@
-# Phase 04 review: Table of contents
+# Phase 04 review: Table of contents (re-review after fixes)
 
 - Reviewer: Claude Code (Opus 5.5), evaluator subagent, fresh context
 - Date: 2026-10-19
-- Commit reviewed: 468595a (branch phase-04-table-of-contents, not pushed)
-- Inputs: AGENTS.md, harness/EVALUATOR.md, harness/build/phase-04-table-of-contents.md,
-  harness/contracts/phase-04-contract.md. I read the diff, build log and context file only after
-  planning my own checks.
+- Commit reviewed: 0d6d5bb (branch phase-04-table-of-contents, not pushed)
+- Previous review: FAIL at 468595a. The full text is in git at b6adb81
+  (`git show b6adb81:harness/code_review/phase-04-review.md`). Its findings were: B1, Contents
+  stuck on "Loading contents…" after opening another book; B2, Escape ignored when no entry has
+  focus; B3, focus left on the entry after a wide-layout jump; T1/T2, missing tests for lazy loading
+  and for B1 and B2.
+- Inputs: AGENTS.md, harness/EVALUATOR.md, the phase file and the contract. I read the diff, the
+  build log and the handoff only after I had planned my own checks.
 
 ## How I tested
 
-- `scripts/verify.sh` → lint, format, typecheck, unit (61 passed), browser (50 passed, chromium and
-  webkit), perf (8 passed; chromium first page 174 ms, webkit 155 ms, webkit p95 32 ms) → `--- PASS`.
-- Production build served with `vite preview --port 4199`. I drove it with Playwright scripts kept
-  outside the repo, in Chromium and WebKit, using the repo fixtures plus probe PDFs I generated with
-  pdf-lib:
-  - mixed-200: 4 levels of nesting, a GoTo-action entry, a numeric-page destination, a URI entry,
-    a 130-character title, and an entry for the last page
-  - all-broken: every entry is a URI or out-of-range
+- `scripts/verify.sh` → lint, format, typecheck, unit (7 files, 62 passed), browser (56 passed,
+  chromium and webkit), perf (8 passed: chromium first page 171 ms, jump 28 ms, p95 16.8 ms; webkit
+  first page 140 ms, jump 47 ms, p95 30 ms; canvas 67.1 MB) → `--- PASS`.
+- I served the production build with `vite preview --port 4199` and drove it with Playwright scripts
+  kept outside the repo (session scratchpad), in Chromium and WebKit. I used the repo fixtures plus
+  probe PDFs that I generated with pdf-lib:
+  - mixed-200: 4 levels of nesting, a GoTo-action entry, a numeric-page destination, a URI entry, a
+    130-character title, a named destination to the last page, an explicit last-page entry, an
+    out-of-range numeric destination, and an untitled entry
+  - all-broken: a URI entry, a missing named destination and an out-of-range page
   - many-600: 300 entries
-- Mutation checks ran on a scratch copy of HEAD (not the repo), Chromium e2e for contents.spec.ts
-  plus the unit tests. See Test quality.
+  - garbage-outline: `/Outlines 42`, which is not a dictionary
+  - cycle-outline: entries whose `/Next` links form a loop
+- I ran mutation checks on a `git archive HEAD` copy in the scratchpad, never in the repo. Each one
+  ran Chromium e2e for contents.spec.ts plus all unit tests. See Test quality.
 
 ## Contract items
 
 | # | Result | What I ran and saw |
 |---|---|---|
-| 1 | PASS | verify e2e passes in both browsers. Probe: the outline-12 tree read back as Part One > [Chapter 1, Chapter 2], Part Two > [Chapter 3, Missing section (disabled)], Appendix. mixed-200 kept 4 levels of nesting in order. |
-| 2 | PASS | verify e2e. Probe, both browsers: I jumped to every enabled outline-12 entry, including the last page (Appendix) and the same entry again after scrolling away. Each time the target slot was at 0–1 px from the reader top, `rendered`, and the only page visible. mixed-200: GoTo action → 50, numeric dest → 60, last page → 199, all at the top and drawn. many-600: Chapter 300 → page 598, drawn, 3 canvases. |
-| 3 | PASS | verify e2e. Probe: Chapter 3 (named "chapter-3") → page index 8 at the top, drawn, in both browsers. |
-| 4 | PASS | verify e2e. Probe: "Missing section", "Website link" (URI) and the all-broken PDF's entries are all disabled. No alert, no console errors or warnings. |
-| 5 | PASS | verify e2e. Probe: basic-3-pages shows "This book has no table of contents." and no buttons, in both browsers. |
-| 6 | **FAIL** | The e2e path works: Enter opens, arrows/Home/End/Enter work, Escape closes and focus returns. But when the panel has no enabled entry, Escape does nothing. Keyboard repro on basic-3-pages, both browsers: focus Contents → Enter → panel opens and focus stays on Contents → Escape → panel still open, `aria-expanded="true"`. The same happens on the all-broken PDF, while the panel says "Loading contents…", and whenever focus is in the pages. See B2. |
-| 7 | PASS | verify e2e. Probe at 600 px: the panel is 320 px wide over a 600 px reader, the reader width is unchanged, and the panel closes after a choice with focus on the reader. PageDown then scrolls the book. At 320 px the panel is 272 px wide. |
-| 8 | PASS | `npx vitest run` → outline.test.ts covers explicit ref, numeric page, named destination, missing name, unresolvable ref, out of range, web link, nesting, blank title and null outline. |
-| 9 | PASS | `npm run test:perf` (inside verify) → 8 passed, first page 174/155 ms. Laziness itself is not tested: see T1. |
-| 10 | **NOT MET** | Local `scripts/verify.sh` → PASS. CI has not run: the branch is not pushed (`git branch -r` has no phase-04 branch). |
-| 11 | **NOT MET** (pending user) | No user report in the build log yet. This is expected at this stage, but the item is open. |
+| 1 | PASS | verify e2e in both browsers. Probe: I read the outline-12 tree back as Part One > [Chapter 1, Chapter 2], Part Two > [Chapter 3, Missing section (disabled)], Appendix. mixed-200 kept its 4 levels and its order. many-600 listed all 300 entries, and the panel scrolls (`overflow: auto`). |
+| 2 | PASS | verify e2e. Probe, both browsers: I jumped to every enabled outline-12 entry (pages 0, 1, 4, 7, 8, 11). Each time the target slot was 0–1 px from the reader top, `rendered`, and the only slot at the top. I re-jumped after scrolling back to the top, and jumped to the same entry twice: still 0–1 px. mixed-200: GoTo → page 50, numeric → 59, Sub A1.1.1 → 12, untitled → 3, last page → 199, all at the top and drawn. many-600: Chapter 300 → page 599, drawn, 2 canvases. |
+| 3 | PASS | verify e2e. Probe: Chapter 3 (named "chapter-3") → page 8. mixed-200 "Named to last page" (Names tree) → page 199. Both browsers. |
+| 4 | PASS | verify e2e. Probe: "Missing section", "Web link", "Out of range numeric" and all three all-broken entries are disabled. No alert, no dialog, no console errors or warnings. |
+| 5 | PASS | verify e2e. Probe: basic-3-pages and garbage-outline both show "This book has no table of contents." with no buttons and no error. cycle-outline lists A and B once each, with no hang. |
+| 6 | PASS | verify e2e in both browsers, including the new test "Escape closes Contents even when no entry has focus". Probe, both browsers: all-broken, focus Contents → Enter → focus stays on Contents → Escape → panel closed, `aria-expanded="false"`, focus on Contents (this was B2 before). After a jump in the wide layout, focus is on the pages, and Escape closes the panel and focuses Contents. many-600: End → Chapter 300 → Enter → page 599. One gap remains, outside the keyboard-only flow this item describes: see N1. |
+| 7 | PASS | verify e2e. Probe at 600 px: the panel is 320 px wide at x=0 over a 600 px reader, the reader width is unchanged, and after a choice the panel is closed with focus on the pages. At 320 px the panel is 272 px wide. |
+| 8 | PASS | `npx vitest run`: outline.test.ts (10 tests) covers explicit ref, numeric page, named, missing name, unresolvable ref, out of range, web link, nesting, blank title and null outline. |
+| 9 | PASS | perf inside verify: 8 passed, first page 171/140 ms. Laziness is now guarded by src/ui/ReaderView.test.tsx: an eager `doc.outline()` at mount fails it (M4 below). |
+| 10 | **NOT MET** | Local `scripts/verify.sh` → PASS. CI has not run: `git branch -r` has no phase-04 branch. Pushing needs the user's OK. |
+| 11 | **NOT MET** (pending user) | The build log has no user report on a real book yet. |
 
 ## Rubric
 
 | Criterion | Score | Threshold | Notes |
 |---|---|---|---|
-| Contract fidelity | 3 | 5 | Item 6 fails for panels without an enabled entry (B2). Items 10 (CI) and 11 (user) have no evidence yet. |
-| Functionality | 3 | 4 | Jumping is accurate in every case I tried, in both browsers. But a core flow breaks: if you open another book while Contents is open, the panel says "Loading contents…" forever (B1). You can reach this from the always-visible Open PDF button. |
-| Robustness | 3 | 4 | Outline mapping never throws, and broken entries degrade well. B1 is a silent failure: there is no error, nothing logged, and a spinner text that never resolves. |
-| Code quality | 3 | 3 | Clean engine/UI split, a pure and tested `resolveOutline`, and comments that explain why. Hidden coupling: ReaderView keeps per-book outline state keyed by hand (`loaded.doc === doc`), but `contentsOpen` is not reset per book, and loading only starts from a click handler. That gap is the root cause of B1. Escape is bound to the `nav` only (B2). |
-| Test quality | 3 | 3 | Mutations caught: children dropped (6 e2e + 1 unit), named dest ignored (4 e2e + 1 unit), off-by-one page (4 e2e), no focus return (1), narrow panel not closing (1), `scrollToPage` without `#update` (unit). Not caught: eager outline load at mount (0 failures, T1). Untested: switching books with the panel open, and Escape on an empty or loading panel. |
-| Product depth | 3 | 3 | A real outline (nesting, named and GoTo destinations, numeric pages), lazy loading, keyboard navigation for Safari, and a narrow overlay. |
-| Design | 3 | 3 | The panel matches the app palette. Disabled entries are muted and italic. Long titles wrap cleanly. The narrow overlay has a shadow. The Contents button sits in its own bar, which costs some vertical space, but it works. |
+| Contract fidelity | 4 | 5 | Items 1–9 pass when exercised in both browsers. Items 10 (CI) and 11 (user check on a real book) have no evidence. Neither can be closed without the user. |
+| Functionality | 4 | 4 | Every jump I tried landed exactly, including GoTo actions, numeric and named destinations, the last page of 200- and 600-page books, and repeated jumps. B1 is fixed: switching books in any order with the panel open (outline → outline, outline → none, none → outline) closes the panel, and reopening shows the new book. Opening from the Library and then Contents also works. The remaining gap (N1) has a one-click workaround. |
+| Robustness | 4 | 4 | Garbage and cyclic outlines degrade to the empty state or a correct list, with no errors. Broken entries are disabled, not errors. A rejected `outline()` shows a readable message and logs to the console. No console errors or warnings in any probe. |
+| Code quality | 4 | 3 | The fix is the right one: a per-book `key` instead of hand-written resets. The Escape handling moved to a single place. `resolveOutline` is pure and tested. Small nits: the comment at ReaderView.tsx:59 ("wherever focus is: in the panel, on the button, or in the pages") is accurate but leaves out the body-focus case (N1). `loaded.doc === doc` is now redundant with the key, though harmless. |
+| Test quality | 4 | 3 | Mutations: no key per book → 1 e2e fail; Escape only in the panel → 2 fail; no focus on the pages after a choice → 1 fail; eager outline at mount → 1 unit fail; reloading the outline on every open → 1 unit fail; no focus return on Escape → 1 fail; off-by-one page in scrollToPage → 5 e2e + 2 unit fail; narrow panel not closing → 1 fail. Survived: the "failed" message replaced with the empty-state text (0 fails). The failed state is untested (T1). |
+| Product depth | 3 | 3 | A real outline: nesting, named and GoTo destinations, numeric pages, lazy loading, arrow/Home/End navigation for Safari, and a narrow overlay. |
+| Design | 3 | 3 | Screenshots at 1280 and 600 px: the panel matches the app palette, indentation shows nesting clearly, disabled entries are muted and italic, long titles wrap, and the narrow overlay has a shadow. The separate Contents bar costs about 44 px of height. |
 
-**Verdict: FAIL** (contract fidelity, functionality and robustness are below threshold).
+**Verdict: FAIL**, only because contract fidelity is 4/5: items 10 (CI) and 11 (the user's real-book
+check) are open. I found no code defect that blocks the phase. Every other criterion meets its
+threshold. Once the branch is pushed with the user's OK, CI is green and the user reports item 11,
+the phase meets the contract without code changes. Fixing N1 is recommended but not required.
 
 ## Bugs and findings
 
-**B1 (high). Opening another book while Contents is open leaves the panel on "Loading contents…" forever.**
-src/ui/ReaderView.tsx:15-18 and 33-45. ReaderView is not keyed by `doc` (src/ui/App.tsx:207), so
-`contentsOpen` stays `true` when the doc changes. `outline` falls back to `{status:'loading'}`
-because `loaded.doc !== doc`, but the outline is only requested inside `openContents()` (a click
-handler), so it is never requested for the new book.
-Repro (Chromium and WebKit, production build): open outline-12-pages.pdf → Contents (entries
-appear) → Open PDF → choose any other PDF (with or without an outline) → wait 8 s. The panel reads
-"CONTENTS / Loading contents…", with no console output. Closing and reopening Contents fixes it.
-Expected: the panel shows the new book's outline (or its empty state), or it closes when the book
-changes. A click on Contents while a new book is still opening also ends up in this state.
+**N1 (medium, not a contract failure). Escape does nothing when focus is on `<body>`.**
+src/ui/ReaderView.tsx:59-66 and 68. The handler is on the `.reader` div, so it only fires when focus
+is inside the reader. Focus lands on `<body>` after common mouse actions:
+- WebKit (Safari does not focus buttons on click): open basic-3-pages.pdf, click Contents with the
+  mouse, press Escape. The panel stays open (`activeElement` is BODY). The same happens with an
+  all-disabled outline, or while the panel shows "Loading contents…".
+- Both browsers: with the panel open, click the "CONTENTS" heading, the note text, or a disabled
+  entry, then press Escape. The panel stays open.
+- Both browsers: focus the Library button in the header, then press Escape. The panel stays open.
 
-**B2 (medium). Escape does not close the panel when no entry has focus.**
-src/ui/ContentsPanel.tsx:54-59 and 83-88. The Escape handler is on the `nav`, so it only fires if
-focus is inside the panel. Focus only moves into the panel when there is an enabled entry
-(ContentsPanel.tsx:47-50).
-Repro (both browsers): open basic-3-pages.pdf, focus Contents, press Enter. "This book has no
-table of contents." appears and focus stays on Contents. Press Escape: the panel stays open with
-`aria-expanded="true"`. The same thing happens with an outline where every entry is disabled,
-while the panel is loading, and with focus in the pages after a click (wide layout).
-Expected (contract item 6): Escape closes the panel and returns focus to Contents.
+Expected: Escape closes an open panel no matter where focus is. A
+`keydown` listener on `document` while the panel is open would cover these cases. The keyboard-only
+flow in item 6 works, so I count this as a functionality gap, not a contract failure.
 
-**B3 (low). In the wide layout, focus stays on the chosen entry after a jump.** Space or Enter
-re-triggers the same jump instead of scrolling the book. PageDown does nothing until the user clicks
-the pages. This is not in the contract. It is noted for the keyboard flow.
+**T1 (test gap, low).** Nothing tests the "This book's table of contents couldn't be read." state.
+Replacing that text with the empty-state text passes every test. A ReaderView unit test with a fake
+doc whose `outline()` rejects would cover it.
 
-**T1 (test gap). Nothing checks that the outline loads lazily.** Item 9's rationale is that the
-outline loads only when Contents opens. Adding `void doc.outline()` to ReaderView's mount effect
-passes every e2e, unit and (by construction) perf test, because the perf fixture has no outline. A
-unit test with a spy `outline()` on a fake doc, asserting no call before Contents is clicked, would
-cover it.
+**O1 (pre-existing, not phase 04).** At a 320 px viewport the page scrolls sideways by 5 px. The
+cause is `p.notice` ("Saved on this device.", right edge at 325 px), with or without the panel. It
+comes from the header, not from this phase's code.
 
-**T2 (test gap).** There are no tests for B1 (switching books with the panel open) or B2 (Escape on
-an empty or loading panel).
-
-**H1 (process).** harness/features.json marks F-005 `passing`, but the phase still has items 10
-and 11 open. The F-005 description itself is met by the e2e evidence, so this is only a note.
+**H1 (process).** harness/features.json has F-005 `failing`, with evidence from the old review. That
+is correct until the author re-runs the checks and records the fixes. The author should update the
+evidence to cite this review, and only mark it passing per AGENTS.md.
 
 ## What is solid
 
-- Destination resolution handles PDF.js shapes correctly: ref, number, named, and GoTo actions
-  (PDF.js converts these to `dest`). Out-of-range and URL entries become disabled, not errors.
-- `Viewer.scrollToPage` reuses the anchor math. Jump accuracy was 0–1 px in every case, including
-  the last page of a 200-page book.
-- In the wide layout the reader re-fits when the panel opens and keeps the current page in view
-  (page 298 before and after, width 1280 → 980).
-- No console errors or warnings in any probe run, in either browser.
+- The fixes address the root causes, not the symptoms. Keying ReaderView by a per-open id
+  (App.tsx:113, 211) gives each book a fresh Viewer, panel state and outline cache. Focusing the
+  pages after a choice fixes Space and PageDown (Space moved 3447 → 4115 px in both browsers).
+- In the wide layout, opening the panel re-fits the pages and keeps the reading position (page 300
+  stays mid-screen in many-600).
+- Jump accuracy was 0–1 px in every case, in both browsers.
+- No console errors, warnings, alerts or dialogs in any probe run.

@@ -522,3 +522,12 @@ Template:
   2 failed; no focus after jump → 2 failed.
 - Verification: `scripts/verify.sh` → PASS: unit 62, browser 56, perf 8 (webkit p95 samples [28, 2354, 30]:
   the known pre-existing freeze in one scroll; median 30).
+
+### 2026-10-19 11:14 EDT | Phase 04 | Claude Code (Opus 5.5) | Re-review: FAIL only on items 10 and 11
+- Evaluator re-review (fresh context) at 0d6d5bb → FAIL, only because items 10 (CI) and 11 (user's real-book
+  check) have no evidence. Items 1–9 pass in both browsers. The three earlier findings are confirmed fixed.
+  Contract 4/5 (blocks), functionality 4, robustness 4, code 4, tests 4, depth 3, design 3.
+  Review rewritten at harness/code_review/phase-04-review.md (the first review stays in git at b6adb81).
+- New findings: N1 (medium): Escape does nothing when focus is on the page body (for example in WebKit after
+  clicking Contents with the mouse, or after clicking the panel heading); T1 (low): no test for the
+  "couldn't be read" state; note: 5 px sideways scroll at 320 px from the header notice (not this phase).
