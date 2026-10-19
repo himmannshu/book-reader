@@ -31,6 +31,8 @@ test('scrolling to the bottom draws the last page of a short book', async ({ pag
 test('scrolling through a 300-page book keeps at most 8 canvases and draws the last page', async ({
   page,
 }) => {
+  // Each stop starts real page draws on the main thread, which is slow in headless WebKit on CI.
+  test.slow();
   await openFixture(page, 'long-300-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
 
@@ -38,7 +40,8 @@ test('scrolling through a 300-page book keeps at most 8 canvases and draws the l
     const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     let maxCanvases = 0;
     let maxActive = 0;
-    for (let y = 0; y <= el.scrollHeight; y += el.clientHeight * 2) {
+    // About 60 stops spread over the whole book; each lands on pages not drawn before.
+    for (let y = 0; y <= el.scrollHeight; y += el.clientHeight * 5) {
       el.scrollTop = y;
       await frame();
       await frame();

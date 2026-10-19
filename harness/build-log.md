@@ -168,3 +168,14 @@ Template:
   (chromium + webkit); "--- PASS".
 - Deferred by the user (not fixed): B2 (more than 8 visible pages leave extras blank), B3 (failed page
   draw shows only a white box), B4 (lint boundary misses dynamic import and .js files).
+
+### 2026-10-19 00:40 EDT | Phase 01 | Claude Code (Opus 5.5) | CI failure on merge to main, fixed
+- Observed: GitHub Actions run 39193955157 on fd874e8 (main) → failure. Only
+  "[webkit] scrolling through a 300-page book…" failed: `locator.evaluate` hit the 30 s test timeout,
+  also on retry. 21 other browser tests passed; lint/format/types/unit passed.
+- Cause: the test stepped through ~160 scroll stops, each waiting for frames while PDF.js drew pages
+  on the main thread. Locally it already took 14.5 s in WebKit; Linux CI WebKit is slower. Not a
+  wrong result, a slow test. Noted as a speed signal for phase 02 (main-thread drawing in WebKit).
+- Fix: step 5 viewports per stop (~60 stops) and `test.slow()`. Local WebKit time 14.5 s → 4.9 s.
+  Mutation check still bites: with canvas release removed → "Expected: <= 8, Received: 300" in both browsers.
+- Verification: `scripts/verify.sh` → PASS (unit 22, browser 22).
