@@ -576,3 +576,14 @@ Template:
   this session ended (not run yet). https://github.com/himmannshu/book-reader/actions/runs/39279260419
 - Phase 04 stays In progress until that run (or a later one on this branch) is green.
 - Commits after aaafd9f are harness docs only and are not pushed.
+
+### 2026-10-19 11:54 EDT | Phase 04 | Claude Code (Opus 5.5) | Session start: verify red on one WebKit perf run, re-run green
+- `scripts/verify.sh` on d1e7a16 (no code changes since the green verify on ca5c0dc; later commits are harness
+  docs only): lint, format, types, unit (63/63) and browser tests (58/58) passed; perf failed one benchmark.
+  perf-webkit steady scrolling: p95FrameMs = 50, budget 40. Other values: chromium p95 16.8, firstPage 176,
+  jump 30; webkit firstPage 136, jump 80, blankFramePct 1.1; maxCanvasMB 67.1 both. Exit 1.
+- Re-ran `npm run test:perf` alone (user-requested, nothing else running): 8/8 passed. perf-webkit p95FrameMs 33
+  (budget 40), firstPage 189, jump 61, blankFramePct 1; chromium p95 16.8, firstPage 168, jump 19; maxCanvasMB 67.1.
+- Reading: a one-off WebKit frame-time spike, in line with the known WebKit variance (~28–37 ms, occasional
+  freezes; phase-03 context file). Not investigated. Budgets unchanged.
+- CI run 39279260419 (aaafd9f) still "queued" on GitHub at 11:54 EDT, about 18 minutes after it was created.

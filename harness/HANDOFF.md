@@ -21,7 +21,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- CI run 39279260419 (phase-04-table-of-contents @ aaafd9f), queued on GitHub at hand-off.
+- CI run 39279260419 (phase-04-table-of-contents @ aaafd9f), still queued on GitHub at 11:54 EDT
+  (created 11:36). If it stays queued, ask the user before cancelling or re-running it.
+- Local baseline, 11:54 EDT: one verify run failed on WebKit perf p95 (50 ms vs 40); a re-run of
+  `npm run test:perf` alone passed (33 ms). Logged as a one-off; see build log.
 
 ## Next action
 
@@ -54,15 +57,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 11:47 EDT
+Snapshot 2026-10-19 11:54 EDT
 - Branch: phase-04-table-of-contents
-- HEAD: ab41928 phase 04: item 11 user-checked; CI queued; handoff for next session
-- Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 11:16 EDT (commit ca5c0dc)
+- HEAD: d1e7a16 phase 04: refresh handoff snapshot
+- Uncommitted files: 2
+- Last verify: FAIL at 2026-10-19 11:51 EDT (commit d1e7a16)
 - Recent commits:
+    d1e7a16 phase 04: refresh handoff snapshot
     ab41928 phase 04: item 11 user-checked; CI queued; handoff for next session
     aaafd9f after reviews: refresh handoff snapshot
     719a4b3 after reviews: handoff lists open findings and next steps
     ca1d8ba phase 03: evaluator review (PASS); D5b and contract amendment for ArrayBuffer storage
-    66c8daa phase 02: evaluator review (PASS)
+- Changed files:
+     M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->
