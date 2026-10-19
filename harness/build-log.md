@@ -453,3 +453,11 @@ Template:
 - Verification: regenerated twice → identical SHA-1; other fixtures unchanged. Read back with PDF.js
   (legacy build, Node): Part One→0 [Chapter 1→1, Chapter 2→4], Part Two→7 [Chapter 3→8 via named
   "chapter-3", Missing section→null via unregistered "no-such-destination"], Appendix→11.
+
+### 2026-10-19 01:15 EDT | Phase 04 | Claude Code (Opus 5.5) | Outline mapping and scrollToPage
+- Changes: src/engine/outline.ts (resolveOutline: explicit page ref, numeric page, named destination,
+  broken/out-of-range/web-link → null, nesting, placeholder title; never throws); engine type OutlineItem and
+  PdfDoc.outline(); PDF.js adapter wires getOutline/getDestination/getPageIndex; Viewer.scrollToPage(index)
+  (clamped, uses the existing anchor math). Test fakes gain outline().
+- Red: outline tests failed (module missing); scrollToPage tests failed ("viewer.scrollToPage is not a function").
+- Green: `npx vitest run` → 61 passed (10 outline, 2 scrollToPage).

@@ -2,11 +2,13 @@
 // PDF.js parses and decodes in its own Web Worker; drawing onto the canvas happens here.
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { resolveOutline, type RawOutlineItem } from './outline';
 import {
   PdfOpenError,
   RenderCancelledError,
   type PageSize,
   type PdfDoc,
+  type OutlineItem,
   type PdfEngine,
   type RenderTask,
 } from './types';
@@ -82,6 +84,19 @@ class PdfjsDoc implements PdfDoc {
         pdfjsTask?.cancel();
       },
     };
+  }
+
+  async outline(): Promise<OutlineItem[]> {
+    const raw = (await this.#doc.getOutline()) as RawOutlineItem[] | null;
+    return resolveOutline(
+      raw,
+      {
+        getDestination: (name) => this.#doc.getDestination(name),
+        getPageIndex: (ref) =>
+          this.#doc.getPageIndex(ref as Parameters<PDFDocumentProxy['getPageIndex']>[0]),
+      },
+      this.pageCount,
+    );
   }
 
   async destroy(): Promise<void> {

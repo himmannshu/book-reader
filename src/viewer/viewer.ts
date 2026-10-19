@@ -106,6 +106,19 @@ export class Viewer {
     );
   }
 
+  /** Brings page `index` (0-based, clamped to the book) to the top of the reader. */
+  scrollToPage(index: number): void {
+    const count = this.#layout.pages.length;
+    if (this.#destroyed || count === 0) return;
+    const pageIndex = Math.max(0, Math.min(Math.trunc(index), count - 1));
+    this.#scroller.scrollTop = scrollTopFor(this.#layout, {
+      pageIndex,
+      fraction: 0,
+      pixelsAbove: 0,
+    });
+    this.#update();
+  }
+
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;

@@ -15,6 +15,7 @@ const fakeDoc: PdfDoc = {
   firstPageSize: { width: 612, height: 792 },
   loadPageSizes: () => new Promise(() => {}),
   renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
+  outline: () => Promise.resolve([]),
   destroy: () => Promise.resolve(),
 };
 const workingEngine: PdfEngine = { open: () => Promise.resolve(fakeDoc) };

@@ -26,6 +26,7 @@ function fakeDoc(pageCount: number, size: PageSize = { width: 500, height: 700 }
       renders.push({ index, finish, fail });
       return { promise, cancel: () => undefined };
     },
+    outline: () => Promise.resolve([]),
     destroy: () => Promise.resolve(),
   };
   const started = () => renders.map((r) => r.index);
@@ -37,11 +38,18 @@ function fakeDoc(pageCount: number, size: PageSize = { width: 500, height: 700 }
   return { doc, started, render };
 }
 
-/** A scroller with a fixed size (jsdom does no layout). */
+/** A scroller with a fixed size and a remembered scroll position (jsdom does no layout). */
 function scroller(width: number, height: number): HTMLElement {
   const element = document.createElement('div');
   Object.defineProperty(element, 'clientWidth', { value: width });
   Object.defineProperty(element, 'clientHeight', { value: height });
+  let scrollTop = 0;
+  Object.defineProperty(element, 'scrollTop', {
+    get: () => scrollTop,
+    set: (value: number) => {
+      scrollTop = value;
+    },
+  });
   document.body.append(element);
   return element;
 }
@@ -105,5 +113,49 @@ describe('Viewer drawing order', () => {
     render(1).finish();
     await flush();
     expect(started()).toEqual([0, 1, 2, 3]);
+  });
+});
+
+describe('Viewer.scrollToPage', () => {
+  let viewer: Viewer | undefined;
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    viewer?.destroy();
+    viewer = undefined;
+    document.body.replaceChildren();
+    vi.unstubAllGlobals();
+  });
+
+  it('puts the chosen page at the top of the reader and starts drawing it', () => {
+    // 1000 px wide: pages are 900 px wide and 1260 px tall, 16 px apart, 24 px padding.
+    const { doc, started } = fakeDoc(10);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+
+    viewer.scrollToPage(3);
+
+    expect(element.scrollTop).toBe(24 + 3 * (1260 + 16));
+    expect(started()).toContain(3);
+  });
+
+  it('clamps a page index outside the book', () => {
+    const { doc } = fakeDoc(4);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+
+    viewer.scrollToPage(99);
+    expect(element.scrollTop).toBe(24 + 3 * (1260 + 16));
+    viewer.scrollToPage(-5);
+    expect(element.scrollTop).toBe(24);
   });
 });

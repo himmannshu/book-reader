@@ -13,6 +13,14 @@ export interface RenderTask {
   cancel(): void;
 }
 
+/** One entry of a book's table of contents. */
+export interface OutlineItem {
+  title: string;
+  /** 0-based page the entry points to, or null when it has no usable destination. */
+  pageIndex: number | null;
+  children: OutlineItem[];
+}
+
 export interface PdfDoc {
   readonly pageCount: number;
   /** True once destroy() has been called. Errors from in-flight work after that can be ignored. */
@@ -26,6 +34,8 @@ export interface PdfDoc {
    * Sets the canvas's pixel size; the caller controls its CSS size.
    */
   renderPage(index: number, canvas: HTMLCanvasElement, scale: number): RenderTask;
+  /** The book's table of contents; empty if it has none. Never rejects for a broken entry. */
+  outline(): Promise<OutlineItem[]>;
   destroy(): Promise<void>;
 }
 
