@@ -6,27 +6,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 03 Complete; 04 not started
-- Branch: main (phase 03 and perf-first-page-investigation merged)
+- Phase: 04 In progress (items 1–9 observed, verify PASS; CI, item 11 and evaluator review pending)
+- Branch: phase-04-table-of-contents (not pushed yet)
 
 ## Done
 
-- First-page fix merged from perf-first-page-investigation: overscan pages start only after the
-  visible pages are drawn (real-book first page 469 → 136 ms in Chromium). See
-  harness/context/first-page-investigation-context.md.
-- Phases 00–02 complete and on main.
-- Phase 03: IndexedDB book store (D5a; bytes stored as ArrayBuffers), "Your books" list with
-  open/remove (confirmed), Library button, storage error messages, lint boundary for browser storage,
-  scroll benchmark now median of 3.
+- Phases 00–03 complete and on main (plus the first-page fix).
+- Phase 04: outline via the engine (src/engine/outline.ts), Viewer.scrollToPage, Contents panel
+  (lazy outline, disabled broken entries, Escape, arrow keys, narrow overlay), e2e/contents.spec.ts.
 
 ## In flight
 
-- Nothing
+- The user asked for an evaluator review after phase 04.
 
 ## Next action
 
-1. Run `/start-session` (or harness/prompts/00-orient.md).
-2. Plan phase 04 (table of contents): post the plan and contract, wait for approval.
+1. Run the evaluator (`/evaluate 04`), relay the verdict.
+2. With the user's OK: push the branch for CI. The user checks Contents on a real book (item 11).
+3. Mark phase 04 Complete only when items 10 (CI) and 11 have evidence; ask before merging.
 
 ## Decisions worth remembering
 

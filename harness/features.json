@@ -40,8 +40,8 @@
       "id": "F-005",
       "phase": "04",
       "description": "The table of contents panel lists the book's outline and jumps to a chosen chapter",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 e2e/contents.spec.ts (outline order and nesting; chapter, named destination and narrow-window jumps) passes in chromium+webkit; scripts/verify.sh PASS. See build-log Phase 04."
     },
     {
       "id": "F-006",

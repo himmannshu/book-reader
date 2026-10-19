@@ -1,6 +1,6 @@
 # Phase 04: Table of contents
 
-- Status: Not started
+- Status: In progress (items 1–9 observed; CI, item 11 and the evaluator review pending)
 - Branch: phase-04-table-of-contents
 - Depends on: 01
 

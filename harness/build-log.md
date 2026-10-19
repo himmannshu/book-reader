@@ -486,3 +486,12 @@ Template:
   invalid. Re-applied the change, committed (303578d), then re-ran item 6 breaks in both browsers:
   Escape ignored → 2 failed; focus not returned → 2 failed; no arrow keys → 2 failed; restored → 2 passed.
 - Green: e2e/contents.spec.ts 14 passed (chromium + webkit).
+
+### 2026-10-19 01:23 EDT | Phase 04 | Claude Code (Opus 5.5) | Verify incl. perf (items 9, 10 local)
+- Checked port 4174 was free first (no other perf run).
+- `scripts/verify.sh` → PASS: unit 61, browser 50, perf 8. Perf: chromium first 174, jump 19, p95 16.8;
+  webkit first 172, jump 61, p95 37 (samples [35, 2393, 37]: the known pre-existing freeze in one scroll),
+  canvas 67.1. First-page times unchanged from before phase 04 (175/175), so lazy outline loading holds (item 9).
+- Note: WebKit p95 medians are now 31 → 36 → 37 ms over the last three verifies (budget 40). Within the
+  spread seen so far, but trending close to the budget.
+- F-005 → passing. Remaining: CI on the branch, item 11 (user), evaluator review.
