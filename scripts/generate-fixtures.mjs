@@ -5,7 +5,16 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import {
+  PDFDocument,
+  PDFHexString,
+  PDFName,
+  PDFNull,
+  PDFNumber,
+  PDFString,
+  StandardFonts,
+  rgb,
+} from 'pdf-lib';
 
 const outDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'tests', 'fixtures');
 const FIXED_DATE = new Date('2026-01-01T00:00:00Z');
@@ -16,7 +25,7 @@ function bandColor(index) {
   return [40 + ((index * 67) % 180), 40 + ((index * 131) % 180), 40 + ((index * 29) % 180)];
 }
 
-async function makePdf(name, sizes) {
+async function makePdf(name, sizes, decorate) {
   const doc = await PDFDocument.create();
   doc.setTitle(name);
   doc.setAuthor('book-reader fixtures');
@@ -46,9 +55,65 @@ async function makePdf(name, sizes) {
     });
   });
 
+  decorate?.(doc);
   const bytes = await doc.save({ useObjectStreams: false });
   writeFileSync(join(outDir, `${name}.pdf`), bytes);
   return { file: `${name}.pdf`, pages: sizes.map(([width, height]) => ({ width, height })) };
+}
+
+/**
+ * Adds a PDF outline (bookmarks tree) built from low-level objects, since pdf-lib has no outline API.
+ * Each entry's `to` is a page index, `{ named }` for a named destination, or null for no destination.
+ * Named destinations listed in `namedDests` are registered in the catalog's /Names /Dests tree;
+ * a `{ named }` that is not registered is a broken destination.
+ */
+function addOutline(doc, entries, namedDests = {}) {
+  const context = doc.context;
+  const pages = doc.getPages();
+  const destTo = (index) =>
+    context.obj([pages[index].ref, PDFName.of('XYZ'), PDFNull, PDFNull, PDFNull]);
+
+  const build = (items, parentRef) => {
+    const refs = items.map(() => context.nextRef());
+    items.forEach((item, i) => {
+      const dict = context.obj({});
+      dict.set(PDFName.of('Title'), PDFHexString.fromText(item.title));
+      dict.set(PDFName.of('Parent'), parentRef);
+      if (i > 0) dict.set(PDFName.of('Prev'), refs[i - 1]);
+      if (i < items.length - 1) dict.set(PDFName.of('Next'), refs[i + 1]);
+      if (typeof item.to === 'number') dict.set(PDFName.of('Dest'), destTo(item.to));
+      else if (item.to?.named) dict.set(PDFName.of('Dest'), PDFString.of(item.to.named));
+      const children = item.children ?? [];
+      if (children.length) {
+        const childRefs = build(children, refs[i]);
+        dict.set(PDFName.of('First'), childRefs[0]);
+        dict.set(PDFName.of('Last'), childRefs[childRefs.length - 1]);
+        dict.set(PDFName.of('Count'), PDFNumber.of(children.length));
+      }
+      context.assign(refs[i], dict);
+    });
+    return refs;
+  };
+
+  const outlinesRef = context.nextRef();
+  const topRefs = build(entries, outlinesRef);
+  context.assign(
+    outlinesRef,
+    context.obj({
+      Type: 'Outlines',
+      First: topRefs[0],
+      Last: topRefs[topRefs.length - 1],
+      Count: PDFNumber.of(entries.length),
+    }),
+  );
+  doc.catalog.set(PDFName.of('Outlines'), outlinesRef);
+
+  const names = Object.entries(namedDests).sort(([a], [b]) => a.localeCompare(b));
+  if (names.length) {
+    const flat = names.flatMap(([name, index]) => [PDFString.of(name), destTo(index)]);
+    const destsTree = context.obj({ Names: context.obj(flat) });
+    doc.catalog.set(PDFName.of('Names'), context.obj({ Dests: destsTree }));
+  }
 }
 
 mkdirSync(outDir, { recursive: true });
@@ -58,6 +123,35 @@ const manifest = {
   'long-300-pages': await makePdf(
     'long-300-pages',
     Array.from({ length: 300 }, () => LETTER),
+  ),
+  // A book with a table of contents (phase 04). Page indexes are 0-based.
+  'outline-12-pages': await makePdf(
+    'outline-12-pages',
+    Array.from({ length: 12 }, () => LETTER),
+    (doc) =>
+      addOutline(
+        doc,
+        [
+          {
+            title: 'Part One',
+            to: 0,
+            children: [
+              { title: 'Chapter 1', to: 1 },
+              { title: 'Chapter 2', to: 4 },
+            ],
+          },
+          {
+            title: 'Part Two',
+            to: 7,
+            children: [
+              { title: 'Chapter 3', to: { named: 'chapter-3' } },
+              { title: 'Missing section', to: { named: 'no-such-destination' } },
+            ],
+          },
+          { title: 'Appendix', to: 11 },
+        ],
+        { 'chapter-3': 8 },
+      ),
   ),
   // Thin strips: many pages fit on screen at once (review finding B2).
   'strips-40-pages': await makePdf(

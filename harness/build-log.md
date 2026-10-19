@@ -445,3 +445,11 @@ Template:
   p95 36 (samples [36, 2419, 33]: the known pre-existing WebKit freeze appeared in one scroll), canvas 67.1.
 - Pushed main (user-authorized). GitHub Actions run 39202555390 → success.
   https://github.com/himmannshu/book-reader/actions/runs/39202555390
+
+### 2026-10-19 01:14 EDT | Phase 04 | Claude Code (Opus 5.5) | Contract and outline fixture
+- Changes: branch phase-04-table-of-contents; contract approved; scripts/generate-fixtures.mjs builds a PDF
+  outline from pdf-lib low-level objects (`addOutline`, named destinations in /Names /Dests) →
+  tests/fixtures/outline-12-pages.pdf.
+- Verification: regenerated twice → identical SHA-1; other fixtures unchanged. Read back with PDF.js
+  (legacy build, Node): Part One→0 [Chapter 1→1, Chapter 2→4], Part Two→7 [Chapter 3→8 via named
+  "chapter-3", Missing section→null via unregistered "no-such-destination"], Appendix→11.
