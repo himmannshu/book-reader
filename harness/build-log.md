@@ -531,3 +531,15 @@ Template:
 - New findings: N1 (medium): Escape does nothing when focus is on the page body (for example in WebKit after
   clicking Contents with the mouse, or after clicking the panel heading); T1 (low): no test for the
   "couldn't be read" state; note: 5 px sideways scroll at 320 px from the header notice (not this phase).
+
+### 2026-10-19 11:16 EDT | Phase 04 | Claude Code (Opus 5.5) | Fix N1, test T1
+- Changes: while Contents is open, ReaderView listens for Escape on `document` (N1), replacing the handler on
+  the reader div. New ReaderView unit test: an outline that cannot be read shows "This book's table of
+  contents couldn't be read." (T1). New e2e: click Contents with the mouse, click the panel heading, Escape closes.
+- Red: N1 e2e failed in chromium and webkit (panel stayed open). T1 passed on first run (message existed but was
+  untested); guard test.
+- Green: unit 63, e2e 58. Committed (ca5c0dc), then breaks: failed state shows the empty-state text → T1 failed;
+  listener only on the reader → N1 e2e 2 failed. Both reverted.
+- Verification: `scripts/verify.sh` → PASS (see summary line above in this log run).
+- F-005 → passing, citing the re-review. Phase 04 still needs items 10 (CI, needs the user's OK to push)
+  and 11 (user's real-book check).
