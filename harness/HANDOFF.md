@@ -48,15 +48,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - A page with a slow image (DDIA page 2) still takes ~300 ms to draw when reached; engine-level.
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 00:39 EDT
+Snapshot 2026-10-19 00:46 EDT
 - Branch: perf-first-page-investigation
-- HEAD: 4a92ad3 phase 02: draw overscan pages after visible ones (real-book first page 469 → 133 ms)
-- Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 00:38 EDT (commit d841b09)
+- HEAD: 3afb315 phase 02: refresh handoff snapshot
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-19 00:46 EDT (commit 3afb315)
 - Recent commits:
+    3afb315 phase 02: refresh handoff snapshot
     4a92ad3 phase 02: draw overscan pages after visible ones (real-book first page 469 → 133 ms)
     d841b09 phase 02: refresh handoff snapshot
     bf249ca phase 02: real-book benchmark recorded; clean perf results per run; phase complete
     b21023e phase 02: refresh handoff snapshot
-    fb0676e phase 02: context, evidence and handoff (item 11 awaits user)
+- Changed files:
+     M harness/build-log.md
+     M harness/context/first-page-investigation-context.md
 <!-- AUTO:END -->

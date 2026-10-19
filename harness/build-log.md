@@ -327,3 +327,15 @@ Template:
   alternating order: before 28,32,33×6 / after 31,33×7 (medians 33 = 33). Chromium p95 16.7–16.8 throughout.
 - `scripts/verify.sh` after fix → PASS (unit 28, browser 26, perf 8; heavy webkit p95 29).
 - Findings: harness/context/first-page-investigation-context.md.
+
+### 2026-10-19 00:50 EDT | After phase 02 | Claude Code (Opus 5.5) | First-page fix: quiet re-measurement
+- The phase-03 session reported its perf runs overlapped mine (about 23:54–00:40 EDT). It held off while I
+  re-ran from 00:41. Each run's exit code was checked, and so was the result JSON's mtime against the run's start
+  (earlier A/B loops read the JSON without checking, so a failed run could have repeated a stale value).
+- DDIA first page (fix): chromium 136 [133,136,138], webkit 142 [142,164,124].
+- WebKit steady p95, 8 interleaved pairs (alternating order): before 30,33,31,29,32,28,44,31 (median 31; one
+  over-budget rc=1); fixed 40,51,29,34,29,31,37,34 (median 34; one over-budget rc=1).
+- Scratch settle spec (scratchpad; temporary config removed), 6 pairs: scroll right after the jump before
+  37,29,29,31,37,33 / fixed 37,36,30,32,33,33; after a 1 s pause before 32,33,28,30,30,33 / fixed 34,31,32,30,31,32.
+  Reading: no clear regression; ≤1–3 ms at most, right after a jump. WebKit p95 can exceed 40 with either version.
+- `scripts/verify.sh` → PASS (unit 28, browser 26, perf 8; heavy chromium firstPage 144, webkit 125, webkit p95 30).

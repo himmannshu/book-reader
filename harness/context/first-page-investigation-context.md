@@ -4,6 +4,11 @@ Why a real book (DDIA, 24 MB, 613 pages) showed its first page in 462 ms (Chromi
 (WebKit) while the generated heavy fixture takes ~145 ms. Measured on the M2 (8 GB), Playwright
 headless, device scale factor 2, 1280×720 viewport. Raw runs are in harness/build-log.md.
 
+Caveat: another session ran `npm run test:perf` on the same machine from about 23:54 to 00:40 EDT,
+which overlaps the breakdown and the first before/after runs. The cause is a ~300 ms effect that
+repeated in every run, so it stands. The final first-page and scroll numbers below were measured
+again after 00:41 on a quiet machine, with exit codes and result-file freshness checked.
+
 ## Breakdown
 
 Time from `book:open-start`, median of 3, in the real app (dev build, so ~40 ms slower than the
@@ -58,23 +63,34 @@ PDF.js's own viewer works the same way (one page at a time, visible first).
   `#update()` after every finished draw. That reads `scrollTop`/`clientHeight` mid-frame and could
   force a layout during scrolling, and this version avoids it.
 
-Production benchmark (`npm run test:perf`, median of 3), before → after (final code):
+Production benchmark (`npm run test:perf`, median of 3). "Before" is from the phase-02 run and
+this session's baseline; "after" is the quiet re-run:
 
 | | Chromium | WebKit |
 |---|---|---|
-| DDIA first page | 469 → 133 ms | 393 → 129 ms |
-| DDIA jump | 31 → 31 ms | 97 → 47 ms |
-| Heavy fixture first page | 142 → 142 ms | 134 → 123 ms |
-| Heavy fixture jump | 30 → 17 ms | 107 → 73 ms |
+| DDIA first page | 469 → 136 ms | 393 → 142 ms |
+| Heavy fixture first page | 142 → 144 ms | 134 → 125 ms |
+| Heavy fixture jump | 30 → 18 ms | 107 → 74 ms |
 
-Jump samples vary widely (one sample in three is often 2–3× the others), so read the jump rows
-as "not worse", not as a gain.
+Jump samples vary widely (one sample in three is often 2–3× the others), so read the jump row as
+"not worse", not as a gain.
 
-Scroll smoothness: WebKit steady-scroll p95 is noisy on this machine (27–61 ms across runs of
-either version when the machine is hot). In a clean interleaved A/B (8 pairs, alternating order)
-the medians were the same: before 28–33 ms (median 33), after 31–33 ms (median 33). Chromium p95
-stayed at 16.7–16.8 ms. Blank frames were unchanged (0–1.1%). WebKit p95 sits close to its 40 ms
-budget with or without this change. That was already known (phase-02 context).
+Scroll smoothness (heavy fixture, WebKit steady-scroll p95, interleaved A/B, quiet machine):
+
+| Runs | Before | After |
+|---|---|---|
+| Benchmark as is, 8 pairs | 28–44, median 31 | 29–51, median 34 |
+| Scroll starts right after the jump, 6 pairs | 29–37, median 32 | 30–37, median 33 |
+| Scroll starts 1 s after the jump, 6 pairs | 28–33, median 31 | 30–34, median 31.5 |
+
+- There is no clear regression. At most ~1–3 ms, only when scrolling starts the moment a jumped-to
+  page is drawn: the overscan pages now start drawing at that moment instead of alongside it.
+- Chromium p95 stayed at 16.7–16.8 ms. Blank frames were unchanged (0–1.1%).
+- Both versions sometimes exceed the 40 ms WebKit p95 budget (before: 44 once in 8; after: 51 once
+  in 8), so local `scripts/verify.sh` can flake on WebKit p95 with or without this change.
+- An earlier version of the fix called `#update()` after every finished draw. It now calls it only
+  while overscan is held back, because `#update()` reads `scrollTop`/`clientHeight` and can force
+  a layout mid-frame.
 
 ## Not done (recommendations)
 
@@ -84,3 +100,6 @@ budget with or without this change. That was already known (phase-02 context).
 - A page with a slow image still takes ~300 ms to draw when the reader reaches it. Only an
   engine change helps there (decode off the PDF.js worker, PDFium, or a second worker). That is
   a user decision (D3).
+- WebKit p95 budget (40 ms) vs measured spread (28–51 ms) on this machine: either the benchmark
+  takes more samples (e.g. median of 3 scroll runs), or the budget is revisited with the user.
+  Not changed here (budgets need the user's agreement).
