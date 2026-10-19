@@ -506,3 +506,19 @@ Template:
   test that the outline loads lazily, none for (1) or (2); minor: after a wide-layout jump, focus stays on
   the entry, so Space or Enter repeats the jump instead of scrolling.
 - F-005 set back to failing until these are fixed. Phase stays In progress.
+
+### 2026-10-19 11:06 EDT | Phase 04 | Claude Code (Opus 5.5) | Fix review findings
+- User asked: fix the phase 04 findings with tests, re-run the phase 04 review, then review phases 02 and 03.
+- Changes: App gives each opened book an id and keys ReaderView by it (fresh reader and panel per book,
+  finding 1); Escape is handled on the ReaderView root, so it closes Contents wherever focus is (finding 2);
+  choosing an entry always focuses the pages (minor finding). ContentsPanel loses its Escape handling.
+- Red: new e2e tests failed in chromium and webkit: "opening another book while Contents is open…"
+  (stuck "Loading contents…"), "Escape closes Contents even when no entry has focus", "after choosing an
+  entry in a wide window, the keyboard scrolls the book" (reader not focused). New unit test
+  src/ui/ReaderView.test.tsx (outline read only on first Contents open, once per book) passed on its first
+  run because the code was already lazy: it is a guard test.
+- Green: unit 62, e2e 56 passed. Committed (147d9d0) before mutation checks. Breaks, each reverted:
+  eager `doc.outline()` at mount → unit test failed; no key per book → 2 failed; Escape only in the panel →
+  2 failed; no focus after jump → 2 failed.
+- Verification: `scripts/verify.sh` → PASS: unit 62, browser 56, perf 8 (webkit p95 samples [28, 2354, 30]:
+  the known pre-existing freeze in one scroll; median 30).
