@@ -195,3 +195,24 @@ storage interface.
 
 **Revisit if:** reading large books needs random access that IndexedDB Blobs can't serve
 quickly. `Blob.slice` covers range reads today. Or if storage quota behaves badly on iOS.
+
+---
+
+## D5b (2026-10-19). Book files as ArrayBuffers, not Blobs. Supersedes the Blob part of D5a
+
+**Context:** while building phase 03, WebKit's default Playwright context rejected Blob and File
+values in IndexedDB, as Safari's private browsing does: the transaction fails. ArrayBuffers
+worked in both browsers at similar speed (24 MB: about 25–29 ms to write, 14–16 ms to read).
+The change was recorded in the build log and the phase 03 context file. This entry was missing
+until the phase 03 review (finding F7) pointed it out.
+
+**Decision:** store each book's bytes as an ArrayBuffer in the `bookFiles` object store. The
+interface returns bytes: `BookStore.getBytes(id): Promise<Uint8Array>`.
+
+**What it gives up:** D5a counted on `Blob.slice` for reading part of a large book without
+loading all of it. With ArrayBuffers, every open loads the whole file into memory. That is fine
+for the books measured so far (58 MB opens within budget), but a range-reading approach for
+very large books would need a different layout, such as chunked records.
+
+**Revisit if:** opening very large books becomes slow or memory-heavy, especially on iPhone.
+That is the time to consider chunked storage.

@@ -556,3 +556,15 @@ Template:
   accumulate while a book stays open; e2e name "keeps at most 8 canvases" is out of date.
 - Note: item 11's real-book run was done by the agent at the user's request (the contract says the user runs it).
   The first-page fix commits (4a92ad3, 47cceaa) are not covered by this review.
+
+### 2026-10-19 11:35 EDT | Phase 03 | Claude Code (Opus 5.5) | Evaluator review: PASS; D5b recorded
+- Evaluator (fresh context) reviewed 7837cee (tip of phase-03-local-book-persistence, in a scratch copy) → PASS.
+  All 12 items pass (item 12 rests on the user's Safari report); code quality and design exactly 3.
+  CI evidence: run 39202341230 on 7837cee green. Review: harness/code_review/phase-03-review.md.
+- Findings (not blocking, all present on HEAD): F1 (medium, iPhone) the book title shrinks to 0 px while
+  confirming removal at 390 px; F2 the "unavailable" startup alert says "this one won't be kept" with no book
+  open; F3 a save-failure alert stays after Library; F4 a record whose file is missing stays listed; F5 a list
+  refresh failure after a successful save would say "couldn't be saved" (code reading); F6 markOpened failures of
+  expected kinds aren't logged; F8 remove confirmation buttons aren't disabled while opening.
+- F7 (process) fixed now: added D5b to architecture-decisions.md (ArrayBuffers supersede D5a's Blobs; gives up
+  Blob.slice partial reads) and Amendment 1 to phase-03-contract.md. To be pointed out to the user.

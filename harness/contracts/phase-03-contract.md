@@ -37,3 +37,10 @@ Every browser check runs in both Chromium and WebKit.
 ## Amendments
 
 (none)
+
+### Amendment 1 (2026-10-19, recorded after the phase 03 review, finding F7)
+
+The preamble's "book files are stored as Blobs in IndexedDB" changed during the build. Files are
+stored as ArrayBuffers, because Safari private browsing and Playwright's WebKit reject Blobs in
+IndexedDB. See D5b in harness/context/architecture-decisions.md. The checkable items are
+unchanged.
