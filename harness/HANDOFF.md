@@ -45,15 +45,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 01:00 EDT
-- Branch: phase-03-local-book-persistence
-- HEAD: c7ce9a8 phase 03: item 12 user-checked in Safari; phase complete
+Snapshot 2026-10-19 01:03 EDT
+- Branch: main
+- HEAD: 6e44e61 Merge branch 'perf-first-page-investigation': draw overscan after visible pages
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 01:00 EDT (commit 5533f82)
+- Last verify: PASS at 2026-10-19 01:03 EDT (commit 7837cee)
 - Recent commits:
+    6e44e61 Merge branch 'perf-first-page-investigation': draw overscan after visible pages
+    7837cee phase 03: refresh handoff snapshot
     c7ce9a8 phase 03: item 12 user-checked in Safari; phase complete
     5533f82 phase 03: refresh handoff snapshot
     511803b phase 03: scroll benchmark is a median of 3; record save A/B, CI and WebKit stall finding
-    c6c3f9e phase 03: lint boundary for browser storage; docs; correct build-log timestamps
-    c1095e5 phase 03: e2e for remove with confirmation, dedupe, recency order, Library button
 <!-- AUTO:END -->
