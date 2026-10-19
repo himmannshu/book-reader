@@ -1,4 +1,4 @@
-import type { SyntheticEvent } from 'react';
+import { useLayoutEffect, useRef, type SyntheticEvent } from 'react';
 
 /** What the floating button offers, and where (CSS px inside the reader body). */
 export type SelectionAction =
@@ -32,9 +32,29 @@ export function SelectionActions({
   noteUnavailableReason = null,
   removeUnavailableReason = null,
 }: SelectionActionsProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const hasNoteAction = onNote !== undefined;
+  useLayoutEffect(() => {
+    const element = ref.current;
+    const area = element?.offsetParent;
+    if (!action || !element || !(area instanceof HTMLElement)) return;
+    // Notes add a second action. Measure the actual menu (including any error reason) only while
+    // shown, so a highlight near an edge never puts an action outside the reader.
+    const box = element.getBoundingClientRect();
+    element.style.left = `${Math.max(8, Math.min(action.left, area.clientWidth - box.width - 8))}px`;
+    element.style.top = `${Math.max(8, Math.min(action.top, area.clientHeight - box.height - 8))}px`;
+  }, [
+    action,
+    unsavedReason,
+    noteUnavailableReason,
+    removeUnavailableReason,
+    noteLabel,
+    hasNoteAction,
+  ]);
   if (!action) return null;
   return (
     <div
+      ref={ref}
       className="selection-actions"
       style={{ left: action.left, top: action.top }}
       onMouseDown={keepSelection}

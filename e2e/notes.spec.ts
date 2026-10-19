@@ -173,6 +173,40 @@ test('an existing highlight accepts a passage note', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: 'Notes' })).toContainText('Bravo two');
 });
 
+test('note actions remain fully reachable for a highlight near the reader bottom', async ({
+  page,
+}) => {
+  await highlight(page);
+  await page.setViewportSize({ width: 1280, height: 360 });
+  await layoutReady(page);
+  await page.getByTestId('reader').evaluate((reader) => {
+    const box = reader.querySelector('.highlight-box')?.getBoundingClientRect();
+    if (box) reader.scrollTop += box.bottom - reader.getBoundingClientRect().bottom + 16;
+  });
+  await expect
+    .poll(() =>
+      page.locator('.highlight-box').evaluate((box) => {
+        const reader = box.closest('[data-testid="reader"]');
+        return Math.round(
+          (reader?.getBoundingClientRect().bottom ?? 0) - box.getBoundingClientRect().bottom,
+        );
+      }),
+    )
+    .toBe(16);
+  await clickHighlight(page);
+  await expect(page.getByRole('button', { name: 'Add note', exact: true })).toHaveCount(1);
+  const bottom = await page
+    .getByTestId('reader')
+    .evaluate((reader) => reader.getBoundingClientRect().bottom);
+  await expect
+    .poll(async () => (await page.locator('.selection-actions').boundingBox())?.y ?? Infinity)
+    .toBeGreaterThanOrEqual(0);
+  const menu = await page.locator('.selection-actions').boundingBox();
+  expect((menu?.y ?? Infinity) + (menu?.height ?? Infinity)).toBeLessThanOrEqual(bottom);
+  await page.getByRole('button', { name: 'Add note', exact: true }).click();
+  await save(page, 'At the edge');
+});
+
 test('one note per target; blank edits and Cancel preserve the saved multiline Unicode text', async ({
   page,
 }) => {

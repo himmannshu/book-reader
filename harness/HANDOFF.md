@@ -24,9 +24,12 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Contract approved (Amendment 01), phase/roadmap In progress. Core/schema v4 implemented with
   transactional note cascades and a populated v3 migration test (3381801).
 - Notes hook/editor/panel, App navigation guard and passage jumps implemented. All 137 unit tests
-  and 34 focused notes browser checks pass. Full canonical verify remains pending.
+  and 34 focused notes browser checks pass. Full verify at e4a8e58 PASS: 137 unit, 164 browser,
+  8 perf; WebKit p95 31 ms, budgets unchanged. Touch editor screenshots inspected.
 - Browser checks exposed Safari editor/confirmation Tab skips and focus lost after deletion; fixed.
   Covers iPhone/iPad taps, cross-page/foot-of-page jumps, isolation, cascades, failure/retry and drafts.
+- Final menu-boundary check caught a lower-edge overflow in both engines; measured clamp fixes it
+  (red 2/2 → green 2/2). Full verify must be rerun on this correction.
 - User confirmed the real-book/device check (9463bfc) and authorized pushing/running CI.
 - First CI run failed one Chromium width check: fixture metadata used kerned widths for plain Tj
   text. Fixed the generator and regenerated ten manifest widths (7ac8b1e); PDF bytes unchanged.
@@ -45,8 +48,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Run full scripts/verify.sh, inspect touch screenshots, record contract evidence. Keep D7–D9.
-   No push/deploy/main merge; CI and real-book/device user check remain outstanding.
+1. Rerun full scripts/verify.sh on the menu correction, then record contract evidence and hand off.
+   No push/deploy/main merge; CI and real-book/device check outstanding.
 
 ## Decisions worth remembering
 
@@ -91,26 +94,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   this session). An occasional ~2.4 s WebKit scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:25 EDT
+Snapshot 2026-10-19 17:29 EDT
 - Branch: phase-07-notes
-- HEAD: 52a80c0 phase 07: add notes editor and guarded reader navigation
-- Uncommitted files: 10
-- Last verify: PASS at 2026-10-19 17:06 EDT (commit 8372a99)
+- HEAD: e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
+- Uncommitted files: 5
+- Last verify: PASS at 2026-10-19 17:27 EDT (commit e4a8e58)
 - Recent commits:
+    e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
     52a80c0 phase 07: add notes editor and guarded reader navigation
     3381801 wip: phase 07 note core and transactional storage; UI checks red
     b1ceea0 phase 07: record approved notes contract and implementation context
     8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
-    7ac8b1e phase 06: measure fixture widths without kerning
 - Changed files:
      M e2e/notes.spec.ts
      M harness/HANDOFF.md
      M harness/build-log.md
-     M scripts/generate-fixtures.mjs
-     M src/ui/ConfirmDialog.tsx
-     M src/ui/NotesPanel.tsx
-     M src/ui/ReaderView.test.tsx
-     M src/ui/useNotes.test.tsx
-     M tests/fixtures/manifest.json
-    ?? tests/fixtures/no-text-1-page.pdf
+     M src/ui/SelectionActions.tsx
+     M src/ui/app.css
 <!-- AUTO:END -->

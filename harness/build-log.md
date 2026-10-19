@@ -909,3 +909,22 @@ Template:
 - Added deterministic vector-only fixture for no-text page notes. Lint passed; all 137 units pass.
   A newly added loading-state test had a type-only unsupported Testing Library `exact` option;
   removed it. Full canonical verify and screenshot inspection next. F-008 not yet changed.
+
+### 2026-10-19 | Phase 07 | Codex | First full local verification
+- `scripts/verify.sh` PASS at e4a8e58: lint, format, types, 137 unit tests, 164 browser tests,
+  8 performance checks. Chromium firstPage 168 ms, jump 19, p95 16.8, blank frames 0%; WebKit
+  firstPage 175 ms, jump 71, p95 31, blank frames 1%; both maxCanvas 67.1 MB. Budgets unchanged.
+- Inspected captured iPhone/iPad notes-editor screenshots: quote/editor/buttons/list fit the panel;
+  narrow overlay and wide split layouts are usable. Emulation does not reproduce the physical
+  iOS keyboard, so this does not replace contract item 18.
+- One final menu-boundary check is being added: the new Add note action makes the floating menu
+  taller, so both actions must stay reachable when a chosen highlight is at the reader's lower edge.
+  Phase remains In progress; CI and the Phase 07 user check have not been run/reported.
+
+### 2026-10-19 | Phase 07 | Codex | Floating-menu edge correction
+- New lower-edge check failed in both engines: the expanded Add note/Remove menu ended at 407px
+  in a 360px viewport. Clamp the measured menu inside its positioned reader body, accounting for
+  error text and width; no measurement/listener on idle scrolling. The same focused checks now
+  pass (2/2); save through the repositioned Add note also succeeds.
+- Full verification will be rerun on the correction. Previous full result is retained above, not
+  treated as evidence for code that changed afterward. No budgets changed.
