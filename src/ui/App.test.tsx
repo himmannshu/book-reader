@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
 import { StorageError, type BookRecord, type BookStore } from '../storage/types';
 import { App } from './App';
@@ -96,5 +96,39 @@ describe('App', () => {
       "This browser mode can't save books",
     );
     expect(screen.getByTestId('book-info')).toHaveTextContent('private.pdf');
+  });
+
+  it('keeps the open book after it is saved, and enables bookmarks for it', async () => {
+    const destroy = vi.fn(() => Promise.resolve());
+    const doc: PdfDoc = { ...fakeDoc, destroy };
+    const record: BookRecord = {
+      id: 'saved',
+      fileName: 'new.pdf',
+      title: 'new',
+      byteSize: 4,
+      addedAt: 1,
+      lastOpenedAt: 1,
+    };
+    // The save finishes only after the reader is showing, as it does in a browser.
+    let finishSave!: () => void;
+    const saved = new Promise<void>((resolve) => (finishSave = resolve));
+    const store: BookStore = { ...memoryStore(), add: () => saved.then(() => record) };
+    const bookmarks = {
+      list: vi.fn(() => Promise.resolve([])),
+      put: () => Promise.resolve(),
+      remove: () => Promise.resolve(),
+    };
+    render(
+      <App engine={{ open: () => Promise.resolve(doc) }} store={store} bookmarks={bookmarks} />,
+    );
+    chooseFile('new.pdf');
+    expect(await screen.findByTestId('book-info')).toHaveTextContent('new.pdf');
+    finishSave();
+    expect(await screen.findByRole('status')).toHaveTextContent('Saved on this device.');
+    await vi.waitFor(() => expect(bookmarks.list).toHaveBeenCalledWith('saved'));
+    await vi.waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Bookmark page' })).toBeEnabled(),
+    );
+    expect(destroy).not.toHaveBeenCalled();
   });
 });

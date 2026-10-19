@@ -75,13 +75,14 @@ export function App({
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Free the previous document's memory and worker when another book replaces it.
+  // Free the previous document's memory and worker when another book replaces it. Keyed on the
+  // document, not the book: the book changes when a newly opened file gets its stored id.
+  const doc = book?.doc;
   useEffect(() => {
-    const doc = book?.doc;
     return () => {
       void doc?.destroy();
     };
-  }, [book]);
+  }, [doc]);
 
   const refreshBooks = useCallback(async () => {
     try {
