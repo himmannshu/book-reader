@@ -6,30 +6,27 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 05 In progress. Evaluator FAIL (B1, wrong page bookmarked with several pages on screen) fixed;
-  `scripts/verify.sh` PASS after the fix (build log 13:05); CI run 39291151035 green on fdaa254 (item 13).
-  Only item 14 (user's real-book check) is open.
-- Branch: phase-05-bookmarks (pushed at fdaa254; later commits are harness docs only)
+- Phase: 05 Complete. All 14 items have evidence: verify PASS at aa73b5c, CI 39291151035 green on fdaa254,
+  item 14 user-checked. The B1 fix (after the evaluator's FAIL) is tested but not re-reviewed.
+- Branch: phase-05-bookmarks (pushed at fdaa254; later commits are harness docs only, not pushed). Not merged.
 
 ## Done
 
-- Phases 00–04 complete and on main (main pushed at 71a46b6).
-- Phase 05: page bookmarks (toggle follows the page in view), own Bookmarks panel, "Page N · <chapter>"
-  names, IndexedDB v2 `bookmarks` store, bookmarks removed with their book. Fixed a bug the new e2e found:
-  App destroyed the open document when a saved file got its id (cleanup effect now keyed on the doc).
-- Evaluator reviews: phase 01–03 PASS, 04 re-review FAIL only on items 10/11 (both since done). Phase 00 skipped.
+- Phases 00–05 complete. 00–04 are on main (pushed at 71a46b6); 05 is not merged yet.
+- Phase 05: page bookmarks (toggle follows the page in view; ties within 1 px go to the earlier page),
+  own Bookmarks panel, "Page N · <chapter>" names, IndexedDB v2 `bookmarks` store, bookmarks removed with
+  their book. Fixed: App destroyed the open document when a saved file got its id.
+- Evaluator reviews: 01–03 PASS, 04 FAIL only on 10/11 (since done), 05 FAIL on B1 (since fixed, not re-reviewed).
 
 ## In flight
 
-- Nothing running. phase-05-bookmarks is committed locally only.
+- Waiting on the user: push the close-out commits and merge phase-05-bookmarks into main.
 
 ## Next action
 
-1. Ask the user to check item 14 on a real book
-   (`npm run dev`, open the book, bookmark a few pages, reload, jump back).
-2. Run the evaluator review (`/evaluate 05`, fresh context) if the user wants it before closing.
-3. When 13 and 14 have evidence: set phase 05 Complete (build file, PLANS.md, summary row), ask before merging.
-4. Non-blocking review findings (below) stay open until the user picks which to fix.
+1. Only with the user's go-ahead: push this branch, fast-forward main to it, push main.
+2. Ask the user whether to re-review phase 05 or fix the open minor findings (below), then plan phase 06
+   (highlights) in plan mode.
 
 ## Decisions worth remembering
 
@@ -41,6 +38,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Blockers and doubts
 
 - Open, non-blocking review findings (user to decide):
+  - Phase 05 minor: disabled toggle's reason only a tooltip (iOS can't show it); unused Viewer.currentPage;
+    toggle ~2 px past the edge at 320 px.
   - Phase 03 F1 (medium, iPhone): book title shrinks to 0 px while confirming removal at 390 px.
   - Phase 03 F2/F3: wrong "unavailable" wording at startup; save-failure alert survives Library.
   - Phase 03 F4–F6, F8: missing-file record stays listed; misleading message on list-refresh failure;
@@ -54,18 +53,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 13:10 EDT
+Snapshot 2026-10-19 13:17 EDT
 - Branch: phase-05-bookmarks
-- HEAD: fdaa254 phase 05: log B1 fix and verify PASS; F-006 passing; handoff
-- Uncommitted files: 2
+- HEAD: c0ad137 phase 05: item 13 CI green; handoff
+- Uncommitted files: 5
 - Last verify: PASS at 2026-10-19 13:05 EDT (commit aa73b5c)
 - Recent commits:
+    c0ad137 phase 05: item 13 CI green; handoff
     fdaa254 phase 05: log B1 fix and verify PASS; F-006 passing; handoff
     aa73b5c phase 05: fix B1 (current page ties within 1 px go to the earlier page); T1/T2 tests; comment
     c9cd68b phase 05: evaluator review (FAIL on B1); F-006 failing until fixed
     d6b5517 phase 05: verify PASS; items 1–12 observed; F-006 passing; handoff
-    03bc129 phase 05: log build progress
 - Changed files:
+     M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
+     M harness/build/phase-05-bookmarks.md
+     M harness/features.json
 <!-- AUTO:END -->

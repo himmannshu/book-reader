@@ -26,7 +26,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 02 | Performance baseline | Automated speed budgets on a large test PDF (first page, scrolling, jumping, memory) fail verify on regression | 01 | Complete |
 | 03 | Local book persistence | Opened books stay on the device; after a reload a simple list reopens them without re-importing | 01 | Complete |
 | 04 | Table of contents | A panel shows the book's outline; choosing a chapter jumps to it | 01 | Complete |
-| 05 | Bookmarks | Add and remove bookmarks, see them in a list, jump to them; they survive a reload | 03 | In progress |
+| 05 | Bookmarks | Add and remove bookmarks, see them in a list, jump to them; they survive a reload | 03 | Complete |
 | 06 | Highlights | Select text and highlight it; highlights stay in place at any zoom and survive a reload | 03 | Not started |
 | 07 | Notes | Attach a note to a highlight or a page; a notes panel lists them and jumps to them; they survive a reload | 06 | Not started |
 | 08 | Installable and hosted | The app installs to Dock and Home Screen, opens offline, and is hosted behind a personal login | 03 | Not started |

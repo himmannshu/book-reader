@@ -1,6 +1,6 @@
 # Phase 05: Bookmarks
 
-- Status: In progress
+- Status: Complete (all 14 contract items observed; CI 39291151035 green)
 - Branch: phase-05-bookmarks
 - Depends on: 03
 

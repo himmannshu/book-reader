@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 05 | Complete | phase-05-bookmarks | verify PASS at aa73b5c; items 1–13 observed (B1 fixed after review FAIL); 14 user-checked; CI 39291151035 green | none |
 | 04 | Complete | phase-04-table-of-contents | verify PASS at ca5c0dc; items 1–9 observed (evaluator re-review); 11 user-checked; CI 39279260419 green | none |
 | 03 | Complete | phase-03-local-book-persistence | verify PASS; items 1–11 observed, 12 user-checked in Safari; CI 39200828535 green | none |
 | 02 | Complete | phase-02-performance-baseline | verify PASS; items 1–11 observed (11 on a real book); CI on main 39198849866 green | none |
@@ -652,3 +653,12 @@ Template:
   https://github.com/himmannshu/book-reader/actions/runs/39291151035
 - Items 1–13 now have evidence (1–2 after the B1 fix, not re-reviewed). Only item 14 (user's real-book check)
   is open; phase stays In progress.
+
+### 2026-10-19 13:15 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 14 user-checked; phase Complete
+- Item 14: user-observed (reported in chat by Himanshu): "I checked on a real book: bookmarked a few pages,
+  reloaded, jumped back. Bookmarks look good." Not independently verified by the agent.
+- All 14 contract items have evidence. Phase 05 set Complete in the build file, PLANS.md and the summary row.
+- The evaluator's FAIL rested on B1 (items 1–2); the fix is covered by new unit/e2e tests and mutation checks
+  but has not been re-reviewed. Minor findings N2 (tooltip-only reason), unused Viewer.currentPage, 320 px
+  toggle overflow stay open.
+- Not merged into main; commits after fdaa254 are harness docs only and not pushed.

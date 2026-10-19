@@ -48,7 +48,7 @@
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
       "status": "passing",
-      "evidence": "2026-10-19 after the B1 fix: e2e/bookmarks.spec.ts (incl. several whole pages and thin strips on screen, page order after reload) passes in chromium+webkit; scripts/verify.sh PASS at aa73b5c (94 unit, 86 e2e, 8 perf); mutation checks (no tie tolerance, no sortByPage) fail the new tests. Not re-reviewed; CI and user check pending."
+      "evidence": "2026-10-19 after the B1 fix: e2e/bookmarks.spec.ts (incl. several whole pages and thin strips on screen, page order after reload) passes in chromium+webkit; scripts/verify.sh PASS at aa73b5c (94 unit, 86 e2e, 8 perf); mutation checks (no tie tolerance, no sortByPage) fail the new tests. CI run 39291151035 on fdaa254 green; user-checked on a real book. Fix not re-reviewed."
     },
     {
       "id": "F-007",
