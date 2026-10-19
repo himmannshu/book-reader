@@ -7,7 +7,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-18
 - Phase: 00 Complete; 01 not started
-- Branch: phase-00-repository-foundation (not merged to main, not pushed)
+- Branch: main (phase 00 merged; pushed to github.com/himmannshu/book-reader, private)
 
 ## Done
 
@@ -21,8 +21,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. User: decide whether to merge phase-00 into main, create the GitHub repo and push (agents
-   must ask before pushing). The first push will run CI for the first time (contract item 10).
+1. Run `/start-session` (or harness/prompts/00-orient.md).
 2. Plan phase 01 (open and read a PDF): post the plan and contract, then wait for approval.
 
 ## Decisions worth remembering
@@ -34,7 +33,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Blockers and doubts
 
-- CI has never run on GitHub (no remote yet).
+- None. CI is green on GitHub (run 39191648738).
 
 <!-- AUTO:BEGIN -->
 Snapshot 2026-10-18 22:38 EDT

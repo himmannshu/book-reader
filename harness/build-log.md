@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log (item 10 GitHub run not run) | none |
+| 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
 ## Entries
 
@@ -82,3 +82,14 @@ Template:
 - Limitations: CI never executed on GitHub (item 10, as the contract allows). Playwright
   browsers were downloaded from Playwright's CDN (chromium cached, webkit-2370 new).
 - Next: user decides on creating the GitHub repo and pushing; then plan phase 01.
+
+### 2026-10-18 23:20 EDT | Phase 00 | Claude Code (Opus 5.5) | First CI run on GitHub (contract item 10)
+- Changes: merged phase-00-repository-foundation into main (fast-forward, 812f49d). Installed the
+  GitHub CLI (`brew install gh`, 2.102.0); the user ran `gh auth login`. Created the private repo
+  https://github.com/himmannshu/book-reader and pushed main (user-authorized).
+- Verification: GitHub Actions run 39191648738 on 812f49d → conclusion success. Steps npm ci,
+  `npx playwright install --with-deps chromium webkit`, and `scripts/verify.sh` all succeeded.
+  https://github.com/himmannshu/book-reader/actions/runs/39191648738
+- Correction to the earlier Phase 00 close entry: item 10's GitHub run is now observed (it was
+  "NOT RUN" at the time).
+- Next: plan phase 01 (open and read a PDF) and wait for approval.
