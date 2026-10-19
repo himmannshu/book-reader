@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 01 | In progress | phase-01-open-and-read-pdf | verify PASS at 5d07bf2; items 1–10 observed | item 11 needs the user |
+| 01 | Complete | phase-01-open-and-read-pdf | verify PASS at 5d07bf2; items 1–10 observed; item 11 user-checked | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
 ## Entries
@@ -144,3 +144,11 @@ Template:
   11. NOT YET: needs the user to open one of their own books in `npm run dev`.
 - Limitations: F-001/F-002 marked passing on items 1–3 evidence. Phase stays In progress until item 11.
 - Next: user checks item 11; then review (`/evaluate 01` or Codex) and decide on push/merge.
+
+### 2026-10-18 23:55 EDT | Phase 01 | Claude Code (Opus 5.5) | Item 11 user-checked; phase complete
+- Verification: 11. User-observed (reported in chat by Himanshu): "I opened a real book in the dev
+  server and it reads and scrolls fine." Not independently verified by the agent (the book is the
+  user's own file and was not shared).
+- All contract items 1–11 now have evidence. Phase 01 status → Complete.
+- Limitations: no independent review yet (recommended: `/evaluate 01` or Codex). Branch not pushed.
+- Next: review, then ask before pushing/merging; phase 02 (performance baseline) is not started.

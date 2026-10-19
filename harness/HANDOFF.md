@@ -6,26 +6,26 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-18
-- Phase: 01 In progress (contract items 1–10 observed; item 11 waits for the user)
+- Phase: 01 Complete; 02 not started
 - Branch: phase-01-open-and-read-pdf (not pushed, not merged)
 
 ## Done
 
 - Phase 00 complete and on origin/main; CI green.
-- Phase 01: engine interface + PDF.js adapter (src/engine), virtualized viewer (src/viewer),
-  open flow and error messages (src/ui), deterministic fixtures, 20 unit + 16 browser tests,
-  lint rule keeping PDF.js inside src/engine. `scripts/verify.sh` → PASS at 5d07bf2.
+- Phase 01 complete: engine interface + PDF.js adapter (src/engine), virtualized viewer
+  (src/viewer), open flow and error messages (src/ui), deterministic fixtures, 20 unit + 16
+  browser tests, lint rule keeping PDF.js inside src/engine. Verify PASS; item 11 user-checked
+  with a real book.
 
 ## In flight
 
-- Contract item 11: the user opens one of their own PDF books in `npm run dev` and scrolls it.
+- Nothing
 
 ## Next action
 
-1. Record the user's item 11 result in the build log. If it passes, set phase 01 Complete
-   (build file, PLANS.md, build-log summary). If not, fix what they saw first.
-2. Independent review recommended (`/evaluate 01`, or Codex with harness/prompts/03-evaluate.md).
-3. Ask before pushing the branch or merging into main.
+1. Independent review recommended (`/evaluate 01`, or Codex with harness/prompts/03-evaluate.md).
+2. Ask the user before pushing the branch or merging into main.
+3. Then plan phase 02 (performance baseline): post the plan and contract, wait for approval.
 
 ## Decisions worth remembering
 

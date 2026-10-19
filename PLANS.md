@@ -22,7 +22,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | # | Phase | Outcome (what a user or test can observe) | Depends on | Status |
 |---|---|---|---|---|
 | 00 | Repository foundation | App shell loads in a browser test; lint, types, unit and browser tests run from `scripts/verify.sh`; CI workflow file exists | none | Complete |
-| 01 | Open and read a PDF | Pick a PDF from disk and read it with continuous scroll; only pages near the viewport are drawn | 00 | In progress |
+| 01 | Open and read a PDF | Pick a PDF from disk and read it with continuous scroll; only pages near the viewport are drawn | 00 | Complete |
 | 02 | Performance baseline | Automated speed budgets on a large test PDF (first page, scrolling, jumping, memory) fail verify on regression | 01 | Not started |
 | 03 | Local book persistence | Opened books stay on the device; after a reload a simple list reopens them without re-importing | 01 | Not started |
 | 04 | Table of contents | A panel shows the book's outline; choosing a chapter jumps to it | 01 | Not started |
