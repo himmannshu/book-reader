@@ -1059,3 +1059,22 @@ Contract evidence from this final canonical run (contract unchanged after approv
   scripts/generate-icons.mjs + `npm run icons` → public/icons/ (192, 512, maskable 512, apple-touch 180, favicon 32).
 - Verification: icons generated twice → identical hashes; inspected 512, maskable 512 and 192 visually (fixed a
   thin line sliver at the top of each page).
+
+### 2026-10-19 19:07 EDT | Phase 08 | Claude Code (Opus 5.5) | PWA: manifest, service worker, offline, update notice, headers
+- Changes: vite-plugin-pwa 2.0.0 + workbox-window 7.4.1 (MIT, exact pins) in prompt mode, SW off in dev; manifest
+  (name, short name, start URL/scope /, standalone, theme/background colours, 192/512/maskable icons); index.html
+  icon and iOS meta tags; src/ui/UpdateNotice.tsx ("A new version is ready." Reload/Later, injectable hook);
+  public/_headers (no-cache for sw.js, registerSW.js, index.html, /, manifest; /assets/* immutable for a year);
+  tests/config/headers.test.ts (Node-side unit test; tests/ added to the Vitest include and tsconfig.node).
+- Red: e2e/pwa.spec.ts failed in both browsers (no manifest, no service worker); UpdateNotice and headers unit
+  tests failed (missing component/file).
+- Green: unit 142; e2e/pwa.spec.ts 9 passed + 1 skipped (installability is Chromium-only); full browser suite
+  175 passed, 1 skipped.
+- Mutation checks (each reverted): worker .mjs not precached → offline-book test failed (item 5); no maskable icon,
+  no apple-touch-icon, display "browser" → manifest test failed (item 1); auto reload → UpdateNotice tests failed
+  (item 6); sw.js cached an hour → headers test failed (item 8).
+- Found and fixed: my first installability test (item 2) was vacuous. Headless Chromium (the default headless
+  shell) returned no installability errors even for a page without a manifest; normal test contexts are incognito
+  ("in-incognito"). The test now launches full Chromium (channel "chromium") with a persistent profile, first
+  checks that a manifest-less page reports "no-manifest", then requires no errors for the app. Breaks: icons
+  removed → failed; manifest removed → failed. (1f9d405)
