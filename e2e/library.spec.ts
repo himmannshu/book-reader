@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { bandColor, bandColorOnCanvas, expectColorClose, openFixture, pageSlot } from './helpers';
+import { bandColor, bandColorOnCanvas, expectColorClose, importBook, pageSlot } from './helpers';
 
 function library(page: Page) {
   return page.getByRole('list', { name: 'Your books' });
@@ -7,13 +7,6 @@ function library(page: Page) {
 
 function bookItem(page: Page, title: string) {
   return library(page).getByRole('listitem').filter({ hasText: title });
-}
-
-/** Imports a fixture through the picker and waits until it is saved on the device. */
-async function importBook(page: Page, file: string) {
-  await openFixture(page, file);
-  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  await expect(page.getByRole('status')).toHaveText('Saved on this device.');
 }
 
 test.beforeEach(async ({ page }) => {

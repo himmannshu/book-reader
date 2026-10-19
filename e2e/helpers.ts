@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 const fixturesDir = join(import.meta.dirname, '..', 'tests', 'fixtures');
 
@@ -53,4 +53,30 @@ export function expectColorClose(actual: number[], expected: number[], tolerance
   return (
     actual.length === 3 && actual.every((v, i) => Math.abs(v - (expected[i] ?? -999)) <= tolerance)
   );
+}
+
+/** Distance in px from the top of the reader to the top of page `index`. */
+export async function offsetFromReaderTop(page: Page, index: number): Promise<number> {
+  return pageSlot(page, index).evaluate((slot) => {
+    const reader = slot.closest('[data-testid="reader"]');
+    return slot.getBoundingClientRect().top - (reader?.getBoundingClientRect().top ?? 0);
+  });
+}
+
+/** Page `index` sits at the top of the reader and is drawn (its band color matches). */
+export async function expectPageAtTop(page: Page, index: number) {
+  await expect.poll(() => offsetFromReaderTop(page, index)).toBeLessThanOrEqual(2);
+  expect(await offsetFromReaderTop(page, index)).toBeGreaterThanOrEqual(-2);
+  await expect(pageSlot(page, index)).toHaveAttribute('data-state', 'rendered');
+  const color = await bandColorOnCanvas(page, index);
+  expect(expectColorClose(color, bandColor(index)), `page ${index + 1} color was ${color}`).toBe(
+    true,
+  );
+}
+
+/** Imports a fixture through the picker and waits until it is saved on the device. */
+export async function importBook(page: Page, file: string) {
+  await openFixture(page, file);
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  await expect(page.getByRole('status')).toHaveText('Saved on this device.');
 }
