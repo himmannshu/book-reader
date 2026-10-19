@@ -646,3 +646,9 @@ Template:
   p95 16.8; webkit firstPage 142, jump 86, p95 33; blank 0/1; maxCanvasMB 67.1). F-006 passing again.
 - Not addressed (minor, user did not ask): N2 reason only as a tooltip on the toggle (panel shows it), unused
   Viewer.currentPage getter, toggle ~2 px past the edge at 320 px. Not re-reviewed.
+
+### 2026-10-19 13:10 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 13: CI green
+- Pushed phase-05-bookmarks (user-approved). GitHub Actions run 39291151035 on fdaa254: completed, success.
+  https://github.com/himmannshu/book-reader/actions/runs/39291151035
+- Items 1–13 now have evidence (1–2 after the B1 fix, not re-reviewed). Only item 14 (user's real-book check)
+  is open; phase stays In progress.
