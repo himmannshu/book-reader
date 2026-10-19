@@ -1,20 +1,20 @@
 {
-  "note": "PLACEHOLDER budgets, deliberately impossible, to prove the checks fail. Replaced after the user agrees the baseline.",
-  "machine": "none yet",
-  "measuredOn": "none yet",
+  "note": "Agreed by the user on 2026-10-19 after the baseline in harness/build-log.md. Budget = measured median plus headroom. CI multiplies time budgets by ciTimeMultiplier; memory is deterministic and never multiplied.",
+  "machine": "Apple M2, 8 GB, macOS (Playwright headless, device scale factor 2)",
+  "measuredOn": "2026-10-19",
   "ciTimeMultiplier": 4,
   "perf-chromium": {
-    "firstPageMs": 1,
-    "jumpMs": 1,
-    "p95FrameMs": 1,
-    "blankFramePct": 0,
-    "maxCanvasMB": 1
+    "firstPageMs": 250,
+    "jumpMs": 100,
+    "p95FrameMs": 25,
+    "blankFramePct": 5,
+    "maxCanvasMB": 96
   },
   "perf-webkit": {
-    "firstPageMs": 1,
-    "jumpMs": 1,
-    "p95FrameMs": 1,
-    "blankFramePct": 0,
-    "maxCanvasMB": 1
+    "firstPageMs": 300,
+    "jumpMs": 200,
+    "p95FrameMs": 40,
+    "blankFramePct": 5,
+    "maxCanvasMB": 96
   }
 }

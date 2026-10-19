@@ -78,8 +78,11 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Browser tests: `npm run test:e2e` (Playwright on the production build, Chromium + WebKit)
 - Lint, format and types: `npm run lint`, `npm run format:check` (`npm run format` to fix),
   `npm run typecheck`
+- Performance budgets: `npm run test:perf` (separate config playwright.perf.config.ts; budgets in
+  e2e/perf/budgets.json; results in perf-results/). `PERF_BOOK=/path/to/book.pdf npm run test:perf`
+  measures your own book without enforcing budgets or copying it into the repo.
 - Regenerate test PDFs: `npm run fixtures` (writes tests/fixtures/, deterministic)
-- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser)
+- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → perf)
 
 ## Conventions
 
@@ -108,8 +111,8 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   IndexedDB, OPFS or `fetch` to the cloud directly.
 - Tests never touch the network or the live cloud. Cloudflare pieces are tested with local
   `wrangler` emulation.
-- Speed is a feature. A change that makes a benchmark in `e2e/` fail is a regression, even if
-  every other test passes.
+- Speed is a feature. A change that makes a benchmark in `e2e/perf/` fail is a regression, even if
+  every other test passes. Change a budget only with the user's agreement, recorded in the build log.
 - Errors: never swallow them silently. Show the user a readable message for failures they can
   act on (a bad PDF, storage full).
 

@@ -234,3 +234,12 @@ Template:
   jumpMs chromium [30,26,21] webkit [96,88,88]; p95FrameMs chromium [16.7,16.7,16.8] webkit [33,29,28];
   blankFramePct chromium [0,0,0] webkit [1.1,1,1]; maxCanvasMB 67.1 both.
 - Next: checkpoint, user agrees budgets.
+
+### 2026-10-19 02:50 EDT | Phase 02 | Claude Code (Opus 5.5) | Budgets agreed and enforced; perf wired into verify and CI
+- User agreed the proposed budgets in chat, "including WebKit p95 frame at 40 ms" (item 3).
+  e2e/perf/budgets.json: chromium firstPage 250, jump 100, p95 frame 25, blank 5%, canvas 96 MB;
+  webkit firstPage 300, jump 200, p95 frame 40, blank 5%, canvas 96 MB; ciTimeMultiplier 4.
+- Changes: verify.local.sh runs `npm run test:perf` after e2e; CI uploads perf-results/ on every run;
+  AGENTS.md commands and the speed convention (budgets change only with user agreement).
+- Verification: `npm run test:perf` enforced → 8 passed (chromium first 142, jump 19, p95 16.8, blank 0,
+  canvas 67.1; webkit 156, 101, 29, 1, 67.1). `scripts/verify.sh` → all six steps, "--- PASS".
