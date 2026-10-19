@@ -7,10 +7,13 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Codex, 2026-10-19
 - Phase: 06 (highlights) In progress. User authorized fixing review blockers B1–B3.
-  B1–B3 fixed; latest `scripts/verify.sh` PASS at ad3ec91 (122 unit, 130 e2e, 8 perf; WebKit p95 38 ms).
+  B1–B3 fixed; latest `scripts/verify.sh` PASS with fixture fix (122 unit, 130 e2e, 8 perf; WebKit p95 37 ms).
   F-007 passing again. Contract 14 passed by the user's real-book/device report on 2026-10-19.
-  Contract 13 (CI) remains pending; the user authorized pushing the phase branch and running CI.
-- Branch: phase-06-highlights (not pushed). main is one commit ahead of origin (a9c3832, handoff only).
+  Contract 13 (CI) failed: https://github.com/himmannshu/book-reader/actions/runs/39310131762.
+  One Chromium fixture-width assertion failed; the manifest used kerned widths for unkerned PDF text.
+  Generator/manifest corrected; local verification PASS; another authorized CI push is next.
+- Branch: phase-06-highlights, pushed at 9463bfc and tracking origin/phase-06-highlights.
+  main is one commit ahead of origin (a9c3832, handoff only).
 
 ## Done this session
 
@@ -28,17 +31,23 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   Full verify PASS includes fresh highlighting after each invalidation. A pre-existing viewer test
   hit its fixed 5 ms wait; that test now waits for the actual text-layer result.
 - Recorded author correction verification in the original review. Its historical FAIL is preserved;
-  an independent re-review has not run. No push, deployment or external writes.
+  an independent re-review has not run.
+- User confirmed the real-book/device check works (contract 14). Fresh local verify PASS at ad3ec91
+  (122 unit, 130 e2e, 8 perf; WebKit p95 38 ms). User check committed as 9463bfc and pushed as
+  authorized. GitHub run 39310131762 is executing scripts/verify.sh. No merge or deployment.
 
 ## In flight
 
 - No code is half done. B1 committed as 4341f7c; B2 as 1c5834c; B3 as 57fa6ad, all verified locally.
-  Fresh local verification PASS; the authorized push and CI run are next. User reports the real-book/device
-  check works as expected (contract item 14).
+  CI run 39310131762 failed on 9463bfc (122 unit and 129 browser checks passed; perf did not run).
+  scripts/generate-fixtures.mjs now sums unkerned glyph advances; regenerated manifest widths.
+  PDF bytes unchanged; runtime, test tolerance and budgets unchanged. Regression check red → green.
+  First local verify of the fixture fix passed 122 unit/130 browser checks but WebKit p95 was 51 ms
+  (budget 40); full rerun PASS, p95 37 ms. Host load averages at retry: 11.33, 8.26, 6.57.
 
 ## Next action
 
-1. Push phase-06-highlights (authorized) and monitor GitHub Actions.
+1. Commit and push the verified fixture correction (authorized), and monitor CI.
    If CI passes, record its run URL and close phase 06. Do not merge or start phase 07.
 
 ## Decisions worth remembering
@@ -60,7 +69,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Phase 06:
   - B1–B3 corrected and verified locally; the user confirmed the real-book/device check works.
-  - CI has not run for this branch (contract item 13).
+  - CI failed its first run; verified fixture metadata correction ready to push (contract item 13).
   - N1 Highlight before highlights load silently does nothing; N2 WebKit has thin performance headroom
     (budget 40 ms) and the benchmark never measures text layers; N3 unsaved note touches the edge at 320 px.
     N4 duplicate import cleaned up with B2.
@@ -80,18 +89,20 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 15:20 EDT
+Snapshot 2026-10-19 16:32 EDT
 - Branch: phase-06-highlights
-- HEAD: ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
-- Uncommitted files: 2
-- Last verify: PASS at 2026-10-19 15:19 EDT (commit ad3ec91)
+- HEAD: 9463bfc phase 06: record user device check and pre-CI verification
+- Uncommitted files: 4
+- Last verify: PASS at 2026-10-19 16:32 EDT (commit 9463bfc)
 - Recent commits:
+    9463bfc phase 06: record user device check and pre-CI verification
     ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
     57fa6ad phase 06: dismiss stale highlight offers when text is released
     1c5834c phase 06: prevent duplicate pending highlight saves
     4341f7c phase 06: restore touch highlight actions in WebKit
-    db28d3c handoff: build-log times match their commits
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
+     M scripts/generate-fixtures.mjs
+     M tests/fixtures/manifest.json
 <!-- AUTO:END -->

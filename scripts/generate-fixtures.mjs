@@ -100,7 +100,13 @@ function addTextLines(doc, font) {
     const { height } = page.getSize();
     for (const { text, baseline } of textLines(pageIndex, height)) {
       page.drawText(text, { x: 72, y: height - baseline, size: TEXT_SIZE, font });
-      const width = Math.round(font.widthOfTextAtSize(text, TEXT_SIZE) * 100) / 100;
+      // drawText emits a plain Tj string without kerning adjustments. Measuring the whole line
+      // includes kerning in pdf-lib, so sum individual glyph advances to match the PDF it writes.
+      const advance = [...text].reduce(
+        (sum, char) => sum + font.widthOfTextAtSize(char, TEXT_SIZE),
+        0,
+      );
+      const width = Math.round(advance * 100) / 100;
       placed.push({ pageIndex, text, x: 72, baseline, size: TEXT_SIZE, width });
     }
   });

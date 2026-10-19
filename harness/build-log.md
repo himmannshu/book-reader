@@ -772,3 +772,36 @@ Template:
   types, 122 unit, 130 e2e (Chromium + WebKit), 8 perf. Chromium firstPage 171 ms, jump 31,
   p95 16.8; WebKit firstPage 161, jump 63, p95 38; canvas 67.1 MB. Budgets unchanged.
 - Ready to push the user's check evidence and the existing B1–B3 fixes to phase-06-highlights.
+
+### 2026-10-19 15:21 EDT | Phase 06 | Codex | Branch pushed; CI running
+- Committed the user's check report as 9463bfc and pushed phase-06-highlights to origin with upstream
+  tracking, as authorized. CI run: https://github.com/himmannshu/book-reader/actions/runs/39310131762
+  (head 9463bfc7b3db8ef6fac9d3147a36c44bdfdff924).
+- Observed dependency/browser installation steps pass; scripts/verify.sh is running. Watching with
+  gh run watch --exit-status. Contract 13 still pending until the run finishes; no merge or deployment.
+
+### 2026-10-19 16:28 EDT | Phase 06 | Codex | CI fixture-width failure diagnosed
+- CI 39310131762 on 9463bfc failed (including its retry): Chromium stored-width difference 2.06 pt
+  versus the manifest's 331.91 pt, exceeding the unchanged 2 pt assertion. All 122 unit and the other
+  129 browser checks passed; perf did not run because verification stops at the first failing step.
+- Root cause confirmed from pdf-lib source and decoded fixture content: drawText emits plain Tj
+  with no kerning offsets; StandardFontEmbedder.widthOfTextAtSize includes pair kerning. The Charlie
+  line's kerned width is 331.912 pt, but its actual glyph advance is 333.802 pt (1.89 pt more).
+- Red check asserted the manifest's Charlie width equals the PDF's rounded advance 333.80; got
+  331.91. Corrected the generator to sum individual glyph advances, regenerated fixtures, and saw
+  that check pass. Git diff confirms only the manifest's ten widths changed; PDF bytes are unchanged.
+  Runtime code, browser assertion tolerances and performance budgets are unchanged. Full verification next.
+
+### 2026-10-19 16:30 EDT | Phase 06 | Codex | Fixture browser checks pass; local timing failure
+- Full `scripts/verify.sh` after the fixture correction: FAIL at perf. Lint, formatting, types,
+  122 unit and all 130 browser tests passed. WebKit p95 51 ms exceeded the unchanged 40 ms budget;
+  the other seven perf checks passed. Chromium firstPage 167 ms, jump 19, p95 16.8; WebKit
+  firstPage 161, jump 65; canvas 67.1 MB. No runtime code changed since the earlier p95 38 ms pass.
+- `uptime` at retry reported host load averages 11.33, 8.26, 6.57; this is a possible source of
+  timing variance, not proof of cause. Full verification rerun started; no budgets changed.
+
+### 2026-10-19 16:32 EDT | Phase 06 | Codex | Fixture correction verified locally
+- Rerun `scripts/verify.sh`: PASS, exit 0. Lint, format, types, 122 unit, 130 browser and 8 perf.
+  Chromium firstPage 174 ms, jump 32, p95 16.8; WebKit firstPage 157, jump 83, p95 37;
+  canvas 67.1 MB. Budgets and runtime code unchanged. Both the failed run and this pass are retained.
+- Ready to commit and push the fixture generator/manifest fix for another CI run.
