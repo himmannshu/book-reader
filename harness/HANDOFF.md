@@ -44,15 +44,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Page drawing is on the main thread; phase 02 benchmarks decide if that matters.
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 23:16 EDT
-- Branch: phase-01-open-and-read-pdf
-- HEAD: 922e9db phase 01: fix review findings B1 (height resize), B5 (keyboard focus), B6 (top gap)
+Snapshot 2026-10-18 23:26 EDT
+- Branch: main
+- HEAD: 794d4b8 phase 01: record merge and green CI
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-18 23:16 EDT (commit eecdf5a)
+- Last verify: PASS at 2026-10-18 23:22 EDT (commit fd874e8)
 - Recent commits:
+    794d4b8 phase 01: record merge and green CI
+    844e7a5 phase 01: make the 300-page scroll test fit CI WebKit time limits
+    fd874e8 phase 01: refresh handoff snapshot
     922e9db phase 01: fix review findings B1 (height resize), B5 (keyboard focus), B6 (top gap)
     eecdf5a phase 01: evaluator review (PASS)
-    5a41e4b phase 01: refresh handoff snapshot
-    53729a6 phase 01: item 11 user-checked; phase complete
-    433fd62 phase 01: refresh handoff snapshot
 <!-- AUTO:END -->
