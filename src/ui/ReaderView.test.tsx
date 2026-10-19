@@ -1,9 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Bookmark } from '../core/bookmarks';
 import type { PdfDoc } from '../engine/types';
-import { StorageError, type BookmarkStore } from '../storage/types';
-import { ReaderView } from './ReaderView';
+import { StorageError, type BookmarkStore, type HighlightStore } from '../storage/types';
+import { ReaderView as Reader } from './ReaderView';
+
+const noNotes = { list: async () => [], put: async () => {}, remove: async () => {} };
+function ReaderView(props: Omit<ComponentProps<typeof Reader>, 'notes'>) {
+  return <Reader {...props} notes={noNotes} />;
+}
 
 function memoryBookmarks(initial: Bookmark[] = []): BookmarkStore {
   let marks = [...initial];
@@ -20,6 +26,12 @@ function memoryBookmarks(initial: Bookmark[] = []): BookmarkStore {
   };
 }
 
+const noHighlights: HighlightStore = {
+  list: () => Promise.resolve([]),
+  put: () => Promise.resolve(),
+  remove: () => Promise.resolve(),
+};
+
 function fakeDoc() {
   const outline = vi.fn(() => Promise.resolve([]));
   const doc: PdfDoc = {
@@ -28,6 +40,7 @@ function fakeDoc() {
     firstPageSize: { width: 612, height: 792 },
     loadPageSizes: () => new Promise(() => {}),
     renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
+    renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
     outline,
     destroy: () => Promise.resolve(),
   };
@@ -35,9 +48,32 @@ function fakeDoc() {
 }
 
 describe('ReaderView contents', () => {
+  it('shows a visible loading reason and disables note creation until notes arrive', () => {
+    const { doc } = fakeDoc();
+    render(
+      <Reader
+        doc={doc}
+        bookId="book"
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+        notes={{ ...noNotes, list: () => new Promise(() => {}) }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Notes' }));
+    expect(screen.getByText('Loading notes…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
+  });
+
   it('reads the outline only when Contents first opens, and only once per book', async () => {
     const { doc, outline } = fakeDoc();
-    render(<ReaderView doc={doc} bookId={null} bookmarks={memoryBookmarks()} />);
+    render(
+      <ReaderView
+        doc={doc}
+        bookId={null}
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+      />,
+    );
     expect(outline).not.toHaveBeenCalled();
 
     const button = screen.getByRole('button', { name: 'Contents' });
@@ -57,7 +93,14 @@ describe('ReaderView contents errors', () => {
     const { doc, outline } = fakeDoc();
     outline.mockImplementation(() => Promise.reject(new Error('broken outline')));
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    render(<ReaderView doc={doc} bookId={null} bookmarks={memoryBookmarks()} />);
+    render(
+      <ReaderView
+        doc={doc}
+        bookId={null}
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Contents' }));
     expect(
       await screen.findByText("This book's table of contents couldn't be read."),
@@ -70,7 +113,14 @@ describe('ReaderView contents errors', () => {
 describe('ReaderView bookmarks', () => {
   it('marks the current page and lists it with its page number', async () => {
     const { doc } = fakeDoc();
-    render(<ReaderView doc={doc} bookId="book" bookmarks={memoryBookmarks()} />);
+    render(
+      <ReaderView
+        doc={doc}
+        bookId="book"
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+      />,
+    );
     const toggle = screen.getByRole('button', { name: 'Bookmark page' });
     await vi.waitFor(() => expect(toggle).toBeEnabled());
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
@@ -83,7 +133,14 @@ describe('ReaderView bookmarks', () => {
 
   it('disables the toggle and says why when the book is not saved on this device', () => {
     const { doc } = fakeDoc();
-    render(<ReaderView doc={doc} bookId={null} bookmarks={memoryBookmarks()} />);
+    render(
+      <ReaderView
+        doc={doc}
+        bookId={null}
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+      />,
+    );
     const toggle = screen.getByRole('button', { name: 'Bookmark page' });
     expect(toggle).toBeDisabled();
     expect(toggle).toHaveAttribute('title', 'Bookmarks need this book saved on this device.');
@@ -97,7 +154,7 @@ describe('ReaderView bookmarks', () => {
       ...memoryBookmarks(),
       put: () => Promise.reject(new StorageError('quota', 'full')),
     };
-    render(<ReaderView doc={doc} bookId="book" bookmarks={store} />);
+    render(<ReaderView doc={doc} bookId="book" bookmarks={store} highlights={noHighlights} />);
     const toggle = screen.getByRole('button', { name: 'Bookmark page' });
     await vi.waitFor(() => expect(toggle).toBeEnabled());
     fireEvent.click(toggle);
@@ -111,7 +168,7 @@ describe('ReaderView bookmarks', () => {
     const { doc } = fakeDoc();
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const store = { ...memoryBookmarks(), list: () => Promise.reject(new Error('broken')) };
-    render(<ReaderView doc={doc} bookId="book" bookmarks={store} />);
+    render(<ReaderView doc={doc} bookId="book" bookmarks={store} highlights={noHighlights} />);
     fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
     expect(await screen.findByText("This book's bookmarks couldn't be read.")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Bookmark page' })).toBeDisabled();

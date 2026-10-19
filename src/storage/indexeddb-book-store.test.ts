@@ -2,6 +2,7 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
 import type { Bookmark } from '../core/bookmarks';
+import type { Highlight } from '../core/highlights';
 import { DB_NAME, DB_VERSION, createIndexedDBStores, toStorageError } from './indexeddb-book-store';
 import { StorageError } from './types';
 
@@ -20,6 +21,7 @@ function setup() {
   return {
     store: stores.books,
     bookmarks: stores.bookmarks,
+    highlights: stores.highlights,
     factory,
     persistCalls: () => persistCalls,
   };
@@ -85,14 +87,49 @@ describe('IndexedDB book store', () => {
     expect(persistCalls()).toBe(1);
   });
 
-  it('creates schema version 2 with separate metadata, file and bookmark stores', async () => {
+  it('creates schema version 4 with metadata, file and annotation stores', async () => {
     const { store, factory } = setup();
     await store.list();
     const db = await openRaw(factory);
     expect(db.version).toBe(DB_VERSION);
-    expect(DB_VERSION).toBe(2);
-    expect([...db.objectStoreNames].sort()).toEqual(['bookFiles', 'bookmarks', 'books']);
+    expect(DB_VERSION).toBe(4);
+    expect([...db.objectStoreNames].sort()).toEqual([
+      'bookFiles',
+      'bookmarks',
+      'books',
+      'highlights',
+      'notes',
+    ]);
     db.close();
+  });
+
+  it('keeps books and bookmarks saved under schema version 2 when upgrading', async () => {
+    const factory = new IDBFactory();
+    const old = await openRaw(factory, 2, (db) => {
+      db.createObjectStore('books', { keyPath: 'id' });
+      db.createObjectStore('bookFiles');
+      db.createObjectStore('bookmarks', { keyPath: 'id' }).createIndex('bookId', 'bookId');
+    });
+    const record = {
+      id: 'v2',
+      fileName: 'old.pdf',
+      title: 'old',
+      byteSize: 4,
+      addedAt: 1,
+      lastOpenedAt: 1,
+    };
+    const tx = old.transaction(['books', 'bookFiles', 'bookmarks'], 'readwrite');
+    tx.objectStore('books').put(record);
+    tx.objectStore('bookFiles').put(new TextEncoder().encode('%PDF').buffer, 'v2');
+    tx.objectStore('bookmarks').put(mark('v2', 3));
+    await new Promise((resolve) => (tx.oncomplete = resolve));
+    old.close();
+
+    const { books, bookmarks, highlights } = createIndexedDBStores({ factory });
+    expect(await books.list()).toEqual([record]);
+    expect(await bookmarks.list('v2')).toEqual([mark('v2', 3)]);
+    await highlights.put(passage('v2', 'h1', 0, 100));
+    expect(await highlights.list('v2')).toEqual([passage('v2', 'h1', 0, 100)]);
   });
 
   it('keeps books saved under schema version 1 when upgrading', async () => {
@@ -134,6 +171,17 @@ function openRaw(
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+function passage(bookId: string, id: string, pageIndex: number, y: number): Highlight {
+  return {
+    id,
+    bookId,
+    pageIndex,
+    rects: [{ pageIndex, x: 72, y, width: 200, height: 14 }],
+    quote: `quote ${id}`,
+    createdAt: 7,
+  };
 }
 
 function mark(bookId: string, pageIndex: number, label = `Page ${pageIndex + 1}`): Bookmark {
@@ -205,5 +253,48 @@ describe('toStorageError', () => {
     const original = new StorageError('not-found', 'x');
     expect(toStorageError(original)).toBe(original);
     expect(toStorageError(new Error('odd')).kind).toBe('unknown');
+  });
+});
+
+describe('IndexedDB highlight store', () => {
+  it("lists a book's highlights in reading order, and only that book's", async () => {
+    const { store, highlights } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    const b = await store.add(pdf('b'), 'b.pdf');
+    await highlights.put(passage(a.id, 'z-late', 1, 50));
+    await highlights.put(passage(a.id, 'y-low', 0, 400));
+    await highlights.put(passage(a.id, 'x-high', 0, 100));
+    await highlights.put(passage(b.id, 'other', 0, 100));
+    expect((await highlights.list(a.id)).map((h) => h.id)).toEqual(['x-high', 'y-low', 'z-late']);
+    expect((await highlights.list(b.id)).map((h) => h.id)).toEqual(['other']);
+  });
+
+  it('removes a highlight', async () => {
+    const { store, highlights } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    await highlights.put(passage(a.id, 'one', 0, 100));
+    await highlights.put(passage(a.id, 'two', 0, 200));
+    await highlights.remove('one');
+    expect((await highlights.list(a.id)).map((h) => h.id)).toEqual(['two']);
+  });
+
+  it("removes a book's highlights together with the book, and its bookmarks", async () => {
+    const { store, highlights, bookmarks } = setup();
+    const a = await store.add(pdf('a'), 'a.pdf');
+    const b = await store.add(pdf('b'), 'b.pdf');
+    await highlights.put(passage(a.id, 'gone', 0, 100));
+    await highlights.put(passage(b.id, 'kept', 0, 100));
+    await bookmarks.put(mark(a.id, 1));
+    await store.remove(a.id);
+    expect(await highlights.list(a.id)).toEqual([]);
+    expect(await bookmarks.list(a.id)).toEqual([]);
+    expect((await highlights.list(b.id)).map((h) => h.id)).toEqual(['kept']);
+  });
+
+  it('refuses a highlight for a book that is not stored', async () => {
+    const { highlights } = setup();
+    await expect(highlights.put(passage('nope', 'h', 0, 1))).rejects.toMatchObject({
+      kind: 'not-found',
+    });
   });
 });

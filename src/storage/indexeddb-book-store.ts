@@ -1,18 +1,33 @@
-// IndexedDB adapter for the book and bookmark stores (D5a in harness/context/architecture-decisions.md).
+// IndexedDB adapter for the book, bookmark and highlight stores (D5a in architecture-decisions.md).
 // Metadata and files live in separate object stores, so listing books never loads the PDFs.
 // Files are stored as ArrayBuffers, not Blobs: Safari's private browsing (and Playwright's WebKit)
 // refuses Blobs in IndexedDB but accepts ArrayBuffers, at similar speed.
 import { sortByPage, type Bookmark } from '../core/bookmarks';
+import { sortByPosition, type Highlight } from '../core/highlights';
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
-import { StorageError, type BookRecord, type BookStore, type BookmarkStore } from './types';
+import { sortNotes, validNote, type Note } from '../core/notes';
+import {
+  StorageError,
+  type BookRecord,
+  type BookStore,
+  type BookmarkStore,
+  type HighlightStore,
+  type NoteStore,
+  type PerBookStore,
+} from './types';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 2;
+export const DB_VERSION = 4;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
 const BOOKMARKS = 'bookmarks';
+const HIGHLIGHTS = 'highlights';
+const NOTES = 'notes';
+/** Stores of items that belong to a book; each has an index on `bookId`. */
+const PER_BOOK = [BOOKMARKS, HIGHLIGHTS, NOTES];
 const BY_BOOK = 'bookId';
+const BY_HIGHLIGHT = 'highlightId';
 
 export interface IndexedDBBookStoreOptions {
   /** Defaults to the browser's `indexedDB`. Tests pass a fake. */
@@ -55,6 +70,35 @@ function done(tx: IDBTransaction): Promise<void> {
   });
 }
 
+/** Abort the entire cascade even if a later request throws synchronously (e.g. quota exceeded). */
+async function atomic<T>(
+  database: IDBDatabase,
+  names: string[],
+  work: (tx: IDBTransaction) => Promise<T>,
+): Promise<T> {
+  const tx = database.transaction(names, 'readwrite');
+  const completion = done(tx);
+  // Attach a handler immediately; work may still be awaiting a request when the transaction aborts.
+  void completion.catch(() => undefined);
+  try {
+    const result = await work(tx);
+    await completion;
+    return result;
+  } catch (error) {
+    if (tx.error === null) {
+      try {
+        tx.abort();
+      } catch (abortError) {
+        // A completed/aborted transaction cannot be aborted again; the original failure is reported.
+        if (!(abortError instanceof DOMException) || abortError.name !== 'InvalidStateError')
+          throw abortError;
+      }
+    }
+    await completion.catch(() => undefined);
+    throw error;
+  }
+}
+
 function upgrade(db: IDBDatabase, oldVersion: number): void {
   if (oldVersion < 1) {
     db.createObjectStore(BOOKS, { keyPath: 'id' });
@@ -62,6 +106,14 @@ function upgrade(db: IDBDatabase, oldVersion: number): void {
   }
   if (oldVersion < 2) {
     db.createObjectStore(BOOKMARKS, { keyPath: 'id' }).createIndex(BY_BOOK, 'bookId');
+  }
+  if (oldVersion < 3) {
+    db.createObjectStore(HIGHLIGHTS, { keyPath: 'id' }).createIndex(BY_BOOK, 'bookId');
+  }
+  if (oldVersion < 4) {
+    const notes = db.createObjectStore(NOTES, { keyPath: 'id' });
+    notes.createIndex(BY_BOOK, 'bookId');
+    notes.createIndex(BY_HIGHLIGHT, 'target.highlightId');
   }
 }
 
@@ -77,6 +129,8 @@ function defaultPersistence(): Promise<boolean> {
 export interface IndexedDBStores {
   books: BookStore;
   bookmarks: BookmarkStore;
+  highlights: HighlightStore;
+  notes: NoteStore;
 }
 
 /** Both stores share one database connection. */
@@ -185,47 +239,109 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
     remove: (id) =>
       guard(async () => {
         const database = await db();
-        const tx = database.transaction([BOOKS, FILES, BOOKMARKS], 'readwrite');
-        tx.objectStore(BOOKS).delete(id);
-        tx.objectStore(FILES).delete(id);
-        const marks = tx.objectStore(BOOKMARKS);
-        const keys = await request(marks.index(BY_BOOK).getAllKeys(id));
-        keys.forEach((key) => marks.delete(key));
-        await done(tx);
+        await atomic(database, [BOOKS, FILES, ...PER_BOOK], async (tx) => {
+          tx.objectStore(BOOKS).delete(id);
+          tx.objectStore(FILES).delete(id);
+          for (const name of PER_BOOK) {
+            const items = tx.objectStore(name);
+            const keys = await request(items.index(BY_BOOK).getAllKeys(id));
+            keys.forEach((key) => items.delete(key));
+          }
+        });
       }),
   };
 
-  const bookmarks: BookmarkStore = {
+  /** list/put/remove for one per-book object store, in reading order. */
+  function perBook<T extends { id: string; bookId: string }>(
+    name: string,
+    order: (items: T[]) => T[],
+  ): PerBookStore<T> {
+    return {
+      list: (bookId) =>
+        guard(async () => {
+          const database = await db();
+          const all = (await request(
+            database.transaction(name).objectStore(name).index(BY_BOOK).getAll(bookId),
+          )) as T[];
+          return order(all);
+        }),
+
+      put: (item) =>
+        guard(async () => {
+          const database = await db();
+          const tx = database.transaction([BOOKS, name], 'readwrite');
+          const book = await request(tx.objectStore(BOOKS).getKey(item.bookId));
+          if (book === undefined) {
+            tx.abort();
+            throw new StorageError('not-found', `No book ${item.bookId}`);
+          }
+          tx.objectStore(name).put(item);
+          await done(tx);
+        }),
+
+      remove: (id) =>
+        guard(async () => {
+          const database = await db();
+          const tx = database.transaction(name, 'readwrite');
+          tx.objectStore(name).delete(id);
+          await done(tx);
+        }),
+    };
+  }
+
+  const highlights = perBook<Highlight>(HIGHLIGHTS, sortByPosition);
+  const noteRows = perBook<Note>(NOTES, (rows) => rows);
+  const notes: NoteStore = {
     list: (bookId) =>
       guard(async () => {
         const database = await db();
-        const all = (await request(
-          database.transaction(BOOKMARKS).objectStore(BOOKMARKS).index(BY_BOOK).getAll(bookId),
-        )) as Bookmark[];
-        return sortByPage(all);
+        const tx = database.transaction([NOTES, HIGHLIGHTS]);
+        const [rows, passages] = await Promise.all([
+          request(tx.objectStore(NOTES).index(BY_BOOK).getAll(bookId)) as Promise<Note[]>,
+          request(tx.objectStore(HIGHLIGHTS).index(BY_BOOK).getAll(bookId)) as Promise<Highlight[]>,
+        ]);
+        return sortNotes(rows, passages);
       }),
-
-    put: (bookmark) =>
+    put: (note) =>
       guard(async () => {
+        if (!validNote(note)) throw new Error('Invalid note');
         const database = await db();
-        const tx = database.transaction([BOOKS, BOOKMARKS], 'readwrite');
-        const book = await request(tx.objectStore(BOOKS).getKey(bookmark.bookId));
-        if (book === undefined) {
-          tx.abort();
-          throw new StorageError('not-found', `No book ${bookmark.bookId}`);
-        }
-        tx.objectStore(BOOKMARKS).put(bookmark);
-        await done(tx);
+        await atomic(database, [BOOKS, HIGHLIGHTS, NOTES], async (tx) => {
+          if ((await request(tx.objectStore(BOOKS).getKey(note.bookId))) === undefined)
+            throw new StorageError('not-found', 'Book no longer exists');
+          if (note.target.kind === 'highlight') {
+            const passage = (await request(
+              tx.objectStore(HIGHLIGHTS).get(note.target.highlightId),
+            )) as Highlight | undefined;
+            if (
+              !passage ||
+              passage.bookId !== note.bookId ||
+              passage.pageIndex !== note.target.pageIndex
+            )
+              throw new StorageError('not-found', 'Highlight no longer exists');
+          }
+          tx.objectStore(NOTES).put(note);
+        });
       }),
-
-    remove: (id) =>
-      guard(async () => {
-        const database = await db();
-        const tx = database.transaction(BOOKMARKS, 'readwrite');
-        tx.objectStore(BOOKMARKS).delete(id);
-        await done(tx);
-      }),
+    remove: noteRows.remove,
   };
 
-  return { books, bookmarks };
+  return {
+    books,
+    bookmarks: perBook<Bookmark>(BOOKMARKS, sortByPage),
+    highlights: {
+      ...highlights,
+      remove: (id) =>
+        guard(async () => {
+          const database = await db();
+          await atomic(database, [HIGHLIGHTS, NOTES], async (tx) => {
+            tx.objectStore(HIGHLIGHTS).delete(id);
+            const items = tx.objectStore(NOTES);
+            const keys = await request(items.index(BY_HIGHLIGHT).getAllKeys(id));
+            keys.forEach((key) => items.delete(key));
+          });
+        }),
+    },
+    notes,
+  };
 }

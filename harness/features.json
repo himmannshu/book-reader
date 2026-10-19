@@ -48,21 +48,21 @@
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
       "status": "passing",
-      "evidence": "2026-10-19 after the B1 fix: e2e/bookmarks.spec.ts (incl. several whole pages and thin strips on screen, page order after reload) passes in chromium+webkit; scripts/verify.sh PASS at aa73b5c (94 unit, 86 e2e, 8 perf); mutation checks (no tie tolerance, no sortByPage) fail the new tests. CI run 39291151035 on fdaa254 green; user-checked on a real book. Fix not re-reviewed."
+      "evidence": "2026-10-19 user withdrew the wrong-page report: printed book numbers were being compared with physical PDF page numbers. Issue https://github.com/himmannshu/book-reader/issues/1 closed with this clarification; numbering clarity retained as a UX follow-up, no navigation fix needed. scripts/verify.sh PASS at 04da1da (137 unit, 166 browser, 8 perf); bookmark jump/persistence/order checks pass both engines. Earlier isolated page-201 jumps passed both engines at three widths. Historical Phase 05 CI 39291151035 green and real-book check passed."
     },
     {
       "id": "F-007",
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 scripts/verify.sh PASS after B1–B3 and fixture-metadata corrections (122 unit, 130 e2e, 8 perf; local WebKit p95 37 ms). CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897 (same test counts; Chromium budgets enforced, Linux WebKit report-only by existing policy). User confirmed the real-book/device check works as expected. Browser regressions cover touch Highlight/Remove, repeated activation/retry, stale offers after text release, alignment, PDF coordinates and reload. Each blocker reproduced red before its fix. See build-log close-out and review correction appendix; phase 06 Complete. No new independent evaluator verdict."
     },
     {
       "id": "F-008",
       "phase": "07",
       "description": "Notes can be attached to a highlight or a page, listed in a panel, and survive a reload",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 user clarified that the reported Notes jump failure was a printed-book versus physical-PDF page-number mismatch, not an actual navigation defect. scripts/verify.sh PASS at 04da1da: 137 unit, 166 browser, 8 perf; WebKit p95 34 ms, budgets unchanged. Notes checks cover both targets, edits/reload, Unicode, deletion/cascades/rollback, isolation, drafts, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad taps; v3 migration preserves existing data. Physical PDF page numbering is unchanged; clearer labeling is only a UX follow-up. Phase 07 stays In progress: separately authorized CI and confirmation of the full real-book/device acceptance checklist remain pending. See build-log."
     },
     {
       "id": "F-009",

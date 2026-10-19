@@ -16,6 +16,15 @@
       }
     ]
   },
+  "no-text-1-page": {
+    "file": "no-text-1-page.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792
+      }
+    ]
+  },
   "mixed-sizes": {
     "file": "mixed-sizes.pdf",
     "pages": [
@@ -1288,6 +1297,109 @@
       {
         "width": 612,
         "height": 792
+      }
+    ]
+  },
+  "text-4-pages": {
+    "file": "text-4-pages.pdf",
+    "pages": [
+      {
+        "width": 612,
+        "height": 792
+      },
+      {
+        "width": 612,
+        "height": 792
+      },
+      {
+        "width": 612,
+        "height": 792
+      },
+      {
+        "width": 612,
+        "height": 792
+      }
+    ],
+    "lines": [
+      {
+        "pageIndex": 0,
+        "text": "Alpha one: the first line of selectable text on page one.",
+        "x": 72,
+        "baseline": 200,
+        "size": 14,
+        "width": 336.98
+      },
+      {
+        "pageIndex": 0,
+        "text": "Bravo two: a second line, with different words in it.",
+        "x": 72,
+        "baseline": 226,
+        "size": 14,
+        "width": 310.46
+      },
+      {
+        "pageIndex": 0,
+        "text": "Charlie three: highlights should cover exactly this text.",
+        "x": 72,
+        "baseline": 252,
+        "size": 14,
+        "width": 333.8
+      },
+      {
+        "pageIndex": 0,
+        "text": "Delta four: the fourth line closes the first paragraph.",
+        "x": 72,
+        "baseline": 278,
+        "size": 14,
+        "width": 318.26
+      },
+      {
+        "pageIndex": 0,
+        "text": "India nine: this sentence starts at the foot of page one",
+        "x": 72,
+        "baseline": 752,
+        "size": 14,
+        "width": 333.1
+      },
+      {
+        "pageIndex": 1,
+        "text": "and Juliet ten finishes it at the top of page two.",
+        "x": 72,
+        "baseline": 174,
+        "size": 14,
+        "width": 287.95
+      },
+      {
+        "pageIndex": 1,
+        "text": "Echo five: page two starts its own paragraph here.",
+        "x": 72,
+        "baseline": 200,
+        "size": 14,
+        "width": 311.26
+      },
+      {
+        "pageIndex": 1,
+        "text": "Foxtrot six: one more line on page two.",
+        "x": 72,
+        "baseline": 226,
+        "size": 14,
+        "width": 241.22
+      },
+      {
+        "pageIndex": 2,
+        "text": "Golf seven: page three has a single paragraph line.",
+        "x": 72,
+        "baseline": 200,
+        "size": 14,
+        "width": 317.51
+      },
+      {
+        "pageIndex": 3,
+        "text": "Hotel eight: and page four is the last page of the book.",
+        "x": 72,
+        "baseline": 200,
+        "size": 14,
+        "width": 336.21
       }
     ]
   },

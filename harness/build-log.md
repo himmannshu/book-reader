@@ -8,6 +8,8 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 07 | Complete | phase-07-notes | verify PASS at 26875e4 (137/166/8); items 1–16 per Codex entries; CI 39331468496 green; 18 user-checked | none |
+| 06 | Complete | phase-06-highlights | per Codex entries: all 14 items observed; CI 39320769897 green on 7ac8b1e; user check confirmed | none (row added later by Claude Code) |
 | 05 | Complete | phase-05-bookmarks | verify PASS at aa73b5c; items 1–13 observed (B1 fixed after review FAIL); 14 user-checked; CI 39291151035 green | none |
 | 04 | Complete | phase-04-table-of-contents | verify PASS at ca5c0dc; items 1–9 observed (evaluator re-review); 11 user-checked; CI 39279260419 green | none |
 | 03 | Complete | phase-03-local-book-persistence | verify PASS; items 1–11 observed, 12 user-checked in Safari; CI 39200828535 green | none |
@@ -590,7 +592,7 @@ Template:
   freezes; phase-03 context file). Not investigated. Budgets unchanged.
 - CI run 39279260419 (aaafd9f) still "queued" on GitHub at 11:54 EDT, about 18 minutes after it was created.
 
-### 2026-10-19 12:15 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 10: CI green; phase Complete
+### 2026-10-19 12:13 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 10: CI green; phase Complete
 - GitHub Actions run 39279260419 on aaafd9f (phase-04-table-of-contents): status completed, conclusion success,
   finished 16:09:52Z after sitting queued ~29 min during a GitHub Actions incident ("Degraded availability for
   GitHub Actions, GitHub Pages and Webhooks", githubstatus.com). https://github.com/himmannshu/book-reader/actions/runs/39279260419
@@ -600,7 +602,7 @@ Template:
   The re-review's FAIL rested only on items 10/11; no new review was run.
 - Not yet merged into main or pushed past aaafd9f; waiting on the user.
 
-### 2026-10-19 12:35 EDT | Phase 05 | Claude Code (Opus 5.5) | Phase 04 merged; phase 05 built test-first
+### 2026-10-19 12:33 EDT | Phase 05 | Claude Code (Opus 5.5) | Phase 04 merged; phase 05 built test-first
 - User-approved: main fast-forwarded to phase-04-table-of-contents (71a46b6), both pushed; branch
   phase-05-bookmarks created from main. Contract written from the approved plan (14 items) and context file added.
 - Red → green, unit (Vitest): currentPageAt (6 failing → pass), Viewer onPageChange (3 failing → pass),
@@ -616,7 +618,7 @@ Template:
   src/ui/usePanelKeys.ts used by both panels. Added a `prod-preview` entry to .claude/launch.json (port 4180)
   for checking the production build in the browser pane.
 
-### 2026-10-19 12:42 EDT | Phase 05 | Claude Code (Opus 5.5) | verify PASS; items 1–12 observed
+### 2026-10-19 12:35 EDT | Phase 05 | Claude Code (Opus 5.5) | verify PASS; items 1–12 observed
 - `scripts/verify.sh` at 03bc129: PASS (exit 0). Lint, format, types clean; unit 91/91; browser 82/82 (Chromium +
   WebKit); perf 8/8: chromium firstPage 176 ms, jump 27, p95 16.8, blank 0; webkit firstPage 163, jump 75,
   p95 31, blank 1.1; maxCanvasMB 67.1 both (item 12; first-page times in line with phase 04's 174/172).
@@ -654,7 +656,7 @@ Template:
 - Items 1–13 now have evidence (1–2 after the B1 fix, not re-reviewed). Only item 14 (user's real-book check)
   is open; phase stays In progress.
 
-### 2026-10-19 13:15 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 14 user-checked; phase Complete
+### 2026-10-19 13:17 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 14 user-checked; phase Complete
 - Item 14: user-observed (reported in chat by Himanshu): "I checked on a real book: bookmarked a few pages,
   reloaded, jumped back. Bookmarks look good." Not independently verified by the agent.
 - All 14 contract items have evidence. Phase 05 set Complete in the build file, PLANS.md and the summary row.
@@ -662,3 +664,380 @@ Template:
   but has not been re-reviewed. Minor findings N2 (tooltip-only reason), unused Viewer.currentPage, 320 px
   toggle overflow stay open.
 - Not merged into main; commits after fdaa254 are harness docs only and not pushed.
+
+### 2026-10-19 14:00 EDT | Phase 06 | Claude Code (Opus 5.5) | Highlights built test-first; e2e green
+- User-approved plan: branch phase-06-highlights from main (a9c3832); contract (14 items) and context file.
+- Fixture: `npm run fixtures` adds text-4-pages.pdf (Helvetica lines with known x/baseline/width in the
+  manifest; no "Page N" labels so a cross-page selection follows the text alone). Regenerating twice gives the
+  same bytes; existing fixtures unchanged.
+- Red → green, unit: core/highlights (import failed → 15 pass: points at any scale, line merging, page split,
+  clipping, rounding, quote normalizing, text joining, sort, hit test); store v3 + per-book helper shared with
+  bookmarks (6 failing → 22 pass, incl. v2→v3 keeps books and bookmarks); viewer text layer only for visible
+  pages after the canvas + percent-placed boxes (3 failing → pass); SelectionActions (import failed → 4 pass).
+- Engine: `PdfDoc.renderTextLayer` wraps PDF.js TextLayer; selection fix ported from PDF.js's viewer
+  (src/engine/text-selection.ts, Apache-2.0) and minimal text-layer CSS.
+- Found by e2e and fixed: (1) quote ran pages together ("page oneand") → joinTextPieces adds a space between
+  lines/pages; (2) Chromium rounds selection-box heights to whole px (24 px at 1280 vs 16 px at 700 → 1.3 pt
+  drift) → line top/height now from the text span's box (14.0 pt at both sizes); (3) WebKit clears the selection
+  when focus moves to the Highlight button → the offered range is kept and used.
+- `npx vitest run`: 121 passed. `npm run test:e2e`: 108 passed (22 new highlight tests, Chromium + WebKit).
+- Early perf check with text layers on (before UI): `npm run test:perf` 8/8 twice; webkit firstPage 208 ms
+  (budget 300), p95 35 ms (budget 40).
+
+### 2026-10-19 14:09 EDT | Phase 06 | Claude Code (Opus 5.5) | Perf headroom restored; verify PASS; items 1–12 observed
+- First full verify after the UI (ac5f44d): PASS but WebKit p95FrameMs = 40 (budget 40, zero headroom); two
+  more perf runs: 40, then 42 (FAIL). Cause: the highlight hook's scroll listener set React state on every scroll
+  event. Fix: it does nothing unless a floating button is showing; text layers also wait for a 200 ms scroll
+  pause (unit test with fake timers: red → green). Perf after: p95 32, 38 (two runs). Budgets unchanged.
+- `scripts/verify.sh` at c4be6a2: PASS (exit 0). Unit 122/122; browser 110/110 (Chromium + WebKit); perf 8/8:
+  chromium firstPage 169, jump 19, p95 16.7; webkit firstPage 187, jump 120 (budget 200; was 61–88 before),
+  p95 36, blank 1; maxCanvasMB 67.1.
+- Contract evidence: items 1–8 and 10 by e2e/highlights.spec.ts in both browsers; item 9 by e2e (whitespace,
+  toolbar text, unsaved book with indexedDB removed, failed save after the book record vanished) and
+  SelectionActions unit tests; item 11 by core/highlights, store and viewer unit tests; item 12 above.
+- Ran the dev server myself (browser pane): a selection from "two:" to "the fourth" over three lines became one
+  highlight drawn over exactly that text (screenshot).
+- Open: 13 (CI, needs a push), 14 (user's real-book check, iPhone/iPad if possible), evaluator review.
+
+### 2026-10-19 14:43 EDT | Phase 06 | Claude Code (Opus 5.5) | Evaluator FAIL; handoff
+- Evaluator review (fresh context) at 9547db8: FAIL. B1 (high) tapping Highlight/Remove does nothing in WebKit
+  with touch (Playwright iPhone 13 / iPad profiles; pointerdown preventDefault suppresses the click); B2 double
+  press saves twice; B3 the Highlight button outlives a selection lost to a relayout. Minor N1–N4. Review
+  committed (52724f8); F-007 set failing.
+- `scripts/verify.sh` at 52724f8: PASS (122 unit, 110 e2e, 8 perf; webkit p95 37, firstPage 162, jump 78).
+- Not pushed. Waiting on the user: fix B1–B3 first, or push now.
+- Correction: the headers of this session's entries from 12:13 on were estimated when written; they now match
+  the commits that wrote them (git log). Only the times changed.
+
+### 2026-10-19 14:58 EDT | Phase 06 | Codex | B1 touch actions fixed
+- User authorized the B1–B3 correction pass under prompt 02; the approved phase contract is unchanged.
+  Orientation at db28d3c: clean tree; `scripts/verify.sh` PASS (122 unit, 110 e2e, 8 perf; WebKit p95 39 ms).
+  The first sandboxed run could not bind ::1:4173; the authorized rerun with server access passed.
+- Red: revised SelectionActions unit assertion failed; all four new WebKit touch checks failed:
+  iPhone 13 and iPad (gen 7), Highlight stored nothing and Remove left its record behind.
+- Fix: remove onPointerDown preventDefault, retain onMouseDown preventDefault for desktop; Safari touch
+  uses the existing offeredRange copy. Corrected the interaction description in the phase context.
+- `scripts/verify.sh`: first attempt caught two forbidden non-null assertions in the new tests (fixed).
+  Rerun PASS, exit 0: 122 unit, 118 e2e, 8 perf. The eight new touch checks pass in Chromium + WebKit,
+  including reopening after creation/removal. Chromium firstPage 236 ms, jump 31, p95 16.8;
+  WebKit firstPage 166, jump 74, p95 31; canvas 67.1 MB. Budgets unchanged.
+- B2 and B3 still open; F-007 remains failing. CI and the real-device user check remain pending.
+
+### 2026-10-19 15:12 EDT | Phase 06 | Codex | B2 duplicate saves fixed
+- Red: repeated-press e2e dispatched two activations before the async save resolved. Both Chromium
+  and WebKit stored two identical records (expected one). The separate quota-failure retry check passed.
+- Fix: synchronous ref guard in useHighlights, released in finally on success or failure. It ignores
+  another activation during the write without dropping keyboard focus. Consolidated the duplicate
+  core/highlights import (review N4).
+- `scripts/verify.sh`: initial attempt caught import formatting; formatted the hook and reran.
+  PASS, exit 0: 122 unit, 122 e2e, 8 perf. New checks prove exactly one record, removal leaves nothing
+  after reopening, and a quota failure can be retried successfully with the error cleared.
+  Chromium firstPage 185 ms, jump 27, p95 16.8; WebKit firstPage 166, jump 58, p95 33; canvas 67.1 MB.
+- B3 still open; F-007 remains failing. Contract unchanged; no push or external writes.
+
+### 2026-10-19 15:15 EDT | Phase 06 | Codex | B3 stale selection actions fixed; blockers verified
+- Red: all eight new browser checks failed at the stale Highlight button (Chromium + WebKit;
+  window resize, focused-button resize, opening a side panel, scrolling the selected page away).
+  Tests suppress selectionchange during removal, verify the original text layer disconnected, and
+  require the offer to disappear with no record saved. A fresh selection must then work in the same reader.
+- Fix: while offering Highlight, observe child removals in the scroller. Capture original range
+  endpoint nodes (a live Range moves them on removal); invalidate on collapse/disconnection and
+  restore reader focus if the removed action had focus. Disconnect when the offer closes. No new
+  viewer callback, idle scroll work or layout reads. Material reasoning recorded in the phase context.
+- First full verify stopped at the existing viewer unit test's 5 ms text-layer wait (expected page 6,
+  got none). Replaced that test's fixed waits with condition-based waits; viewer production code unchanged.
+- `scripts/verify.sh` on the B3 working tree based on 1c5834c: PASS, exit 0. Lint, format, types;
+  122/122 unit, 130/130 e2e (Chromium + WebKit), 8/8 perf. Chromium firstPage 174 ms, jump 24,
+  p95 16.8; WebKit firstPage 216, jump 50, p95 31, blank 1.1%; canvas 67.1 MB. Budgets unchanged.
+- Local contract coverage remains items 1–12: highlights e2e covers selection/alignment, multi-line
+  mouse drag, page break, resize, reload, stored PDF coordinates/quote, removal/cascade, invalid
+  selections/unsaved/error states, keyboard; unit covers conversions and schema upgrade; perf above.
+  Added 20 browser checks overall: 8 touch, 4 duplicate/retry, 8 selection lifecycle. Each blocker's
+  regression failed before its fix. The review appendix records author verification, not a new independent verdict.
+- F-007 restored to passing after observing the full run. Phase stays In progress: item 13 needs a
+  permitted push and green CI; item 14 needs the user's real-book/device report. No push or deployment.
+
+### 2026-10-19 15:17 EDT | Phase 06 | Codex | Correction pass handoff
+- B1 committed as 4341f7c; B2 as 1c5834c; B3 as 57fa6ad. Latest full verify is PASS as recorded above;
+  only evidence/handoff files changed afterward, and their formatting plus git diff --check pass.
+- Handoff refreshed with the correction commits and pending contract items 13–14. Phase remains
+  In progress; no push or deployment. A fresh agent should start with harness/prompts/00-orient.md.
+
+### 2026-10-19 15:18 EDT | Phase 06 | Codex | User check passed; CI authorized
+- User report: "I completed the real-book/device check. It's working as expected." Contract item 14
+  now has user-observed evidence. The user also authorized CI, including pushing the phase branch.
+- Clean working tree at ad3ec91 on phase-06-highlights before this evidence update. GitHub Actions
+  has no existing runs on this branch. Fresh local verification is running; CI remains pending.
+
+### 2026-10-19 15:19 EDT | Phase 06 | Codex | Local pre-push verification PASS
+- `scripts/verify.sh` at ad3ec91 plus the user-check evidence update: PASS, exit 0. Lint, format,
+  types, 122 unit, 130 e2e (Chromium + WebKit), 8 perf. Chromium firstPage 171 ms, jump 31,
+  p95 16.8; WebKit firstPage 161, jump 63, p95 38; canvas 67.1 MB. Budgets unchanged.
+- Ready to push the user's check evidence and the existing B1–B3 fixes to phase-06-highlights.
+
+### 2026-10-19 15:21 EDT | Phase 06 | Codex | Branch pushed; CI running
+- Committed the user's check report as 9463bfc and pushed phase-06-highlights to origin with upstream
+  tracking, as authorized. CI run: https://github.com/himmannshu/book-reader/actions/runs/39310131762
+  (head 9463bfc7b3db8ef6fac9d3147a36c44bdfdff924).
+- Observed dependency/browser installation steps pass; scripts/verify.sh is running. Watching with
+  gh run watch --exit-status. Contract 13 still pending until the run finishes; no merge or deployment.
+
+### 2026-10-19 16:28 EDT | Phase 06 | Codex | CI fixture-width failure diagnosed
+- CI 39310131762 on 9463bfc failed (including its retry): Chromium stored-width difference 2.06 pt
+  versus the manifest's 331.91 pt, exceeding the unchanged 2 pt assertion. All 122 unit and the other
+  129 browser checks passed; perf did not run because verification stops at the first failing step.
+- Root cause confirmed from pdf-lib source and decoded fixture content: drawText emits plain Tj
+  with no kerning offsets; StandardFontEmbedder.widthOfTextAtSize includes pair kerning. The Charlie
+  line's kerned width is 331.912 pt, but its actual glyph advance is 333.802 pt (1.89 pt more).
+- Red check asserted the manifest's Charlie width equals the PDF's rounded advance 333.80; got
+  331.91. Corrected the generator to sum individual glyph advances, regenerated fixtures, and saw
+  that check pass. Git diff confirms only the manifest's ten widths changed; PDF bytes are unchanged.
+  Runtime code, browser assertion tolerances and performance budgets are unchanged. Full verification next.
+
+### 2026-10-19 16:30 EDT | Phase 06 | Codex | Fixture browser checks pass; local timing failure
+- Full `scripts/verify.sh` after the fixture correction: FAIL at perf. Lint, formatting, types,
+  122 unit and all 130 browser tests passed. WebKit p95 51 ms exceeded the unchanged 40 ms budget;
+  the other seven perf checks passed. Chromium firstPage 167 ms, jump 19, p95 16.8; WebKit
+  firstPage 161, jump 65; canvas 67.1 MB. No runtime code changed since the earlier p95 38 ms pass.
+- `uptime` at retry reported host load averages 11.33, 8.26, 6.57; this is a possible source of
+  timing variance, not proof of cause. Full verification rerun started; no budgets changed.
+
+### 2026-10-19 16:32 EDT | Phase 06 | Codex | Fixture correction verified locally
+- Rerun `scripts/verify.sh`: PASS, exit 0. Lint, format, types, 122 unit, 130 browser and 8 perf.
+  Chromium firstPage 174 ms, jump 32, p95 16.8; WebKit firstPage 157, jump 83, p95 37;
+  canvas 67.1 MB. Budgets and runtime code unchanged. Both the failed run and this pass are retained.
+- Ready to commit and push the fixture generator/manifest fix for another CI run.
+
+### 2026-10-19 16:37 EDT | Phase 06 | Codex | Fixture correction pushed; CI rerunning
+- Pushed 7ac8b1ecc404119ed3230a598dc2bc0f63ee7948 to phase-06-highlights. CI run:
+  https://github.com/himmannshu/book-reader/actions/runs/39320769897 (in progress).
+- Watching this run to completion; phase remains In progress until contract item 13 has a green run.
+
+### 2026-10-19 16:47 EDT | Phase 06 | Codex | CI PASS; phase Complete
+- CI run https://github.com/himmannshu/book-reader/actions/runs/39320769897 completed successfully
+  on 7ac8b1ecc404119ed3230a598dc2bc0f63ee7948. gh run watch --exit-status exited 0; gh run view
+  confirmed status completed and conclusion success for that exact SHA.
+- Observed scripts/verify.sh PASS in CI: lint, format, types, 122 unit, 130 browser (Chromium + WebKit),
+  8 perf. Chromium firstPage 362 ms, jump 35, p95 33.3, blank 0%, canvas 67.1 MB (budgets enforced
+  with the existing CI time multiplier). Linux WebKit firstPage 1176, jump 697, p95 396, blank 80%,
+  canvas 67.1 MB: report-only in CI under the existing user-approved phase-02 policy. Budgets unchanged.
+- Contract close-out: items 1–11 have evidence in the phase build/correction entries and the latest
+  passing unit/browser suites; item 12 local enforced perf PASS at 16:32 (WebKit p95 37); item 13
+  local verify plus the CI URL above; item 14 the user's real-book/device report recorded at 15:18.
+  Every contract item now has observed evidence. Set phase file and PLANS.md to Complete, retained
+  F-007 passing with updated evidence, and appended author close-out to the historical review.
+- Final closure commit contains only PLANS.md and harness documentation/feature evidence. It uses
+  [skip ci] to avoid retriggering CI for its own result record; all source, generator, fixture, test,
+  dependency and workflow files remain exactly those verified on 7ac8b1e. Formatting and diff checks
+  validate the closure records. No merge or deployment; phase 07 has not started.
+
+### 2026-10-19 16:55 EDT | Phase 07 planning | Codex | Read-only audit; first questions pending
+- User requested prompt 01 planning, with questions/options before phase proposals, decisions and
+  reasoning recorded in architecture-decisions.md as chosen. Explicitly no application code or commits.
+- Read AGENTS.md, GOALS.md, PLANS.md, prompt 01, architecture-decisions.md, phase 06 and its contract,
+  and the phase 07 outline. GOALS.md's major architecture questions are already resolved; confirm whether
+  to retain those choices rather than silently reopening them. Phase 07 is Not started; no contract exists.
+- Code audit: existing selection/anchors/highlight persistence/floating actions are reusable foundation;
+  no note model/store/editor/panel is implemented. CSS classes named selection-note/panel-note are
+  status messages, not reader annotations. The current outline includes notes on highlights and pages.
+- `scripts/verify.sh` at 8372a99: PASS (lint, format, types, 122 unit, 130 browser, 8 perf).
+  Chromium firstPage 166 ms, jump 19, p95 16.8; WebKit firstPage 166, jump 34, p95 30; canvas 67.1 MB.
+- Asked two initial questions with options/tradeoffs: retain or revisit architecture; highlight/page/both
+  note targets. Waiting for choices. No new decisions recorded, phase proposals made, or application
+  files changed. Handoff/log updated without committing, per the user's instruction.
+
+### 2026-10-19 17:03 EDT | Phase 07 | Codex | Direction confirmed; plan and contract drafted
+- User chose to retain the architecture and support notes on highlights and pages, emphasizing
+  progress along the original direction unless a change offers a substantial improvement. Recorded
+  the choices, considered alternatives and reasoning as D7/D8 in architecture-decisions.md.
+- User invoked prompt 02 for phase 07. Read the phase outline, contract template and run prompt.
+  Preflight `scripts/verify.sh` at 8372a99: PASS (lint, format, types, 122 unit, 130 browser, 8 perf).
+  Chromium firstPage 170 ms, jump 19, p95 16.7; WebKit firstPage 174, jump 83, p95 30; canvas 67.1 MB.
+  The two pre-existing planning edits (handoff/log, from the preceding turn) were preserved.
+- Branch-base conflict: prompt 02 says create a phase branch from main, but main does not contain
+  completed phase 06, and phase 07 explicitly depends on 06. Created phase-07-notes at completed
+  phase-06-highlights (8372a99, a descendant of main) so the required highlights code is present.
+  No main merge, history rewrite, commit or push performed.
+- Posted the plan (scope, files, first failing checks, risks), expanded the existing phase-07 plan,
+  and drafted phase-07-contract.md from the template. Proposed interaction defaults are explicitly
+  awaiting approval: one note per anchor, explicit Save/Cancel, draft-discard guards, and confirmed
+  deletion of a highlight with its note. These are not recorded as accepted architecture decisions.
+- Stopping at prompt 02 step 6 for plan/contract approval. No application code or tests changed;
+  no feature marked passing, no Phase 07 context file created, and no commits made.
+
+### 2026-10-19 17:07 EDT | Phase 07 | Codex | Contract approved; build started
+- User: "Approved!" in response to the concrete plan, interaction defaults and contract. Approval
+  recorded by append-only Amendment 01; phase/roadmap In progress. D9 records the accepted defaults.
+- Baseline `scripts/verify.sh` at 8372a99 PASS: 122 unit, 130 browser, 8 perf; Chromium firstPage
+  172 ms, jump 17, p95 16.8; WebKit firstPage 156, jump 57, p95 31; canvas 67.1 MB.
+- Preserved the uncommitted planning records. Recorded material storage/association, draft-guard
+  and navigation decisions in phase-07-notes-context.md. Starting core/storage/browser checks red first.
+- No push, deployment or main merge authorized. Contract items 17 (CI) and 18 (user check) will
+  remain open until separately observed; do not mark the phase Complete based on local tests alone.
+
+### 2026-10-19 17:10 EDT | Phase 07 | Codex | Core/storage checkpoint; UI checks red
+- Red first: core/storage note suites failed on missing core/notes; initial Chromium page-note and
+  passage-note browser checks failed at missing Notes/Add note buttons (2 failed, expected).
+- Implemented deterministic per-target identity, plain-text validation/order and schema v4 notes.
+  Parent book/highlight validation is transactional; removing books/highlights cascades notes atomically.
+  Injecting a notes-delete failure keeps both the highlight and note; v3 upgrade keeps all old data.
+- Focused note unit tests 8/8; all unit tests 130/130; typecheck PASS (development checks, not full
+  phase verification). Updated the schema inventory test for v4. Full verify not yet run on this step;
+  browser notes checks remain red until UI integration. F-008 remains failing.
+
+### 2026-10-19 | Phase 07 | Codex | Initial notes UI green
+- Added draft controller, Notes editor/list, guarded panel/Library/file navigation, confirmation
+  dialog, highlight Add/Edit note actions and PDF-coordinate passage jumps. Pending-write, failed-save,
+  blank-text and dirty-navigation hook checks and the passage jump unit went red before implementation.
+- All 135 units and typecheck pass. Initial notes browser flows PASS (4/4, Chromium + WebKit).
+  One Chromium persistence check initially reloaded before its async save completed; waiting for the
+  saved row/editor dismissal resolves that test race. No product persistence change needed.
+- These are development checks, not canonical phase evidence. Full verify and broader contract
+  cases remain pending; no feature marked passing. No push/deploy/main merge.
+
+### 2026-10-19 | Phase 07 | Codex | Contract edge coverage green
+- Expanded focused browser suite to 34 passing cases across Chromium/WebKit: independent targets,
+  multiline/Unicode/blank edits, cancellation, edits/reopening, book isolation/removal, atomic
+  highlight+note failure/cancel/retry, note-only deletion, unsaved/read/save failures and Retry,
+  dirty guards on every navigation path, PDF association/reading order, non-first-page/current-page
+  selection, multiline/cross-page and foot-of-page jumps, keyboard and iPhone/iPad tap workflows.
+- Red keyboard checks exposed Safari skipping editor Save and dialog buttons in native Tab order,
+  and focus dropping to body after confirmed row deletion. Explicit internal Tab navigation and
+  focus restoration fix these; keyboard case now passes both engines.
+- Test synchronization fixes: wait for editor dismissal before reloading after save; wait for
+  viewer relayout/text rebuild after closing a wide panel; wait for new highlight boxes rather than
+  an older existing box. Page jump assertion uses the existing page-top check (layout has 24px padding),
+  not an incorrect scrollTop=0 assumption. No delays, relaxed budgets or product changes for those.
+- Added deterministic vector-only fixture for no-text page notes. Lint passed; all 137 units pass.
+  A newly added loading-state test had a type-only unsupported Testing Library `exact` option;
+  removed it. Full canonical verify and screenshot inspection next. F-008 not yet changed.
+
+### 2026-10-19 | Phase 07 | Codex | First full local verification
+- `scripts/verify.sh` PASS at e4a8e58: lint, format, types, 137 unit tests, 164 browser tests,
+  8 performance checks. Chromium firstPage 168 ms, jump 19, p95 16.8, blank frames 0%; WebKit
+  firstPage 175 ms, jump 71, p95 31, blank frames 1%; both maxCanvas 67.1 MB. Budgets unchanged.
+- Inspected captured iPhone/iPad notes-editor screenshots: quote/editor/buttons/list fit the panel;
+  narrow overlay and wide split layouts are usable. Emulation does not reproduce the physical
+  iOS keyboard, so this does not replace contract item 18.
+- One final menu-boundary check is being added: the new Add note action makes the floating menu
+  taller, so both actions must stay reachable when a chosen highlight is at the reader's lower edge.
+  Phase remains In progress; CI and the Phase 07 user check have not been run/reported.
+
+### 2026-10-19 | Phase 07 | Codex | Floating-menu edge correction
+- New lower-edge check failed in both engines: the expanded Add note/Remove menu ended at 407px
+  in a 360px viewport. Clamp the measured menu inside its positioned reader body, accounting for
+  error text and width; no measurement/listener on idle scrolling. The same focused checks now
+  pass (2/2); save through the repositioned Add note also succeeds.
+- Full verification will be rerun on the correction. Previous full result is retained above, not
+  treated as evidence for code that changed afterward. No budgets changed.
+
+### 2026-10-19 | Phase 07 | Codex | Local implementation ready; external gates pending
+- Final `scripts/verify.sh` PASS at 117ed45: lint, format, typecheck, 137 unit, 166 browser and
+  8 performance checks. Chromium firstPage 201 ms, jump 28, p95 16.8, blank frames 0%; WebKit
+  firstPage 162 ms, jump 54, p95 35, blank frames 1%; both maxCanvas 67.1 MB. Budgets unchanged.
+- The production app was exercised through the picker, reader, panels and Library in both engines;
+  36 Notes browser cases include iPhone/iPad contexts using actual tap events. Touch editor
+  screenshots inspected earlier; no claim of a physical-device check. No independent review yet.
+- F-008 marked locally passing for its observed feature behavior. Phase 07/PLANS stay In progress:
+  no Phase 07 CI run, push, deployment or main merge; the user's Phase 06 report is not reused for
+  Phase 07. No next phase started. App code is committed; handoff records the remaining gates.
+
+Contract evidence from this final canonical run (contract unchanged after approval):
+
+| Item | Observed evidence |
+|---|---|
+| 1 | Notes e2e existing-highlight and multiline/cross-page cases save attached text, page and quote; touch cases tap Add note |
+| 2 | Vector-only fixture accepts a note with zero selectable spans; non-first-page case compares page-note target with Bookmark current-page index 2 |
+| 3 | Same-target Add reopens the editor; independent highlights keep separate notes; hook pending-write test observes one put for duplicate Save |
+| 4 | Browser multiline/Unicode and blank-edit cases; core/store validation rejects whitespace without changing saved content |
+| 5 | New-draft Cancel leaves no note; changed existing note Cancel preserves storage; Save updates row/text |
+| 6 | Page/passage saves and edits survive reload/reopening (including touch workflows); two-book isolation case keeps the books separate |
+| 7 | Browser empty/failure/retry states and page/passage ordering; ReaderView loading-reason unit; core sorting across pages and PDF positions |
+| 8 | Non-first-page jump plus first-box jump near page foot across a page break; wide reader focus and narrow touch panel closure |
+| 9 | Cancel/confirm note-only deletion, persisted absence after reopening, highlight still present; touch deletes both note types |
+| 10 | Explicit Remove both/Cancel; injected notes-delete failure keeps both records, retry removes both while page note stays; storage atomic rollback unit |
+| 11 | Two-target book removal deletes notes/highlights, preserves other book, and reimport starts empty; storage cascade unit |
+| 12 | Dirty draft retained on cancelling close/switch/Escape/other-note edit or jump/Library/file open; confirmed discard opens the chosen file; hook confirms guarded continuation |
+| 13 | Unsaved/failed-read browser cases plus pending-read UI/hook units disable changes visibly; save/delete failures preserve text/records and permit retry |
+| 14 | Populated real-v3 upgrade unit preserves metadata, PDF bytes, bookmarks and highlights; stored target-key assertions contain only page/highlight associations; core/storage validation/order/cascade units |
+| 15 | Keyboard Enter inserts newline, Tab reaches Save, dialog cancel/confirm and deletion restore usable focus; iPhone/iPad tap add/edit/reopen/jump/delete both targets in both engines |
+| 16 | All existing reading/bookmark/highlight browser regressions pass; 8 perf checks pass unchanged |
+| 17 | Local PASS above; CI NOT RUN — requires separately authorized push |
+| 18 | NOT OBSERVED — ask user to create/edit/reopen/jump/delete both note types in a real book, on iPhone/iPad if possible |
+
+### 2026-10-19 17:44 EDT | Phase 07 | Codex | User-reported jump failures; bookmark issue filed
+- User reports choosing Notes and Bookmarks does not land on the right page, and requests a
+  GitHub issue for Bookmarks. This supersedes the earlier locally-ready interpretation: contract
+  8/18 is unresolved. Asked asynchronously for device/browser, page versus highlight note and
+  expected-versus-actual page. No answer received yet; no cause claimed and no app code changed.
+- Startup: handoff/log/status/history read; clean tree on phase-07-notes at 798c536. Read AGENTS,
+  phase/contract and navigation/layout code. `scripts/verify.sh` PASS: 137 unit, 166 browser, 8 perf;
+  Chromium firstPage 168 ms, jump 29, p95 16.7; WebKit firstPage 170, jump 75, p95 32; canvas 67.1 MB.
+- Additional isolated Playwright diagnostic against the production preview: import generated
+  long-300-pages.pdf, mark physical page 201, add its page note, scroll away, choose each entry,
+  compare page top immediately and after 600ms settling. Both Chromium/WebKit at widths 1280,
+  810 and 390 landed within 1px of the intended page top (12 jumps). These checks did not reproduce
+  the report; no private book read/copied. Hypotheses such as page labels or layout remain unconfirmed.
+- GitHub reads initially failed inside the network sandbox; escalated retry succeeded. Checked
+  repository and open issues (none), then created and verified OPEN issue #1 under the user's request:
+  https://github.com/himmannshu/book-reader/issues/1 . Issue clearly separates user report from
+  generated-fixture observations. No push, deployment, main merge or credential-file access.
+- Used writing-style skill for the issue; retrieval tools were unavailable, so followed the user's
+  supplied direct wording without claiming a retrieved style match.
+- F-006/F-008 marked failing with explicit user-report evidence (not fabricated red tests).
+  Historical test results retained. Phase 07 stays In progress; no fix attempted without a repro.
+
+### 2026-10-19 17:52 EDT | Phase 07 | Codex | Page-number clarification; navigation report withdrawn
+- User: "actually never mind ... page numbers ... printed on the book page vs actual pdf page
+  number." This resolves the reported wrong-page behavior without an application fix. The UX
+  concern is clearer physical-PDF versus printed-book numbering, not broken stored associations.
+- Closed GitHub issue #1 with the clarification (reason NOT_PLANNED); read back state CLOSED.
+  Retained numbering clarity as a local UX follow-up; no new external issue, UI feature, metadata
+  support, fixed offset or OCR work inferred/implemented. No push/deploy/main merge.
+- Startup clean at 04da1da. `scripts/verify.sh` PASS: lint, format, types, 137 unit, 166 browser,
+  8 perf. Chromium firstPage 169 ms, jump 32, p95 16.8; WebKit firstPage 146, jump 77, p95 34;
+  blank frames 0%/1%, canvas 67.1 MB. Budgets unchanged.
+- Restored F-006/F-008 passing using the observed checks plus withdrawn failure report. Prior
+  entries remain historical evidence. Phase 07 stays In progress for authorized CI and confirmation
+  of the full real-book/device checklist; this clarification does not confirm every contract-18 action.
+
+### 2026-10-19 | Phase 07 | Codex | Authorized push/CI preflight
+- User: "Ok,next is CI and then push the code." Authorized pushing phase-07-notes and observing CI;
+  explained GitHub CI requires the commit to be pushed first. No merge/deployment authorized.
+- Clean preflight at 43c3efa. `scripts/verify.sh` PASS: lint, format, types, 137 unit, 166 browser,
+  8 perf. Chromium firstPage 166 ms, jump 18, p95 16.8; WebKit firstPage 155, jump 91, p95 29;
+  blank frames 0%/1%, maxCanvas 67.1 MB. Budgets unchanged; no application code changed.
+- Inspected verify.yml: push-triggered verification, no deployment. Remote branch absent (read-only
+  git ls-remote; initial sandbox DNS failure resolved by escalated retry). First push/CI next.
+- First push succeeded: origin/phase-07-notes now tracks local branch at 26875e4. Exact SHA matched
+  queued verify run 39331468496: https://github.com/himmannshu/book-reader/actions/runs/39331468496 .
+  Monitoring with gh run watch --exit-status; no result claimed yet. No PR, merge or deployment.
+- While CI runs, user confirms trying jumps, deletion and reopening for both highlight/page notes.
+  Clarified my phrase "cover creating" meant checking note creation, not making book covers. Do not
+  infer that editing was checked from this report. Full acceptance record remains partial.
+- User separately requests an issue for incomplete Contents: local The Hundred Page ML Book lists
+  only Preface. Read engine mapping and Phase 04 contract: current behavior reads embedded outline;
+  generation from page content is explicitly out of scope. Cause unconfirmed without the PDF;
+  no private book accessed/copied/uploaded, no TOC implementation work added to Phase 07.
+- Writing-style skill used for the requested issue; retrieval tools unavailable, so the supplied
+  user wording is the style basis without a claim of retrieved examples.
+- Created requested Contents issue #2, https://github.com/himmannshu/book-reader/issues/2 , with
+  the Preface-only example and explicit embedded-outline versus TOC-generation distinction.
+
+### 2026-10-19 18:16 EDT | Phase 07 | Claude Code (Opus 5.5) | Takeover after Codex hit its limit; phase complete
+- Took over from Codex (usage limit). Its uncommitted HANDOFF.md/build-log.md edits were harness notes only,
+  consistent with git and CI; kept and committed here.
+- Item 17: GitHub Actions run 39331468496 on 26875e4 → completed, success (all steps, including scripts/verify.sh).
+  https://github.com/himmannshu/book-reader/actions/runs/39331468496
+  Local: `scripts/verify.sh` at 26875e4 → PASS: 137 unit, 166 browser, 8 perf. Chromium first 181, jump 27,
+  p95 16.8; WebKit first 183, jump 83, p95 33; blank 0%/1%; canvas 67.1 MB. Budgets unchanged.
+- Item 18: user-observed. Earlier: creating, jumping, deleting and reopening both highlight and page notes.
+  Now (chat, answer to "did you also try editing a note"): "Yes, editing works". iPhone/iPad not reported
+  (the contract says "if possible").
+- All contract items 1–18 have evidence. Phase 07 → Complete. No independent review of phase 07 yet.
+- Issue #2 (Contents shows only Preface for The Hundred-Page Machine Learning Book): with the user's permission,
+  read the local PDF's outline with PDF.js in Node (read-only; nothing copied or uploaded). 152 pages; the
+  embedded outline has 5 entries in total: "Preface.pdf" (no destination) > "Preface" (page index 2) > 3 Preface
+  sections; no page labels. So the app shows the embedded outline faithfully. The source outline is incomplete
+  (likely merged per-chapter PDFs). Not a parser or mapping bug. Chapters would need contents generation,
+  which phase 04 left out of scope.

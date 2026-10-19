@@ -1,51 +1,67 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
+import type { Highlight } from '../core/highlights';
+import type { Note, NoteTarget } from '../core/notes';
 import type { OutlineItem, PdfDoc } from '../engine/types';
-import { StorageError, type BookmarkStore } from '../storage/types';
+import type { BookmarkStore, HighlightStore, NoteStore } from '../storage/types';
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
+import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
 import { ContentsPanel, type OutlineState } from './ContentsPanel';
+import { SelectionActions } from './SelectionActions';
+import { useHighlights } from './useHighlights';
+import { useNotes } from './useNotes';
+import { NotesPanel } from './NotesPanel';
+import { ConfirmDialog } from './ConfirmDialog';
 
 /** Below this width a side panel covers the pages instead of sitting beside them. */
 const NARROW_QUERY = '(max-width: 699px)';
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
+const NOTES_ID = 'notes-panel';
+const NO_HIGHLIGHTS: readonly Highlight[] = [];
 
-type Panel = 'contents' | 'bookmarks';
+type Panel = 'contents' | 'bookmarks' | 'notes';
+
+export interface ReaderHandle {
+  requestNavigation(proceed: () => void): void;
+}
 
 /** A book's bookmarks once read; `bookId` says which book they belong to. */
 type LoadedBookmarks =
   { bookId: string; status: 'failed' } | { bookId: string; status: 'ready'; items: Bookmark[] };
-
-function bookmarkMessage(error: unknown, action: 'save' | 'remove'): string {
-  const kind = error instanceof StorageError ? error.kind : 'unknown';
-  switch (kind) {
-    case 'quota':
-      return "There isn't enough storage space to save this bookmark.";
-    case 'not-found':
-      return "This book is no longer stored on this device, so its bookmarks can't be changed.";
-    case 'unavailable':
-    case 'unknown':
-      return action === 'save'
-        ? "This bookmark couldn't be saved."
-        : "This bookmark couldn't be removed.";
-  }
-}
 
 interface ReaderViewProps {
   doc: PdfDoc;
   /** The stored book's id, or null while the book isn't saved on this device. */
   bookId: string | null;
   bookmarks: BookmarkStore;
+  highlights: HighlightStore;
+  notes: NoteStore;
+  ref?: Ref<ReaderHandle>;
   now?: () => number;
+  newId?: () => string;
 }
 
+const randomId = () => crypto.randomUUID();
+
 /** Hosts the plain-TS Viewer. React owns only this element; the viewer owns everything inside. */
-export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderViewProps) {
+export function ReaderView({
+  doc,
+  bookId,
+  bookmarks,
+  highlights,
+  notes,
+  ref,
+  now = Date.now,
+  newId = randomId,
+}: ReaderViewProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
   const bookmarksButtonRef = useRef<HTMLButtonElement>(null);
+  const notesButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -56,7 +72,8 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
 
   const [marks, setMarks] = useState<LoadedBookmarks | null>(null);
   const [changing, setChanging] = useState(false);
-  const [marksError, setMarksError] = useState<string | null>(null);
+  /** A readable message about a bookmark or highlight that couldn't be saved or removed. */
+  const [annotationError, setAnnotationError] = useState<string | null>(null);
   const bookmarksState: BookmarksState =
     bookId === null
       ? { status: 'unsaved' }
@@ -118,17 +135,24 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
   }
 
   function buttonFor(panel: Panel) {
-    return panel === 'contents' ? contentsButtonRef : bookmarksButtonRef;
+    return panel === 'contents'
+      ? contentsButtonRef
+      : panel === 'bookmarks'
+        ? bookmarksButtonRef
+        : notesButtonRef;
   }
 
   function togglePanel(panel: Panel) {
-    if (openPanel === panel) {
-      setOpenPanel(null);
-      buttonFor(panel).current?.focus();
-      return;
-    }
-    setOpenPanel(panel);
-    if (panel === 'contents') void loadOutline();
+    written.request(() => {
+      marked.dismiss();
+      if (openPanel === panel) {
+        setOpenPanel(null);
+        buttonFor(panel).current?.focus();
+        return;
+      }
+      setOpenPanel(panel);
+      if (panel === 'contents') void loadOutline();
+    });
   }
 
   function choose(pageIndex: number) {
@@ -148,15 +172,13 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
   }
 
   function reportFailure(error: unknown, action: 'save' | 'remove') {
-    if (!(error instanceof StorageError) || error.kind === 'unknown') {
-      console.error(`Could not ${action} the bookmark`, error);
-    }
-    setMarksError(bookmarkMessage(error, action));
+    logUnexpectedAnnotationError(error, `Could not ${action} the bookmark`);
+    setAnnotationError(annotationMessage(error, 'bookmark', action));
   }
 
   async function removeBookmark(mark: Bookmark): Promise<boolean> {
     setChanging(true);
-    setMarksError(null);
+    setAnnotationError(null);
     try {
       await bookmarks.remove(mark.id);
       updateItems(mark.bookId, (list) => list.filter((m) => m.id !== mark.id));
@@ -177,7 +199,7 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
     }
     const pageIndex = currentPage;
     setChanging(true);
-    setMarksError(null);
+    setAnnotationError(null);
     try {
       // A table of contents that can't be read only costs the chapter name (and is logged).
       const entries = await loadOutline().catch((): OutlineItem[] => []);
@@ -197,18 +219,83 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
     }
   }
 
-  // While a panel is open, Escape closes it wherever focus is: in the panel, on a button, in the
-  // pages, or on the page body (in Safari a mouse click does not focus the button it clicks).
+  const marked = useHighlights({
+    bookId,
+    store: highlights,
+    viewer: viewerRef,
+    scroller: scrollerRef,
+    body: bodyRef,
+    now,
+    newId,
+    onError: setAnnotationError,
+  });
+  const highlightList = marked.items ?? NO_HIGHLIGHTS;
+  const written = useNotes({ bookId, store: notes, highlights: highlightList, now });
+  useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
+
+  function openNote(target: NoteTarget) {
+    written.open(target, () => {
+      marked.dismiss();
+      setOpenPanel('notes');
+    });
+  }
+
+  function chooseNote(note: Note) {
+    written.request(() => {
+      const target = note.target;
+      const passage =
+        target.kind === 'highlight'
+          ? highlightList.find((highlight) => highlight.id === target.highlightId)
+          : undefined;
+      const rect = passage?.rects[0];
+      if (rect) viewerRef.current?.scrollToRect(rect);
+      else viewerRef.current?.scrollToPage(note.target.pageIndex);
+      if (window.matchMedia(NARROW_QUERY).matches) setOpenPanel(null);
+      scrollerRef.current?.focus({ preventScroll: true });
+    });
+  }
+
+  function removeHighlight(id: string) {
+    written.request(() => {
+      const attached = written.items?.find(
+        (note) => note.target.kind === 'highlight' && note.target.highlightId === id,
+      );
+      const remove = async () => {
+        if (await marked.removeHighlight(id)) written.forgetHighlight(id);
+      };
+      if (attached)
+        written.ask({
+          title: 'Remove highlight and note?',
+          message: 'This removes the highlight and its attached note.',
+          label: 'Remove both',
+          run: () => {
+            void remove();
+          },
+        });
+      else void remove();
+    });
+  }
+  const dismissHighlightAction = marked.dismiss;
+  const requestNoteNavigation = written.request;
+  const noteConfirmation = written.confirmation;
+
+  // Escape first hides a floating highlight button. Otherwise, while a panel is open, it closes the
+  // panel wherever focus is: in the panel, on a button, in the pages, or on the page body (in
+  // Safari a mouse click does not focus the button it clicks).
   useEffect(() => {
-    if (!openPanel) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      setOpenPanel(null);
-      (openPanel === 'contents' ? contentsButtonRef : bookmarksButtonRef).current?.focus();
+      if (noteConfirmation) return;
+      if (dismissHighlightAction()) return;
+      if (!openPanel) return;
+      requestNoteNavigation(() => {
+        setOpenPanel(null);
+        buttonFor(openPanel).current?.focus();
+      });
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel]);
+  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation]);
 
   return (
     <div className="reader">
@@ -244,13 +331,23 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
         >
           Bookmark page
         </button>
+        <button
+          ref={notesButtonRef}
+          type="button"
+          className="button secondary"
+          aria-expanded={openPanel === 'notes'}
+          aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
+          onClick={() => togglePanel('notes')}
+        >
+          Notes
+        </button>
       </div>
-      {marksError && (
+      {annotationError && (
         <p className="error" role="alert">
-          {marksError}
+          {annotationError}
         </p>
       )}
-      <div className="reader-body">
+      <div ref={bodyRef} className="reader-body">
         {openPanel === 'contents' && (
           <ContentsPanel id={CONTENTS_ID} outline={outline} onChoose={choose} />
         )}
@@ -262,6 +359,16 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
             onRemove={removeBookmark}
           />
         )}
+        {openPanel === 'notes' && (
+          <NotesPanel
+            id={NOTES_ID}
+            notes={written}
+            highlights={highlightList}
+            currentPage={currentPage}
+            onOpen={openNote}
+            onChoose={chooseNote}
+          />
+        )}
         <div
           ref={scrollerRef}
           className="reader-scroller"
@@ -269,8 +376,40 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
           tabIndex={0}
           role="region"
           aria-label="Book pages"
+          onClick={marked.onPagesClick}
+        />
+        <SelectionActions
+          action={marked.action}
+          unsavedReason={marked.unavailableReason}
+          onHighlight={() => void marked.highlightSelection()}
+          onRemove={removeHighlight}
+          onNote={(id) => {
+            const highlight = highlightList.find((item) => item.id === id);
+            if (highlight)
+              openNote({ kind: 'highlight', pageIndex: highlight.pageIndex, highlightId: id });
+          }}
+          noteLabel={
+            marked.action?.kind === 'remove' &&
+            written.items?.some(
+              (note) =>
+                note.target.kind === 'highlight' &&
+                marked.action?.kind === 'remove' &&
+                note.target.highlightId === marked.action.id,
+            )
+              ? 'Edit note'
+              : 'Add note'
+          }
+          noteUnavailableReason={written.unavailableReason}
+          removeUnavailableReason={written.unavailableReason}
         />
       </div>
+      {written.confirmation && (
+        <ConfirmDialog
+          question={written.confirmation}
+          onConfirm={written.acceptConfirmation}
+          onCancel={written.rejectConfirmation}
+        />
+      )}
     </div>
   );
 }
