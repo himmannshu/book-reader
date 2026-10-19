@@ -17,7 +17,8 @@ export interface BookStore {
   add(file: Blob, fileName: string): Promise<BookRecord>;
   /** All stored books, most recently opened first. Does not load the files. */
   list(): Promise<BookRecord[]>;
-  getFile(id: string): Promise<Blob>;
+  /** The book's bytes, fresh for each call (PDF.js may take ownership of the buffer). */
+  getBytes(id: string): Promise<Uint8Array>;
   markOpened(id: string): Promise<void>;
   /** Deletes the book and its file. */
   remove(id: string): Promise<void>;

@@ -39,11 +39,11 @@ describe('IndexedDB book store', () => {
     expect(await store.list()).toEqual([record]);
   });
 
-  it('returns the stored file with the same bytes', async () => {
+  it('returns the stored bytes unchanged', async () => {
     const { store } = setup();
     const record = await store.add(pdf('bytes'), 'b.pdf');
-    const file = await store.getFile(record.id);
-    expect(await file.text()).toBe('%PDF-1.7 bytes');
+    const bytes = await store.getBytes(record.id);
+    expect(new TextDecoder().decode(bytes)).toBe('%PDF-1.7 bytes');
   });
 
   it('keeps one entry when the same file is added twice, and marks it opened again', async () => {
@@ -68,12 +68,12 @@ describe('IndexedDB book store', () => {
     const record = await store.add(pdf('gone'), 'gone.pdf');
     await store.remove(record.id);
     expect(await store.list()).toEqual([]);
-    await expect(store.getFile(record.id)).rejects.toMatchObject({ kind: 'not-found' });
+    await expect(store.getBytes(record.id)).rejects.toMatchObject({ kind: 'not-found' });
   });
 
   it('reports a missing book as not-found', async () => {
     const { store } = setup();
-    await expect(store.getFile('nope')).rejects.toBeInstanceOf(StorageError);
+    await expect(store.getBytes('nope')).rejects.toBeInstanceOf(StorageError);
     await expect(store.markOpened('nope')).rejects.toMatchObject({ kind: 'not-found' });
   });
 

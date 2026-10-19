@@ -1,5 +1,7 @@
 // IndexedDB adapter for the book store (D5a in harness/context/architecture-decisions.md).
 // Metadata and files live in separate object stores, so listing books never loads the PDFs.
+// Files are stored as ArrayBuffers, not Blobs: Safari's private browsing (and Playwright's WebKit)
+// refuses Blobs in IndexedDB but accepts ArrayBuffers, at similar speed.
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
 import { StorageError, type BookRecord, type BookStore } from './types';
 
@@ -57,8 +59,8 @@ function upgrade(db: IDBDatabase, oldVersion: number): void {
   }
 }
 
-async function sha256Hex(blob: Blob): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
@@ -110,7 +112,8 @@ export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}
   return {
     add: (file, fileName) =>
       guard(async () => {
-        const id = await sha256Hex(file);
+        const bytes = await file.arrayBuffer();
+        const id = await sha256Hex(bytes);
         const database = await db();
         const tx = database.transaction([BOOKS, FILES], 'readwrite');
         const books = tx.objectStore(BOOKS);
@@ -127,7 +130,7 @@ export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}
               lastOpenedAt: time,
             };
         books.put(record);
-        if (!existing) tx.objectStore(FILES).put(file, id);
+        if (!existing) tx.objectStore(FILES).put(bytes, id);
         await done(tx);
 
         if (!askedForPersistence) {
@@ -147,13 +150,13 @@ export function createIndexedDBBookStore(options: IndexedDBBookStoreOptions = {}
         return sortByRecentlyOpened(all);
       }),
 
-    getFile: (id) =>
+    getBytes: (id) =>
       guard(async () => {
         const database = await db();
-        const file = (await request(database.transaction(FILES).objectStore(FILES).get(id))) as
-          Blob | undefined;
-        if (!file) throw new StorageError('not-found', `No stored file for book ${id}`);
-        return file;
+        const bytes = (await request(database.transaction(FILES).objectStore(FILES).get(id))) as
+          ArrayBuffer | undefined;
+        if (!bytes) throw new StorageError('not-found', `No stored file for book ${id}`);
+        return new Uint8Array(bytes);
       }),
 
     markOpened: (id) =>

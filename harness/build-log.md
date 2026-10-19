@@ -324,3 +324,17 @@ Template:
 - Red: library tests failed (module missing); adapter tests failed (module missing).
 - Green: library 7 passed; adapter 11 passed (one expectation in my own test was wrong: byteSize 13
   for a 12-byte string; fixed the test). `npx vitest run` → all unit tests pass.
+
+### 2026-10-19 05:45 EDT | Phase 03 | Claude Code (Opus 5.5) | Library UI: import, reload, reopen
+- Changes: src/ui/Library.tsx ("Your books" list, inline remove confirmation, empty state); App takes a
+  `store` prop, saves after a successful open (never keeps an unreadable file), shows "Saved on this
+  device." (role=status), opens from the list, Library button; storage error messages; library CSS;
+  e2e/library.spec.ts; App unit tests use in-memory fake stores; jsdom ResizeObserver stub in test-setup.
+- Red: library e2e (import → reload → open from list) failed in chromium and webkit (no status / list).
+- Found while going green: WebKit's default Playwright context (like Safari private browsing) rejects
+  Blob and File values in IndexedDB; ArrayBuffer works. Probe, 24 MB: chromium Blob 15 ms / ArrayBuffer
+  25 ms write; webkit Blob "ERR", ArrayBuffer 29 ms write, 14 ms read. Changed the store to keep
+  ArrayBuffers; `getFile(): Blob` became `getBytes(): Uint8Array`. Also fixed an ambiguous e2e locator
+  ("basic-3-pages" matched "Remove basic-3-pages") with exact matching, and a React lint finding
+  (set-state-in-effect) by loading the list with a cancellable promise callback.
+- Green: `npx vitest run` → 46 passed; `npx playwright test` → 28 passed (chromium + webkit).
