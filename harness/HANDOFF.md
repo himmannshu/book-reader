@@ -54,15 +54,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 11:35 EDT
+Snapshot 2026-10-19 11:47 EDT
 - Branch: phase-04-table-of-contents
-- HEAD: 719a4b3 after reviews: handoff lists open findings and next steps
+- HEAD: ab41928 phase 04: item 11 user-checked; CI queued; handoff for next session
 - Uncommitted files: 0
 - Last verify: PASS at 2026-10-19 11:16 EDT (commit ca5c0dc)
 - Recent commits:
+    ab41928 phase 04: item 11 user-checked; CI queued; handoff for next session
+    aaafd9f after reviews: refresh handoff snapshot
     719a4b3 after reviews: handoff lists open findings and next steps
     ca1d8ba phase 03: evaluator review (PASS); D5b and contract amendment for ArrayBuffer storage
     66c8daa phase 02: evaluator review (PASS)
-    974294a phase 04: log N1/T1 fixes; F-005 passing again
-    ca5c0dc phase 04: Escape closes Contents from anywhere (N1); test the unreadable-outline state (T1)
 <!-- AUTO:END -->
