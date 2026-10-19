@@ -15,7 +15,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Phase 04 closed (CI 39279260419 green); phase 05 (bookmarks) built, reviewed (its B1 page-tie bug fixed),
   CI 39291151035 green, user-checked. Both merged to main and pushed (be88ca0).
-- Phase 06 built test-first (build log 14:20, 14:45): text-4-pages fixture; src/core/highlights.ts; IndexedDB
+- Phase 06 built test-first (build log 14:00, 14:09): text-4-pages fixture; src/core/highlights.ts; IndexedDB
   v3 with one per-book store shared with bookmarks; engine `renderTextLayer` (PDF.js TextLayer + ported
   selection fix, src/engine/text-selection.ts); viewer text layers for visible pages after a 200 ms scroll
   pause; floating Highlight / Remove highlight (src/ui/SelectionActions.tsx, src/ui/useHighlights.ts);
@@ -71,17 +71,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 14:42 EDT
+Snapshot 2026-10-19 14:43 EDT
 - Branch: phase-06-highlights
-- HEAD: 52724f8 phase 06: evaluator review (FAIL on B1 touch, B2, B3); F-007 failing until fixed
-- Uncommitted files: 1
+- HEAD: f30eb4c handoff: correct build-log timestamp
+- Uncommitted files: 2
 - Last verify: PASS at 2026-10-19 14:42 EDT (commit 52724f8)
 - Recent commits:
+    f30eb4c handoff: correct build-log timestamp
+    c701158 handoff: Claude Code (Opus 5.5) 2026-10-19
     52724f8 phase 06: evaluator review (FAIL on B1 touch, B2, B3); F-007 failing until fixed
     9547db8 phase 06: perf headroom restored; verify PASS; items 1–12 observed; F-007 passing; handoff
     c4be6a2 phase 06: keep scrolling cheap: text layers wait for a scroll pause; scroll listener idle without a button
-    ac5f44d phase 06: e2e for the unsaved-book Highlight reason
-    f7e4871 phase 06: log build progress
 - Changed files:
      M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->

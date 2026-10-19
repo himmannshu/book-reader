@@ -590,7 +590,7 @@ Template:
   freezes; phase-03 context file). Not investigated. Budgets unchanged.
 - CI run 39279260419 (aaafd9f) still "queued" on GitHub at 11:54 EDT, about 18 minutes after it was created.
 
-### 2026-10-19 12:15 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 10: CI green; phase Complete
+### 2026-10-19 12:13 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 10: CI green; phase Complete
 - GitHub Actions run 39279260419 on aaafd9f (phase-04-table-of-contents): status completed, conclusion success,
   finished 16:09:52Z after sitting queued ~29 min during a GitHub Actions incident ("Degraded availability for
   GitHub Actions, GitHub Pages and Webhooks", githubstatus.com). https://github.com/himmannshu/book-reader/actions/runs/39279260419
@@ -600,7 +600,7 @@ Template:
   The re-review's FAIL rested only on items 10/11; no new review was run.
 - Not yet merged into main or pushed past aaafd9f; waiting on the user.
 
-### 2026-10-19 12:35 EDT | Phase 05 | Claude Code (Opus 5.5) | Phase 04 merged; phase 05 built test-first
+### 2026-10-19 12:33 EDT | Phase 05 | Claude Code (Opus 5.5) | Phase 04 merged; phase 05 built test-first
 - User-approved: main fast-forwarded to phase-04-table-of-contents (71a46b6), both pushed; branch
   phase-05-bookmarks created from main. Contract written from the approved plan (14 items) and context file added.
 - Red → green, unit (Vitest): currentPageAt (6 failing → pass), Viewer onPageChange (3 failing → pass),
@@ -616,7 +616,7 @@ Template:
   src/ui/usePanelKeys.ts used by both panels. Added a `prod-preview` entry to .claude/launch.json (port 4180)
   for checking the production build in the browser pane.
 
-### 2026-10-19 12:42 EDT | Phase 05 | Claude Code (Opus 5.5) | verify PASS; items 1–12 observed
+### 2026-10-19 12:35 EDT | Phase 05 | Claude Code (Opus 5.5) | verify PASS; items 1–12 observed
 - `scripts/verify.sh` at 03bc129: PASS (exit 0). Lint, format, types clean; unit 91/91; browser 82/82 (Chromium +
   WebKit); perf 8/8: chromium firstPage 176 ms, jump 27, p95 16.8, blank 0; webkit firstPage 163, jump 75,
   p95 31, blank 1.1; maxCanvasMB 67.1 both (item 12; first-page times in line with phase 04's 174/172).
@@ -654,7 +654,7 @@ Template:
 - Items 1–13 now have evidence (1–2 after the B1 fix, not re-reviewed). Only item 14 (user's real-book check)
   is open; phase stays In progress.
 
-### 2026-10-19 13:15 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 14 user-checked; phase Complete
+### 2026-10-19 13:17 EDT | Phase 05 | Claude Code (Opus 5.5) | Item 14 user-checked; phase Complete
 - Item 14: user-observed (reported in chat by Himanshu): "I checked on a real book: bookmarked a few pages,
   reloaded, jumped back. Bookmarks look good." Not independently verified by the agent.
 - All 14 contract items have evidence. Phase 05 set Complete in the build file, PLANS.md and the summary row.
@@ -663,7 +663,7 @@ Template:
   toggle overflow stay open.
 - Not merged into main; commits after fdaa254 are harness docs only and not pushed.
 
-### 2026-10-19 14:20 EDT | Phase 06 | Claude Code (Opus 5.5) | Highlights built test-first; e2e green
+### 2026-10-19 14:00 EDT | Phase 06 | Claude Code (Opus 5.5) | Highlights built test-first; e2e green
 - User-approved plan: branch phase-06-highlights from main (a9c3832); contract (14 items) and context file.
 - Fixture: `npm run fixtures` adds text-4-pages.pdf (Helvetica lines with known x/baseline/width in the
   manifest; no "Page N" labels so a cross-page selection follows the text alone). Regenerating twice gives the
@@ -682,7 +682,7 @@ Template:
 - Early perf check with text layers on (before UI): `npm run test:perf` 8/8 twice; webkit firstPage 208 ms
   (budget 300), p95 35 ms (budget 40).
 
-### 2026-10-19 14:45 EDT | Phase 06 | Claude Code (Opus 5.5) | Perf headroom restored; verify PASS; items 1–12 observed
+### 2026-10-19 14:09 EDT | Phase 06 | Claude Code (Opus 5.5) | Perf headroom restored; verify PASS; items 1–12 observed
 - First full verify after the UI (ac5f44d): PASS but WebKit p95FrameMs = 40 (budget 40, zero headroom); two
   more perf runs: 40, then 42 (FAIL). Cause: the highlight hook's scroll listener set React state on every scroll
   event. Fix: it does nothing unless a floating button is showing; text layers also wait for a 200 ms scroll
@@ -704,3 +704,5 @@ Template:
   committed (52724f8); F-007 set failing.
 - `scripts/verify.sh` at 52724f8: PASS (122 unit, 110 e2e, 8 perf; webkit p95 37, firstPage 162, jump 78).
 - Not pushed. Waiting on the user: fix B1–B3 first, or push now.
+- Correction: the headers of this session's entries from 12:13 on were estimated when written; they now match
+  the commits that wrote them (git log). Only the times changed.
