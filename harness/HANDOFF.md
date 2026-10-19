@@ -6,26 +6,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 02 In progress (contract items 1–10 observed; item 11 waits for the user)
-- Branch: phase-02-performance-baseline (pushed; CI run 39197818164 green; not merged)
+- Phase: 02 Complete; 03 not started
+- Branch: phase-02-performance-baseline (pushed; not merged into main)
 
 ## Done
 
 - Phases 00 and 01 complete and on main.
-- Phase 02: heavy benchmark book, User Timing marks, `npm run test:perf` (Chromium + WebKit, DPR 2),
-  user-agreed budgets in e2e/perf/budgets.json, perf step in verify and CI (CI enforces Chromium ×4,
-  reports WebKit: contract amendment 1), memory planner replacing the 8-page cap (B2), visible pages
-  drawn before overscan.
+- Phase 02 complete: speed budgets enforced by `scripts/verify.sh` (both browsers locally; CI enforces
+  Chromium ×4 and reports WebKit), memory planner (B2 fixed), real-book run recorded.
 
 ## In flight
 
-- Contract item 11: the user runs `PERF_BOOK=/path/to/book.pdf npm run test:perf` on one real book.
+- Nothing
 
 ## Next action
 
-1. Record the user's item 11 numbers in the build log. Then set phase 02 Complete (build file,
-   PLANS.md, build-log summary) and refresh the handoff.
-2. Ask before merging into main.
+1. Ask the user before merging phase 02 into main.
+2. Open question for the user: investigate the real-book first-page time (462 ms in Chromium on a
+   24 MB book, target 400 ms); see the phase-02 context file.
 3. Then plan phase 03 (local book persistence).
 
 ## Decisions worth remembering

@@ -42,6 +42,11 @@ Material decisions only. Measurements are in harness/build-log.md.
 
 ## Findings to carry forward
 
+- On a real 24 MB book (DDIA), first page took 462 ms in Chromium and 384 ms in WebKit, against
+  the 400 ms product target and about 3× the heavy fixture. Jump, scroll and memory matched the
+  fixture. The cause is not measured yet. Splitting `book:open-start → book:opened → page:rendered`
+  is the first step.
+
 - WebKit p95 frame time on the M2 is 28–33 ms, right at the 34 ms product target, because PDF.js
   draws on the main thread. The candidate fix is drawing off the main thread (OffscreenCanvas
   in a worker) or a PDFium engine behind the same interface (D3). Either is a user decision.

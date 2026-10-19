@@ -3,7 +3,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..', 'perf-results');
-for (const book of ['heavy', 'own-book']) {
+// Report only the book this run measured.
+const books = process.env.PERF_BOOK ? ['own-book'] : ['heavy'];
+for (const book of books) {
   const dir = join(root, book);
   if (!existsSync(dir)) continue;
   const rows = {};

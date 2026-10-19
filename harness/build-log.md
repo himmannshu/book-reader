@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 02 | In progress | phase-02-performance-baseline | verify PASS; CI 39197818164 green; items 1–10 observed | item 11 needs the user |
+| 02 | Complete | phase-02-performance-baseline | verify PASS; CI 39197818164 green; items 1–11 observed (11 on a real book) | none |
 | 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
@@ -291,3 +291,18 @@ Template:
   locally: 8 passed), 8 (B2 e2e + planner unit tests), 9 (above), 10 (local PASS + CI green, amendment 1).
   11: NOT YET — needs `PERF_BOOK=<own book> npm run test:perf` from the user.
 - F-003 → passing. Phase 02 stays In progress until item 11.
+
+### 2026-10-19 04:20 EDT | Phase 02 | Claude Code (Opus 5.5) | Item 11: real-book benchmark; phase complete
+- User gave the folder /Users/himanshu/Documents/Books and asked the agent to run the benchmark. Chose the
+  longest book there, "Designing Data Intensive Applications by Martin Kleppmann.pdf" (24 MB). Read in place;
+  nothing copied into the repo.
+- `PERF_BOOK=… npm run test:perf` (report-only) → 8 passed. Results (median of samples):
+  chromium firstPage 462 [469,462,460], jump 31 [31,11,100], p95 frame 16.7, blank 0, canvas 68 MB;
+  webkit firstPage 384 [384,398,381], jump 97 [97,78,121], p95 frame 29, blank 0, canvas 68 MB.
+- Finding: first page on this real book (462 ms chromium) misses the 400 ms product target and is ~3× the
+  heavy fixture. Jump/scroll/memory match the fixture. Cause not yet measured (file read, cover image or
+  embedded fonts are candidates). Proposed to the user as a follow-up, not fixed in this phase.
+- Fix found while doing this: the report showed stale numbers from the earlier slowed run. Global setup now
+  clears perf-results/<book> each run and the report prints only the measured book. Checked by planting a
+  fake 99999 ms result: cleared, fresh table printed.
+- All contract items 1–11 have evidence. Phase 02 → Complete.

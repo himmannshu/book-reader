@@ -1,6 +1,6 @@
 # Phase 02: Performance baseline
 
-- Status: In progress (items 1–10 observed; item 11 awaits user)
+- Status: Complete
 - Branch: phase-02-performance-baseline
 - Depends on: 01
 
