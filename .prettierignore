@@ -1,0 +1,9 @@
+dist/
+node_modules/
+playwright-report/
+test-results/
+package-lock.json
+# Harness docs are hand-formatted prose; keep them out of the formatter.
+harness/
+*.md
+.claude/
