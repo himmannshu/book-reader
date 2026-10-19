@@ -36,6 +36,11 @@ export interface ViewerOptions {
   maxCanvasBytes: number;
   /** Cap on device pixel ratio for canvas resolution, to bound memory on high-DPI screens. */
   maxPixelRatio: number;
+  /**
+   * How long scrolling must pause before visible pages get their selectable text. Laying out a
+   * page's text costs main-thread time, and nobody selects text mid-scroll.
+   */
+  textDelayMs: number;
   /** Called with the current page (see currentPageAt) on open and whenever it changes. */
   onPageChange?: (pageIndex: number) => void;
 }
@@ -45,6 +50,7 @@ export const defaultViewerOptions: ViewerOptions = {
   overscan: 1,
   maxCanvasBytes: 96_000_000,
   maxPixelRatio: 2,
+  textDelayMs: 200,
 };
 
 type SlotState = 'placeholder' | 'rendering' | 'rendered' | 'error';
@@ -82,6 +88,7 @@ export class Viewer {
   #visibleFirst = -1;
   #visibleLast = -1;
   #highlightList: readonly Highlight[] = [];
+  #textTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** `scroller` must be a scrollable element (overflow: auto) that the viewer may fill. */
   constructor(scroller: HTMLElement, doc: PdfDoc, options: ViewerOptions = defaultViewerOptions) {
@@ -198,6 +205,7 @@ export class Viewer {
     if (this.#destroyed) return;
     this.#destroyed = true;
     cancelAnimationFrame(this.#frame);
+    clearTimeout(this.#textTimer);
     this.#scroller.removeEventListener('scroll', this.#onScroll);
     this.#resizeObserver.disconnect();
     delete this.#scroller.dataset.layout;
@@ -206,6 +214,8 @@ export class Viewer {
   }
 
   #onScroll = () => {
+    // Scrolling restarts the wait for selectable text.
+    if (this.#textTimer !== undefined) this.#scheduleText();
     cancelAnimationFrame(this.#frame);
     this.#frame = requestAnimationFrame(() => this.#update());
   };
@@ -261,7 +271,7 @@ export class Viewer {
       if (slot?.state === 'placeholder') this.#render(slot, i, plan.pixelRatio);
       if (slot?.state === 'rendering') visibleDone = false;
       // A page drawn as overscan gets its text once it scrolls into view.
-      if (slot?.state === 'rendered' && !slot.text) this.#renderText(slot, i);
+      if (slot?.state === 'rendered' && !slot.text) this.#scheduleText();
     }
     // Overscan pages start only once the visible pages are drawn. PDF.js decodes in a single
     // worker, so a costly neighbour (one big image) would otherwise delay the page the reader
@@ -296,8 +306,7 @@ export class Viewer {
         if (slot.task !== task) return;
         this.#setState(slot, 'rendered');
         markPageRendered(index);
-        if (index >= this.#visibleFirst && index <= this.#visibleLast)
-          this.#renderText(slot, index);
+        if (index >= this.#visibleFirst && index <= this.#visibleLast) this.#scheduleText();
         // Only when needed: #update reads layout, which costs a frame mid-scroll.
         if (this.#overscanHeld) this.#update();
       },
@@ -309,6 +318,19 @@ export class Viewer {
         if (this.#overscanHeld) this.#update();
       },
     );
+  }
+
+  /** Gives visible, drawn pages their selectable text once scrolling has paused. */
+  #scheduleText(): void {
+    clearTimeout(this.#textTimer);
+    this.#textTimer = setTimeout(() => {
+      this.#textTimer = undefined;
+      if (this.#destroyed) return;
+      for (let i = this.#visibleFirst; i >= 0 && i <= this.#visibleLast; i++) {
+        const slot = this.#slots[i];
+        if (slot?.state === 'rendered' && !slot.text) this.#renderText(slot, i);
+      }
+    }, this.#options.textDelayMs);
   }
 
   /** Lays out the page's selectable text over its canvas, at the layout scale. */

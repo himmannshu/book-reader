@@ -68,6 +68,9 @@ function scroller(width: number, height: number): HTMLElement {
 }
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Text layers right away, so tests only wait for timers to run. */
+const noTextDelay = { ...defaultViewerOptions, textDelayMs: 0 };
 
 describe('Viewer drawing order', () => {
   let viewer: Viewer | undefined;
@@ -252,31 +255,54 @@ describe('Viewer text and highlights', () => {
   it('builds the text layer only for visible pages, after their canvas is drawn', async () => {
     // 1000 px wide pages are 1260 px tall: only page 0 is visible; page 1 is overscan.
     const { doc, render, liveText, textLayers } = fakeDoc(5);
-    viewer = new Viewer(scroller(1000, 600), doc, defaultViewerOptions);
+    viewer = new Viewer(scroller(1000, 600), doc, noTextDelay);
     expect(liveText()).toEqual([]);
 
     render(0).finish();
-    await flush();
+    await wait(5);
     expect(liveText()).toEqual([0]);
     // At the layout scale (CSS px per point), not the canvas resolution.
     expect(textLayers[0]?.scale).toBeCloseTo(900 / 500);
 
     render(1).finish();
-    await flush();
+    await wait(5);
     expect(liveText()).toEqual([0]);
+  });
+
+  it('waits until scrolling pauses before building the text layer', async () => {
+    vi.useFakeTimers({
+      toFake: ['setTimeout', 'clearTimeout', 'requestAnimationFrame', 'cancelAnimationFrame'],
+    });
+    try {
+      const { doc, render, liveText } = fakeDoc(10);
+      const element = scroller(1000, 600);
+      viewer = new Viewer(element, doc, { ...defaultViewerOptions, textDelayMs: 100 });
+      render(0).finish();
+      await Promise.resolve(); // let the drawn page report back
+      vi.advanceTimersByTime(60);
+      expect(liveText()).toEqual([]);
+      // Scrolling restarts the wait.
+      element.dispatchEvent(new Event('scroll'));
+      vi.advanceTimersByTime(80);
+      expect(liveText()).toEqual([]);
+      vi.advanceTimersByTime(100);
+      expect(liveText()).toEqual([0]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('drops the text layer with the page when it scrolls away', async () => {
     const { doc, render, liveText } = fakeDoc(10);
-    viewer = new Viewer(scroller(1000, 600), doc, defaultViewerOptions);
+    viewer = new Viewer(scroller(1000, 600), doc, noTextDelay);
     render(0).finish();
-    await flush();
+    await wait(5);
     expect(liveText()).toEqual([0]);
 
     viewer.scrollToPage(6);
     expect(liveText()).toEqual([]);
     render(6).finish();
-    await flush();
+    await wait(5);
     expect(liveText()).toEqual([6]);
   });
 

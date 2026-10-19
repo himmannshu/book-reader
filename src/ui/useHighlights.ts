@@ -69,6 +69,11 @@ export function useHighlights({
   // The selection "Highlight" was offered for. Safari clears a selection when focus moves to a
   // button (Tab, or a tap on iOS), so pressing it uses this copy.
   const offeredRange = useRef<Range | null>(null);
+  // Read by the scroll listener, which must cost nothing while no button is showing.
+  const shownAction = useRef<SelectionAction | null>(null);
+  useEffect(() => {
+    shownAction.current = action;
+  }, [action]);
   const current = loaded?.bookId === bookId ? loaded : null;
   const items = current && 'items' in current ? current.items : null;
   const unavailableReason =
@@ -116,8 +121,10 @@ export function useHighlights({
       }
     };
     const onScroll = () => {
-      setAction((shown) => (shown?.kind === 'remove' ? null : shown));
-      follow();
+      const shown = shownAction.current;
+      if (!shown) return;
+      if (shown.kind === 'remove') setAction(null);
+      else follow();
     };
     const element = scroller.current;
     document.addEventListener('selectionchange', follow);
