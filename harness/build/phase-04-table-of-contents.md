@@ -1,6 +1,6 @@
 # Phase 04: Table of contents
 
-- Status: In progress (items 1–9 observed; CI, item 11 and the evaluator review pending)
+- Status: Complete (all 11 contract items observed; CI 39279260419 green)
 - Branch: phase-04-table-of-contents
 - Depends on: 01
 

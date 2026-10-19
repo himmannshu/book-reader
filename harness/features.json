@@ -41,7 +41,7 @@
       "phase": "04",
       "description": "The table of contents panel lists the book's outline and jumps to a chosen chapter",
       "status": "passing",
-      "evidence": "2026-10-19 e2e/contents.spec.ts (outline order and nesting; chapter, named destination and narrow jumps; book switch; Escape) passes in chromium+webkit; scripts/verify.sh PASS at ca5c0dc; evaluator re-review confirms items 1\u20139 (harness/code_review/phase-04-review.md)."
+      "evidence": "2026-10-19 e2e/contents.spec.ts (outline order and nesting; chapter, named destination and narrow jumps; book switch; Escape) passes in chromium+webkit; scripts/verify.sh PASS at ca5c0dc; evaluator re-review confirms items 1\u20139 (harness/code_review/phase-04-review.md); CI run 39279260419 on aaafd9f green."
     },
     {
       "id": "F-006",

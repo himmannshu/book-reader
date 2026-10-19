@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 04 | Complete | phase-04-table-of-contents | verify PASS at ca5c0dc; items 1–9 observed (evaluator re-review); 11 user-checked; CI 39279260419 green | none |
 | 03 | Complete | phase-03-local-book-persistence | verify PASS; items 1–11 observed, 12 user-checked in Safari; CI 39200828535 green | none |
 | 02 | Complete | phase-02-performance-baseline | verify PASS; items 1–11 observed (11 on a real book); CI on main 39198849866 green | none |
 | 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
@@ -587,3 +588,13 @@ Template:
 - Reading: a one-off WebKit frame-time spike, in line with the known WebKit variance (~28–37 ms, occasional
   freezes; phase-03 context file). Not investigated. Budgets unchanged.
 - CI run 39279260419 (aaafd9f) still "queued" on GitHub at 11:54 EDT, about 18 minutes after it was created.
+
+### 2026-10-19 12:15 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 10: CI green; phase Complete
+- GitHub Actions run 39279260419 on aaafd9f (phase-04-table-of-contents): status completed, conclusion success,
+  finished 16:09:52Z after sitting queued ~29 min during a GitHub Actions incident ("Degraded availability for
+  GitHub Actions, GitHub Pages and Webhooks", githubstatus.com). https://github.com/himmannshu/book-reader/actions/runs/39279260419
+- Local verify for item 10: PASS at ca5c0dc (11:16 EDT); code unchanged since (later commits are harness docs).
+- All 11 contract items now have evidence: 1–9 (evaluator re-review, harness/code_review/phase-04-review.md),
+  10 (above), 11 (user-checked). Phase 04 set Complete in the build file, PLANS.md and the summary row.
+  The re-review's FAIL rested only on items 10/11; no new review was run.
+- Not yet merged into main or pushed past aaafd9f; waiting on the user.
