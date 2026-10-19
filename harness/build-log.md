@@ -1078,3 +1078,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
   ("in-incognito"). The test now launches full Chromium (channel "chromium") with a persistent profile, first
   checks that a manifest-less page reports "no-manifest", then requires no errors for the app. Breaks: icons
   removed → failed; manifest removed → failed. (1f9d405)
+
+### 2026-10-19 19:10 EDT | Phase 08 | Claude Code (Opus 5.5) | Verify incl. perf; dev server has no service worker
+- Item 9/10 (local): port 4174 free first. `scripts/verify.sh` → PASS: unit 142, browser 175 passed + 1 skipped, perf 8.
+  Chromium first 171, jump 17, p95 16.7; WebKit first 152, jump 49, p95 33 (samples [33, 2455, 29]: the known
+  pre-existing freeze in one scroll); blank 0%/1%; canvas 67.1 MB. Budgets unchanged; first page unaffected by the
+  service worker's first-visit install.
+- Item 7: `npm run dev` in the Claude browser pane (port 5174; 5173 was held by an existing dev server from this
+  repo, left running): navigator.serviceWorker.getRegistrations() → 0, controller false, no manifest link.
