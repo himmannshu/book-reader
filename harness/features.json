@@ -47,8 +47,8 @@
       "id": "F-006",
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 e2e/bookmarks.spec.ts (add, follow page, jump, page order, reload, remove, book removal, no-outline names, keyboard, one panel, narrow) passes in chromium+webkit; scripts/verify.sh PASS at 03bc129 (91 unit, 82 e2e, 8 perf). CI and user check pending."
     },
     {
       "id": "F-007",

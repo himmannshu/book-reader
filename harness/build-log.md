@@ -614,3 +614,17 @@ Template:
 - Panel classes renamed (contents-panel → side-panel, contents-entry → panel-entry); shared keyboard hook
   src/ui/usePanelKeys.ts used by both panels. Added a `prod-preview` entry to .claude/launch.json (port 4180)
   for checking the production build in the browser pane.
+
+### 2026-10-19 12:42 EDT | Phase 05 | Claude Code (Opus 5.5) | verify PASS; items 1–12 observed
+- `scripts/verify.sh` at 03bc129: PASS (exit 0). Lint, format, types clean; unit 91/91; browser 82/82 (Chromium +
+  WebKit); perf 8/8: chromium firstPage 176 ms, jump 27, p95 16.8, blank 0; webkit firstPage 163, jump 75,
+  p95 31, blank 1.1; maxCanvasMB 67.1 both (item 12; first-page times in line with phase 04's 174/172).
+- Contract evidence: items 1–8 and 10 by e2e/bookmarks.spec.ts in both browsers (1 "bookmarking a page…",
+  2 "the toggle follows…", 3 "choosing a bookmark…", 4 "page order", 5 "after a reload", 6 "a removed bookmark
+  stays removed…", 7 "removing a book deletes its bookmarks…", 8 "a book without an outline…", 10 keyboard +
+  narrow window + one panel at a time); item 9 by ReaderView/App unit tests; item 11 by layout, core/bookmarks,
+  indexeddb-book-store unit tests (incl. v1→v2 upgrade keeps books).
+- Ran the dev server myself (browser pane): bookmarked page 5 of outline-12-pages; the toggle shows pressed and
+  the panel lists "Page 5 · Chapter 2" with Remove.
+- Open: item 13 needs a push (user approval) and a green CI run; item 14 is the user's real-book check;
+  evaluator review not run yet. Phase stays In progress.
