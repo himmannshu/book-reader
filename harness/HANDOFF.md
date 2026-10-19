@@ -7,7 +7,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
 - Phase: 02 Complete; 03 not started
-- Branch: phase-02-performance-baseline (pushed; not merged into main)
+- Branch: main (phase 02 merged and pushed; CI run 39198849866 green)
 
 ## Done
 
@@ -17,14 +17,14 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- Nothing
+- A separate Claude Code session is investigating the real-book first-page time (462 ms in Chromium
+  on a 24 MB book, target 400 ms) on its own branch and worktree. Check its branch before merging
+  anything that touches src/engine or src/ui/App.tsx.
 
 ## Next action
 
-1. Ask the user before merging phase 02 into main.
-2. Open question for the user: investigate the real-book first-page time (462 ms in Chromium on a
-   24 MB book, target 400 ms); see the phase-02 context file.
-3. Then plan phase 03 (local book persistence).
+1. Run `/start-session` (or harness/prompts/00-orient.md).
+2. Plan phase 03 (local book persistence): post the plan and contract, wait for approval.
 
 ## Decisions worth remembering
 

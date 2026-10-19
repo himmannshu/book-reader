@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 02 | Complete | phase-02-performance-baseline | verify PASS; CI 39197818164 green; items 1–11 observed (11 on a real book) | none |
+| 02 | Complete | phase-02-performance-baseline | verify PASS; items 1–11 observed (11 on a real book); CI on main 39198849866 green | none |
 | 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
@@ -306,3 +306,11 @@ Template:
   clears perf-results/<book> each run and the report prints only the measured book. Checked by planting a
   fake 99999 ms result: cleared, fresh table printed.
 - All contract items 1–11 have evidence. Phase 02 → Complete.
+
+### 2026-10-19 04:40 EDT | Phase 02 | Claude Code (Opus 5.5) | Merged to main; CI green
+- phase-02-performance-baseline fast-forwarded into main (d841b09) and pushed (user-authorized).
+- GitHub Actions run 39198849866 on d841b09 → success.
+  https://github.com/himmannshu/book-reader/actions/runs/39198849866
+- Separate session started by the user: investigation of the real-book first-page time
+  (branch from phase-02-performance-baseline, its own worktree). Not merged here.
+- Next: plan phase 03 (local book persistence).
