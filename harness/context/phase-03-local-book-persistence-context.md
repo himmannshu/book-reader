@@ -41,3 +41,13 @@ Material decisions only.
 - An overlapping `npm run test:perf` from another worktree (the first-page investigation session)
   produced a failing perf run (WebKit p95 frame 50 ms, plus errors) and then port collisions.
   Rule added to AGENTS.md and harness/SWITCHING.md: never run perf in two worktrees at once.
+
+## Findings carried forward
+
+- Saving after opening adds about 25 ms to WebKit's first page (A/B median ~158 vs ~131 ms) and does
+  not affect scrolling. If first page becomes tight, start the save after page 1 is drawn.
+- WebKit sometimes freezes for about 2.5 s while scrolling the heavy book from 45%. It happens on main
+  too, so it predates this phase. The scroll benchmark now reports the median of 3 scrolls, which
+  hides a single freeze; the per-scroll samples in perf-results/ show it. Needs its own investigation.
+- The first-page investigation session's fix (start overscan only after visible pages are drawn)
+  is on its local branch `perf-first-page-investigation`, not merged here.

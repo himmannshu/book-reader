@@ -373,3 +373,21 @@ Template:
   canvas 67.1; webkit first 158, jump 89, p95 39 (budget 40; was ~29 before phase 03), blank 1, canvas 67.1.
 - Open question: whether the background save (SHA-256 + IndexedDB write of the 58 MB book) causes the
   WebKit p95 rise. To be measured with and without saving once the other session finishes its perf runs.
+
+### 2026-10-19 00:56 EDT | Phase 03 | Claude Code (Opus 5.5) | Save A/B, CI, scroll metric median of 3, WebKit stall finding
+- CI: branch pushed (user-authorized). Run 39200828535 → success (chromium enforced ×4: first 484, jump 91,
+  p95 66.6, blank 0, canvas 67.1; webkit report-only).
+  https://github.com/himmannshu/book-reader/actions/runs/39200828535
+- Coordination: the first-page investigation session finished its perf runs and said "done" before these.
+- A/B (WebKit, interleaved, 4 runs each, report-only; save disabled by a temporary edit, reverted):
+  with save p95 [32,32,30,30], first page [172,140,194,145]; without save p95 [35,31,32,34], first page
+  [130,132,124,137]. Saving does not hurt scrolling; it adds ~25 ms to WebKit first page (within budget 300).
+  The earlier 39 ms p95 was run-to-run noise.
+- Fix: the scroll benchmark now takes the median of 3 scrolls (starting at 20%, 45%, 70%), as the approved
+  phase 02 plan specified ("each timing is the median of 3 runs"); it was a single scroll. Budgets unchanged.
+- Finding (pre-existing, not caused by phase 03): an occasional ~2.4–2.5 s WebKit freeze (80–100% blank
+  frames), always in the scroll starting at 45%. Phase 03 branch: 2/5 runs with save, 2/5 without;
+  main (temporary worktree, same benchmark): 1/5 ("p95 [33, 2442, 28] blank [1.1, 100, 1]"). The old
+  single scroll from 20% never hit it. The median keeps verify stable but hides it; per-scroll samples
+  are in perf-results/heavy/*.json. Proposed to the user as a follow-up investigation.
+- Verification: `scripts/verify.sh` → PASS (unit 46, browser 36, perf 8; webkit p95 samples [30,32,31]).

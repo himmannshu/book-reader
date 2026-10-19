@@ -6,25 +6,29 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 02 Complete; 03 not started
-- Branch: main (phase 02 merged and pushed; CI run 39198849866 green)
+- Phase: 03 In progress (contract items 1–11 observed; item 12 waits for the user)
+- Branch: phase-03-local-book-persistence (pushed; CI run 39200828535 green; not merged)
 
 ## Done
 
-- Phases 00 and 01 complete and on main.
-- Phase 02 complete: speed budgets enforced by `scripts/verify.sh` (both browsers locally; CI enforces
-  Chromium ×4 and reports WebKit), memory planner (B2 fixed), real-book run recorded.
+- Phases 00–02 complete and on main.
+- Phase 03: IndexedDB book store (D5a; bytes stored as ArrayBuffers), "Your books" list with
+  open/remove (confirmed), Library button, storage error messages, lint boundary for browser storage,
+  scroll benchmark now median of 3.
 
 ## In flight
 
-- A separate Claude Code session is investigating the real-book first-page time (462 ms in Chromium
-  on a 24 MB book, target 400 ms) on its own branch and worktree. Check its branch before merging
-  anything that touches src/engine or src/ui/App.tsx.
+- Contract item 12: the user imports a real book in real Safari (`npm run dev`), closes the tab,
+  reopens, and checks it is listed and opens.
+- Branch `perf-first-page-investigation` (local only, from the first-page investigation session):
+  draws visible pages before starting overscan; real-book first page 469 → 136 ms (Chromium).
+  Not merged. It touches src/viewer, so merge it after phase 03, or ask the user.
 
 ## Next action
 
-1. Run `/start-session` (or harness/prompts/00-orient.md).
-2. Plan phase 03 (local book persistence): post the plan and contract, wait for approval.
+1. Record the user's item 12 result; then set phase 03 Complete and refresh the handoff.
+2. Ask the user before merging phase 03 (and separately the investigation branch) into main.
+3. Then plan phase 04 (table of contents).
 
 ## Decisions worth remembering
 
@@ -39,6 +43,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   - B3: a page that fails to draw shows only a white box and is not retried.
   - B4: the PDF.js lint boundary misses dynamic `import()` and `.js` files under src/.
 - WebKit p95 frame time is 28–33 ms on the M2, right at the 34 ms target (main-thread drawing).
+- WebKit sometimes freezes ~2.5 s while scrolling the heavy book (pre-existing; phase-03 context file).
   Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
