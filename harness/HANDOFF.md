@@ -42,15 +42,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 01:03 EDT
-- Branch: main
-- HEAD: 6e44e61 Merge branch 'perf-first-page-investigation': draw overscan after visible pages
+Snapshot 2026-10-19 01:23 EDT
+- Branch: phase-04-table-of-contents
+- HEAD: 729a719 phase 04: context, evidence and handoff (CI, item 11, review pending)
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 01:03 EDT (commit 7837cee)
+- Last verify: PASS at 2026-10-19 01:23 EDT (commit f1f3f99)
 - Recent commits:
-    6e44e61 Merge branch 'perf-first-page-investigation': draw overscan after visible pages
-    7837cee phase 03: refresh handoff snapshot
-    c7ce9a8 phase 03: item 12 user-checked in Safari; phase complete
-    5533f82 phase 03: refresh handoff snapshot
-    511803b phase 03: scroll benchmark is a median of 3; record save A/B, CI and WebKit stall finding
+    729a719 phase 04: context, evidence and handoff (CI, item 11, review pending)
+    f1f3f99 phase 04: log e2e and mutation checks
+    303578d phase 04: e2e for outline order, named and broken destinations, empty state, keyboard, narrow window; arrow-key navigation
+    cadc476 phase 04: Contents panel with lazy outline loading and chapter jump
+    25c09a5 phase 04: outline mapping in the engine and Viewer.scrollToPage, with unit tests
 <!-- AUTO:END -->
