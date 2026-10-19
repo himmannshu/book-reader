@@ -173,3 +173,25 @@ when the app opens to others (real auth).
   2. Library view
   3. Export of highlights and notes
   4. In-book search. It comes last because it is the most complex.
+
+---
+
+## D5a (2026-10-19). Book files in IndexedDB, not OPFS. Supersedes the OPFS part of D5
+
+**Context:** while planning phase 03, a probe showed:
+- Playwright's WebKit refuses OPFS in its default test context ("UnknownError"). It works
+  only with a persistent profile.
+- Older Safari versions (iOS 17–18, above our 17.4 floor) likely lack OPFS `createWritable`,
+  so writing there would need a worker.
+- IndexedDB Blobs worked in every case, at similar speed. For a 24 MB file: Chromium wrote in
+  6 ms and read in 42 ms; WebKit wrote in 167 ms and read in 10 ms. OPFS was 88/12 ms and
+  46/76 ms where it worked.
+
+**Decision (user):** store PDFs as Blobs in IndexedDB, in an object store separate from the
+metadata. One code path for every supported browser, private modes, and both test browsers.
+
+**Unchanged from D5:** local-first, Cloudflare as the cloud adapter, everything behind the
+storage interface.
+
+**Revisit if:** reading large books needs random access that IndexedDB Blobs can't serve
+quickly. `Blob.slice` covers range reads today. Or if storage quota behaves badly on iOS.
