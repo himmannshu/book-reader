@@ -12,15 +12,15 @@
       "id": "F-001",
       "phase": "01",
       "description": "Opening a PDF file renders its pages with continuous scrolling",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e 'opening a PDF draws its first page' and 'scrolling to the bottom\u2026' pass in chromium+webkit (canvas pixel band colors). See build-log Phase 01 close-out."
     },
     {
       "id": "F-002",
       "phase": "01",
       "description": "Only pages near the viewport are drawn while scrolling a long book",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e steps through long-300-pages, max canvases \u2264 8, page 1 released; fails when release is removed (mutation check). See build-log Phase 01."
     },
     {
       "id": "F-003",

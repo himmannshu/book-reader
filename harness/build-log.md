@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 01 | In progress | phase-01-open-and-read-pdf | verify PASS at 5d07bf2; items 1–10 observed | item 11 needs the user |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
 ## Entries
@@ -126,3 +127,20 @@ Template:
 - Red: probe file src/ui/boundary-probe.ts importing pdfjs-dist → `npm run lint` exit 0 (no rule yet).
 - Green: with the rule, the probe → lint exit 1 ("'pdfjs-dist' import is restricted… Import PDF.js
   only inside src/engine"); probe deleted → lint exit 0.
+
+### 2026-10-18 23:45 EDT | Phase 01 | Claude Code (Opus 5.5) | Close-out checks (items 1–10 observed; 11 pending user)
+- Changes: harness/context/phase-01-open-and-read-pdf-context.md; AGENTS.md Commands gains `npm run fixtures`.
+- Verification against harness/contracts/phase-01-contract.md:
+  1–7. `scripts/verify.sh` at 5d07bf2 → browser tests 16 passed (app shell + 7 phase-01 tests, each
+     in chromium and webkit). Tests 2–7 were checked against deliberate breaks (see 23:30 entry).
+  8. Lint boundary probe → exit 1 with the rule, 0 without the probe (23:35 entry).
+  9. `npm run test:unit` → 20 passed (16 layout tests covering top, middle, gap, bottom, overscan
+     clamp, maxPages cap, single page, empty layout, anchor/scroll restore; 4 App tests).
+  10. `scripts/verify.sh` → lint, format check, typecheck, unit, browser all ran; "--- PASS";
+      harness/.last-verify result: PASS at 5d07bf2.
+  Dev server (Claude browser pane, http://localhost:5173): opened long-300-pages.pdf through the
+  file input, scrolled to 40% → toolbar "long-300-pages.pdf · 300 pages", 3 canvases in DOM,
+  rendered pages 119–121, screenshot shows page 121, no console errors.
+  11. NOT YET: needs the user to open one of their own books in `npm run dev`.
+- Limitations: F-001/F-002 marked passing on items 1–3 evidence. Phase stays In progress until item 11.
+- Next: user checks item 11; then review (`/evaluate 01` or Codex) and decide on push/merge.

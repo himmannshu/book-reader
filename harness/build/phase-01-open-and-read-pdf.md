@@ -1,6 +1,6 @@
 # Phase 01: Open and read a PDF
 
-- Status: Not started
+- Status: In progress (items 1–10 observed; item 11 awaits user)
 - Branch: phase-01-open-and-read-pdf
 - Depends on: 00
 

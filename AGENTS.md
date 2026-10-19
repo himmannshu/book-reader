@@ -78,6 +78,7 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Browser tests: `npm run test:e2e` (Playwright on the production build, Chromium + WebKit)
 - Lint, format and types: `npm run lint`, `npm run format:check` (`npm run format` to fix),
   `npm run typecheck`
+- Regenerate test PDFs: `npm run fixtures` (writes tests/fixtures/, deterministic)
 - What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser)
 
 ## Conventions
