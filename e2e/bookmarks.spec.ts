@@ -122,14 +122,20 @@ test('bookmarks are listed in page order, whatever order they were added', async
   ]);
 });
 
-test('bookmarks are still listed after a reload', async ({ page }) => {
+test('bookmarks are still listed, in page order, after a reload', async ({ page }) => {
   await importBook(page, 'outline-12-pages.pdf');
-  await bookmarkPage(page, 1);
+  // Stored ids sort as strings ("…:10" before "…:2"); the list must still be in page order.
+  await bookmarkPage(page, 10);
+  await bookmarkPage(page, 2);
   await bookmarkPage(page, 7);
 
   await reloadAndReopen(page, 'outline-12-pages');
   await openPanel(page);
-  expect(await listed(page)).toEqual(['Page 2 · Chapter 1', 'Page 8 · Part Two']);
+  expect(await listed(page)).toEqual([
+    'Page 3 · Chapter 1',
+    'Page 8 · Part Two',
+    'Page 11 · Chapter 3',
+  ]);
   await entry(page, 'Page 8 · Part Two').click();
   await expectPageAtTop(page, 7);
 });
@@ -254,4 +260,37 @@ test('in a narrow window the panel covers the pages and closes after a choice', 
   await entry(page, 'Page 9 · Chapter 3').click();
   await expect(panel(page)).toHaveCount(0);
   await expectPageAtTop(page, 8);
+});
+
+test('with several whole pages on screen, the page at the top is the one bookmarked', async ({
+  page,
+}) => {
+  // Two whole pages fit in the reader; page tops are fractional (review finding B1).
+  await page.setViewportSize({ width: 420, height: 1150 });
+  await importBook(page, 'outline-12-pages.pdf');
+  for (const index of [2, 4, 7, 9]) await bookmarkPage(page, index);
+
+  await openPanel(page);
+  expect(await listed(page)).toEqual([
+    'Page 3 · Chapter 1',
+    'Page 5 · Chapter 2',
+    'Page 8 · Part Two',
+    'Page 10 · Chapter 3',
+  ]);
+});
+
+test('with many thin pages on screen, a jump to a bookmark shows it as bookmarked', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await importBook(page, 'strips-40-pages.pdf');
+  await bookmarkPage(page, 5);
+  await bookmarkPage(page, 20);
+  await scrollToPage(page, 0);
+
+  await openPanel(page);
+  expect(await listed(page)).toEqual(['Page 6', 'Page 21']);
+  await entry(page, 'Page 21').click();
+  await expectPageAtTop(page, 20);
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
 });

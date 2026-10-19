@@ -237,7 +237,7 @@ export function ReaderView({ doc, bookId, bookmarks, now = Date.now }: ReaderVie
           type="button"
           className="button secondary bookmark-toggle"
           aria-pressed={currentMark !== undefined}
-          // Not disabled while a change is saving: that would drop keyboard focus. Clicks wait instead.
+          // Not disabled while a change is saving: that would drop keyboard focus. Clicks are ignored instead.
           disabled={!items}
           title={bookId === null ? UNSAVED_REASON : undefined}
           onClick={() => void toggleBookmark()}

@@ -145,10 +145,11 @@ describe('IndexedDB bookmark store', () => {
     const { store, bookmarks } = setup();
     const a = await store.add(pdf('a'), 'a.pdf');
     const b = await store.add(pdf('b'), 'b.pdf');
-    await bookmarks.put(mark(a.id, 9));
+    // Ids sort as strings ("…:10" before "…:2"), so this checks the list is sorted by page.
+    await bookmarks.put(mark(a.id, 10));
     await bookmarks.put(mark(a.id, 2));
     await bookmarks.put(mark(b.id, 4));
-    expect((await bookmarks.list(a.id)).map((m) => m.pageIndex)).toEqual([2, 9]);
+    expect((await bookmarks.list(a.id)).map((m) => m.pageIndex)).toEqual([2, 10]);
     expect(await bookmarks.list(b.id)).toEqual([mark(b.id, 4)]);
   });
 

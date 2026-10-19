@@ -157,6 +157,12 @@ export function planRender(
   return { first: lo, last: hi, visibleFirst: first, visibleLast: last, pixelRatio };
 }
 
+/**
+ * Visible heights closer than this count as a tie. Page tops and heights are fractional, so two
+ * whole pages on screen differ by rounding noise, and the top page is often cut by a fraction of a pixel.
+ */
+const TIE_PX = 1;
+
 /** The page covering the most of the viewport; ties go to the earlier page. Null if there are none. */
 export function currentPageAt(
   layout: Layout,
@@ -166,13 +172,15 @@ export function currentPageAt(
   const { pages } = layout;
   if (pages.length === 0) return null;
   const viewBottom = scrollTop + viewportHeight;
+  const shownOf = (page: PageBox) =>
+    Math.min(page.top + page.height, viewBottom) - Math.max(page.top, scrollTop);
   let best = Math.min(firstPageEndingAfter(layout, scrollTop), pages.length - 1);
-  let bestShown = -1;
-  for (let i = best; i < pages.length; i++) {
+  let bestShown = shownOf(pageAt(layout, best));
+  for (let i = best + 1; i < pages.length; i++) {
     const page = pageAt(layout, i);
-    if (page.top >= viewBottom && bestShown >= 0) break;
-    const shown = Math.min(page.top + page.height, viewBottom) - Math.max(page.top, scrollTop);
-    if (shown > bestShown) {
+    if (page.top >= viewBottom) break;
+    const shown = shownOf(page);
+    if (shown > bestShown + TIE_PX) {
       best = i;
       bestShown = shown;
     }

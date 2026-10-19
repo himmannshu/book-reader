@@ -184,8 +184,44 @@ describe('currentPageAt', () => {
   });
 
   it('gives a tie to the earlier page', () => {
-    // Viewport [70, 170]: page 0 shows 50px, page 1 shows 50px.
-    expect(currentPageAt(layout, 70, 100)).toBe(0);
+    // Viewport [75, 175]: page 0 (20-120) shows 45px, page 1 (130-230) shows 45px.
+    expect(currentPageAt(layout, 75, 100)).toBe(0);
+  });
+
+  it('counts visible heights less than a pixel apart as a tie', () => {
+    // Viewport [74.8, 174.8]: page 0 shows 45.2px, page 1 shows 44.8px; [75.2, 175.2] the reverse.
+    expect(currentPageAt(layout, 74.8, 100)).toBe(0);
+    expect(currentPageAt(layout, 75.2, 100)).toBe(0);
+  });
+
+  // Real layouts have fractional tops and heights, and the reader often shows several whole pages.
+  const viewerOpts: LayoutOptions = { gap: 16, padding: 24, maxPageWidth: 900 };
+  const letters = Array.from({ length: 12 }, () => LETTER);
+
+  it('is the page at the top when several whole pages are on screen', () => {
+    // 420 px wide: pages are 372 × 481.41 px, so two whole pages fit in 1060 px.
+    const narrow = computeLayout(letters, 420, viewerOpts);
+    for (let index = 0; index < 10; index++) {
+      const top = pageAt(narrow, index).top;
+      for (const nudge of [-0.05, 0, 0.19, 0.6]) {
+        expect(currentPageAt(narrow, top + nudge, 1060), `page ${index}, ${nudge}`).toBe(index);
+      }
+    }
+  });
+
+  it('is the page at the top when many thin pages are on screen', () => {
+    // 792 × 60 pt strips at 1280 px wide: about 68 px tall, a dozen on screen.
+    const strips = computeLayout(
+      Array.from({ length: 40 }, () => ({ width: 792, height: 60 })),
+      1280,
+      viewerOpts,
+    );
+    for (const index of [5, 6, 20, 30]) {
+      const top = pageAt(strips, index).top;
+      for (const nudge of [-0.38, 0, 0.91]) {
+        expect(currentPageAt(strips, top + nudge, 820), `page ${index}, ${nudge}`).toBe(index);
+      }
+    }
   });
 
   it('is the last page at the bottom of the book', () => {
