@@ -47,8 +47,8 @@
       "id": "F-006",
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
-      "status": "failing",
-      "evidence": "2026-10-19 evaluator review FAIL (harness/code_review/phase-05-review.md): B1, the wrong page is bookmarked when two or more whole pages fit on screen. Failing until fixed and re-verified."
+      "status": "passing",
+      "evidence": "2026-10-19 after the B1 fix: e2e/bookmarks.spec.ts (incl. several whole pages and thin strips on screen, page order after reload) passes in chromium+webkit; scripts/verify.sh PASS at aa73b5c (94 unit, 86 e2e, 8 perf); mutation checks (no tie tolerance, no sortByPage) fail the new tests. Not re-reviewed; CI and user check pending."
     },
     {
       "id": "F-007",

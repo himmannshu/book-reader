@@ -628,3 +628,21 @@ Template:
   the panel lists "Page 5 · Chapter 2" with Remove.
 - Open: item 13 needs a push (user approval) and a green CI run; item 14 is the user's real-book check;
   evaluator review not run yet. Phase stays In progress.
+
+### 2026-10-19 13:05 EDT | Phase 05 | Claude Code (Opus 5.5) | Evaluator FAIL (B1) fixed; verify PASS
+- Evaluator review (fresh context) at d6b5517: FAIL. B1 (high): with two or more whole pages on screen,
+  "Bookmark page" marked a later page (fractional tops/heights; strict > in currentPageAt). T1: the "tie" unit
+  test was not a tie. T2: nothing checked list order after a reload. Review: harness/code_review/phase-05-review.md
+  (c9cd68b). F-006 set failing at that point.
+- Red: new currentPageAt tests (fractional 420 px layout with nudges -0.05/0/0.19/0.6 px; 40 thin strips; a real
+  45/45 px tie; a 0.4 px near-tie) → 3 failing ("page 0, 0.19: expected 1"; "page 5, -0.38: expected 7").
+  Green: visible heights within 1 px count as a tie (TIE_PX in src/viewer/layout.ts) → 38/38 viewer tests.
+- T2: store unit test and the reload e2e now use pages whose ids sort differently as strings (…:10 vs …:2).
+  New e2e: several whole pages at 420x1150 (pages 3, 5, 8, 10 bookmarked as themselves) and strips-40-pages at
+  1280x900 (jump to "Page 21" shows it pressed). Comment in ReaderView corrected ("Clicks are ignored").
+- Mutation checks (restored afterwards): TIE_PX = 0 → 3 unit + 4 e2e failures; returning the store list unsorted
+  → 1 unit + 2 e2e (reload order, both browsers) failures.
+- `scripts/verify.sh` at aa73b5c: PASS. Unit 94/94; browser 86/86; perf 8/8 (chromium firstPage 170, jump 17,
+  p95 16.8; webkit firstPage 142, jump 86, p95 33; blank 0/1; maxCanvasMB 67.1). F-006 passing again.
+- Not addressed (minor, user did not ask): N2 reason only as a tooltip on the toggle (panel shows it), unused
+  Viewer.currentPage getter, toggle ~2 px past the edge at 320 px. Not re-reviewed.
