@@ -5,22 +5,16 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), 2026-10-19, taking over from Codex (usage limit).
-- Phase 07 (notes) Complete: CI run 39331468496 green on 26875e4; local verify PASS (137/166/8);
-  item 18 user-checked including editing. No independent review of phase 07 yet.
-- Phase 06 Complete (CI 39320769897). Neither 06 nor 07 is merged into main.
-- Branch: phase-07-notes (contains phases 04–06). origin/phase-07-notes is at 26875e4; later commits
-  here are harness docs only, not pushed. main has phases 00–05; local main is one handoff commit
-  (a9c3832) ahead of origin/main.
+- Last agent: Claude Code (Opus 5.5), 2026-10-19
+- Phases 00–07 Complete and merged into main (5ba0694); main pushed; CI run 39334209183 green.
+- Branch: main. No phase in progress.
 
 ## Done (this session)
 
-- Recorded CI, the user's editing confirmation and phase 07 completion; added the missing build-log
-  summary rows for phases 06 and 07; committed Codex's pending harness notes.
-- Issue #2 diagnosed (with the user's permission to read the local PDF's outline): the book's
-  embedded outline really contains only "Preface.pdf" > "Preface" + 3 sections (5 entries, 152
-  pages). The app shows it faithfully. Not a parser bug. Chapters for such books need contents
-  generation (out of scope since phase 04).
+- Took over phase 07 from Codex; recorded CI and the user's check; phase 07 Complete.
+- Merged phase-07-notes (with phase 06) into main; verify PASS (137/166/8); CI green on main.
+- Issue #2 diagnosed: the book's embedded outline only contains the Preface (5 entries, 152 pages);
+  the app shows it faithfully. Contents generation would be a new enhancement.
 
 ## In flight
 
@@ -28,11 +22,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Ask the user before merging phase 06 + 07 into main and pushing main.
-2. Optional: independent review of phase 07 (`/evaluate 07`), as done for earlier phases.
-3. Issue #2: with the user's OK, comment the diagnosis on the issue. Contents generation would be a
-   new phase or enhancement to plan, not a bug fix.
-4. Then plan the next phase (08, installable and hosted), after asking.
+1. Ask the user what comes next. Options already raised: an independent review of phase 07
+   (`/evaluate 07`, never done); commenting the issue #2 diagnosis on GitHub (needs OK); a
+   contents-generation enhancement for books with incomplete outlines; the printed page-number UX
+   follow-up; open review findings (below); then plan phase 08 (installable and hosted).
 
 ## Decisions worth remembering
 

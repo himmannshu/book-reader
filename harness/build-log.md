@@ -1041,3 +1041,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
   sections; no page labels. So the app shows the embedded outline faithfully. The source outline is incomplete
   (likely merged per-chapter PDFs). Not a parser or mapping bug. Chapters would need contents generation,
   which phase 04 left out of scope.
+
+### 2026-10-19 18:29 EDT | After phase 07 | Claude Code (Opus 5.5) | Merged phases 06 and 07 into main; CI green
+- User asked: merge phase-07-notes (includes phase 06) into main, rerun verify, push main, watch CI.
+- main was an ancestor of refs/heads/phase-07-notes; merged with a merge commit (5ba0694), no conflicts.
+- Verification on merged main: `scripts/verify.sh` → PASS: 137 unit, 166 browser, 8 perf. Chromium first 171,
+  jump 19, p95 16.7; WebKit first 198, jump 48, p95 32; blank 0%/1%; canvas 67.1 MB. Budgets unchanged.
+- Pushed main (user-authorized). GitHub Actions run 39334209183 on 5ba0694 → completed, success.
+  https://github.com/himmannshu/book-reader/actions/runs/39334209183
