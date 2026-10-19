@@ -216,3 +216,16 @@ test('after choosing an entry in a wide window, the keyboard scrolls the book', 
   await page.keyboard.press('PageDown');
   await expect.poll(() => reader.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
 });
+
+test('Escape closes Contents after a mouse click, wherever focus ends up', async ({ page }) => {
+  await openFixture(page, 'basic-3-pages.pdf');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  const button = page.getByRole('button', { name: 'Contents' });
+  await button.click();
+  await expect(contents(page)).toBeVisible();
+  // Clicking plain text moves focus to the page body (in Safari, even clicking the button does).
+  await contents(page).getByRole('heading', { name: 'Contents' }).click();
+  await page.keyboard.press('Escape');
+  await expect(contents(page)).toHaveCount(0);
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+});

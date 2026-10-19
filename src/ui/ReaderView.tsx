@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PdfDoc } from '../engine/types';
 import { Viewer } from '../viewer/viewer';
 import { ContentsPanel, type OutlineState } from './ContentsPanel';
@@ -56,16 +56,21 @@ export function ReaderView({ doc }: { doc: PdfDoc }) {
     scrollerRef.current?.focus({ preventScroll: true });
   }
 
-  // Escape closes Contents wherever focus is: in the panel, on the button, or in the pages.
-  function onKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && contentsOpen) {
-      event.stopPropagation();
-      closeContents();
-    }
-  }
+  // While Contents is open, Escape closes it wherever focus is: in the panel, on the button, in the
+  // pages, or on the page body (in Safari a mouse click does not focus the button it clicks).
+  useEffect(() => {
+    if (!contentsOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setContentsOpen(false);
+      contentsButtonRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [contentsOpen]);
 
   return (
-    <div className="reader" onKeyDown={onKeyDown}>
+    <div className="reader">
       <div className="reader-tools">
         <button
           ref={contentsButtonRef}

@@ -34,3 +34,18 @@ describe('ReaderView contents', () => {
     expect(outline).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('ReaderView contents errors', () => {
+  it('says so when the table of contents cannot be read', async () => {
+    const { doc, outline } = fakeDoc();
+    outline.mockImplementation(() => Promise.reject(new Error('broken outline')));
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(<ReaderView doc={doc} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Contents' }));
+    expect(
+      await screen.findByText("This book's table of contents couldn't be read."),
+    ).toBeInTheDocument();
+    expect(errors).toHaveBeenCalled();
+    errors.mockRestore();
+  });
+});
