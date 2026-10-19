@@ -53,15 +53,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 01:23 EDT
+Snapshot 2026-10-19 11:35 EDT
 - Branch: phase-04-table-of-contents
-- HEAD: 729a719 phase 04: context, evidence and handoff (CI, item 11, review pending)
+- HEAD: 719a4b3 after reviews: handoff lists open findings and next steps
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 01:23 EDT (commit f1f3f99)
+- Last verify: PASS at 2026-10-19 11:16 EDT (commit ca5c0dc)
 - Recent commits:
-    729a719 phase 04: context, evidence and handoff (CI, item 11, review pending)
-    f1f3f99 phase 04: log e2e and mutation checks
-    303578d phase 04: e2e for outline order, named and broken destinations, empty state, keyboard, narrow window; arrow-key navigation
-    cadc476 phase 04: Contents panel with lazy outline loading and chapter jump
-    25c09a5 phase 04: outline mapping in the engine and Viewer.scrollToPage, with unit tests
+    719a4b3 after reviews: handoff lists open findings and next steps
+    ca1d8ba phase 03: evaluator review (PASS); D5b and contract amendment for ArrayBuffer storage
+    66c8daa phase 02: evaluator review (PASS)
+    974294a phase 04: log N1/T1 fixes; F-005 passing again
+    ca5c0dc phase 04: Escape closes Contents from anywhere (N1); test the unreadable-outline state (T1)
 <!-- AUTO:END -->
