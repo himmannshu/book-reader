@@ -6,14 +6,14 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-18
-- Phase: planning done; phase 00 not started (see PLANS.md)
-- Branch: planning
+- Phase: 00 Complete; 01 not started
+- Branch: phase-00-repository-foundation (not merged to main, not pushed)
 
 ## Done
 
-- Architecture decided with the user: harness/context/architecture-decisions.md (D1–D6)
-- AGENTS.md Project, Commands (planned) and Conventions filled in; GOALS.md and PLANS.md updated
-- Phase files harness/build/phase-00…13-*.md; features F-001…F-015 added (all failing)
+- Planning: architecture decisions in harness/context/architecture-decisions.md
+- Phase 00: Vite + React + TS shell; Vitest; Playwright (prod build, Chromium + WebKit);
+  ESLint + Prettier; `scripts/verify.sh` → PASS; CI workflow file; AGENTS.md Commands filled
 
 ## In flight
 
@@ -21,21 +21,20 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Run `/start-session` (or harness/prompts/00-orient.md).
-2. Plan phase 00 (repository foundation): post scope, files, tests and risks, then wait for
-   the user's approval before writing code.
+1. User: decide whether to merge phase-00 into main, create the GitHub repo and push (agents
+   must ask before pushing). The first push will run CI for the first time (contract item 10).
+2. Plan phase 01 (open and read a PDF): post the plan and contract, then wait for approval.
 
 ## Decisions worth remembering
 
 - PWA, TypeScript strict, React + Vite, PDF.js only through `src/engine`, viewer outside React.
-- Local-first (OPFS + IndexedDB); Cloudflare cloud from phase 08/09. Agents never handle keys
-  or deploy without asking.
-- Speed is enforced by benchmarks in `scripts/verify.sh` from phase 02.
+- TypeScript pinned to 6.0.x until typescript-eslint supports 7 (phase-00 context file).
+- Browser tests run on the production build in Chromium and WebKit.
+- Local-first (OPFS + IndexedDB); Cloudflare cloud from phase 08/09. Agents never handle keys.
 
 ## Blockers and doubts
 
-- Phase 00: will the repo live on GitHub? (affects the CI workflow file only)
-- `scripts/verify.sh` reports NOT CONFIGURED until phase 00 adds scripts/verify.local.sh.
+- CI has never run on GitHub (no remote yet).
 
 <!-- AUTO:BEGIN -->
 Snapshot 2026-10-18 22:29 EDT

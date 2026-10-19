@@ -5,8 +5,8 @@
       "id": "F-000",
       "phase": "00",
       "description": "Repository builds and scripts/verify.sh runs end to end",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-18 scripts/verify.sh PASS at 28a4c32 (lint, format, typecheck, unit, e2e chromium+webkit); clean-worktree npm ci + verify PASS. See build-log Phase 00 close."
     },
     {
       "id": "F-001",

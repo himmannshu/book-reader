@@ -1,6 +1,6 @@
 # Phase 00: Repository foundation
 
-- Status: Not started
+- Status: Complete
 - Branch: phase-00-repository-foundation
 - Depends on: none
 
@@ -34,7 +34,7 @@ Set up the project so that every later phase has a working build, test and verif
 
 ## Decisions needing a human
 
-- Confirm whether the repo will live on GitHub (affects the CI file only)
+- Resolved: the repo will live on GitHub (user, 2026-10-18)
 
 ## Verification plan
 

@@ -72,20 +72,22 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 
 - Verify everything: `scripts/verify.sh` (the only command that counts as evidence)
 - Snapshot state: `scripts/handoff.sh`
-Planned names. They are created in phase 00, and none of them exist before then.
-
-- Install: `npm ci`
-- Run dev server: `npm run dev`
-- Unit tests only: `npm run test:unit`
-- Browser (Playwright) tests: `npm run test:e2e`
-- Lint and types: `npm run lint` and `npm run typecheck`
+- Install: `npm ci && npx playwright install chromium webkit` (Node 24, see `.nvmrc`)
+- Run dev server: `npm run dev` (http://localhost:5173)
+- Unit tests only: `npm run test:unit` (Vitest, jsdom)
+- Browser tests: `npm run test:e2e` (Playwright on the production build, Chromium + WebKit)
+- Lint, format and types: `npm run lint`, `npm run format:check` (`npm run format` to fix),
+  `npm run typecheck`
+- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser)
 
 ## Conventions
 
 Architecture decisions and their reasoning: harness/context/architecture-decisions.md.
 Do not reverse one silently. Append a superseding entry there and note it in the build log.
 
-- Runtime: Node 24, npm, with a committed `package-lock.json`. TypeScript in `strict` mode.
+- Runtime: Node 24, npm, with a committed `package-lock.json` and exact version pins.
+  TypeScript in `strict` mode, pinned to 6.0.x because typescript-eslint does not support 7 yet
+  (see harness/context/phase-00-repository-foundation-context.md).
 - UI: React + Vite. The page viewer (canvases, scrolling, virtualization) is plain TypeScript
   outside React. React renders only the surrounding chrome (library, panels, settings).
 - PDF: PDF.js (`pdfjs-dist`), used only through the engine interface in `src/engine`, running in

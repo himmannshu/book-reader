@@ -8,7 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
-| 00 | Not started | | | |
+| 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log (item 10 GitHub run not run) | none |
 
 ## Entries
 
@@ -53,3 +53,32 @@ Template:
 - Verification: browsers installed with `npx playwright install chromium webkit`.
 - Limitations: lint/format/unit/verify wiring not done yet.
 - Next: unit test, lint, format, typecheck.
+
+### 2026-10-18 22:38 EDT | Phase 00 | Claude Code (Opus 5.5) | Phase complete: verify loop, CI, contract evidence
+- Changes: Vitest (jsdom) + src/ui/App.test.tsx; ESLint (typescript-eslint strict, react-hooks),
+  Prettier; split tsconfig (app/node); scripts/verify.local.sh; .github/workflows/verify.yml;
+  .claude/launch.json (dev server for the Claude browser pane); AGENTS.md Commands filled in and
+  TS pin added to Conventions; harness/context/phase-00-repository-foundation-context.md.
+- Red: `npx vitest run` before config → 2 files failed (no DOM env; picked up e2e spec).
+- Green: `npx vitest run` → 1 passed after jsdom config.
+- Verification against harness/contracts/phase-00-contract.md:
+  1. Fresh `git worktree` at 69a9679+: `npm ci` → 0 vulnerabilities; `npx playwright install
+     chromium webkit` → exit 0; then `scripts/verify.sh` → PASS.
+  2. `scripts/verify.sh` (commit 28a4c32) → steps lint, format check, typecheck, unit tests,
+     browser tests (chromium, webkit) all ran; "--- PASS"; harness/.last-verify result: PASS.
+  3. `export const typeBreak: number = 'a'` in src/ui/break.ts → verify exit 1, failed at typecheck. Reverted.
+  4. Unused `const unused = 1` → verify exit 1, failed at lint. Reverted.
+  5. Unit assertion changed to 'Wrong Name' → verify exit 1, failed at unit tests. Reverted.
+  6. e2e expected heading changed to 'Wrong Name' → verify exit 1, failed at browser tests. Reverted.
+  7. `npm run test:e2e` → "[chromium] … ✓" and "[webkit] … ✓", 2 passed.
+  8. `npm run dev` via Claude browser pane at http://localhost:5173 → accessibility tree shows
+     main > heading "Book Reader"; no console errors.
+  9. Fresh worktree before `npm ci`: verify printed "node_modules is missing. Run: npm ci && npx
+     playwright install chromium webkit", "--- FAIL", exit 1. No stack trace.
+  10. .github/workflows/verify.yml runs `npm ci`, `npx playwright install --with-deps chromium
+      webkit`, `scripts/verify.sh`. GitHub run: NOT RUN (no remote; push not authorized).
+  11. Each AGENTS.md command run once: lint, format:check, typecheck, test:unit, test:e2e,
+      build → all exit 0.
+- Limitations: CI never executed on GitHub (item 10, as the contract allows). Playwright
+  browsers were downloaded from Playwright's CDN (chromium cached, webkit-2370 new).
+- Next: user decides on creating the GitHub repo and pushing; then plan phase 01.
