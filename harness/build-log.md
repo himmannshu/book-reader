@@ -338,3 +338,14 @@ Template:
   ("basic-3-pages" matched "Remove basic-3-pages") with exact matching, and a React lint finding
   (set-state-in-effect) by loading the list with a cancellable promise callback.
 - Green: `npx vitest run` → 46 passed; `npx playwright test` → 28 passed (chromium + webkit).
+
+### 2026-10-19 06:05 EDT | Phase 03 | Claude Code (Opus 5.5) | E2E: remove, dedupe, order, Library button
+- Changes: e2e/library.spec.ts gains tests for items 3 (cancel keeps; confirm removes; IndexedDB stores
+  counted from the browser; still gone after reload), 4 (same file twice → 1 book, 1 file), 5 (most
+  recently opened first, re-ordered after opening from the list), 6 (Library closes the reader).
+- Red: NOT observed first (the UI was built in the previous step); 10 passed on first run. Each test was
+  then run against a deliberate break (chromium), all failed as they should: remove leaves the file;
+  remove without confirmation; random ids (no dedupe); unsorted list; Library button keeps the book.
+  All breaks reverted with `git checkout`.
+- Item 7 evidence: App unit tests "explains a full disk…" and "…browser mode cannot save books…" (fake
+  stores failing with quota/unavailable; book info still shown) and adapter `toStorageError` tests.
