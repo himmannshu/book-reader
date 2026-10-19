@@ -543,3 +543,16 @@ Template:
 - Verification: `scripts/verify.sh` → PASS (see summary line above in this log run).
 - F-005 → passing, citing the re-review. Phase 04 still needs items 10 (CI, needs the user's OK to push)
   and 11 (user's real-book check).
+
+### 2026-10-19 11:28 EDT | Phase 02 | Claude Code (Opus 5.5) | Evaluator review: PASS
+- Evaluator (fresh context) reviewed 665207e (tip of phase-02-performance-baseline, in a scratch worktree) → PASS.
+  All 11 contract items pass; every criterion meets its threshold (test quality exactly 3/3).
+  Review: harness/code_review/phase-02-review.md. CI evidence: run 39199111272 on 665207e green.
+- Findings (not blocking): F1: when visible pages alone exceed the 96 MB budget (1280×10000 at DPR 2), small
+  scrolls redraw every page (74 renders vs 2–4), because the lowered pixel ratio changes with the visible count;
+  unreachable on today's screens, relevant to zoom-out (phase 10). F2: the canvas-memory benchmark and the B2
+  e2e test don't catch a removed overscan budget check (only a unit test does), and the lowered-resolution path
+  has no browser test. Nits: src/core/perf-marks.ts uses the `performance` global; page:rendered marks
+  accumulate while a book stays open; e2e name "keeps at most 8 canvases" is out of date.
+- Note: item 11's real-book run was done by the agent at the user's request (the contract says the user runs it).
+  The first-page fix commits (4a92ad3, 47cceaa) are not covered by this review.
