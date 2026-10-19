@@ -194,3 +194,9 @@ Template:
 - Observed: first attempt was 127.6 MB (grain too random to compress); reduced grain and image size
   → 57.8 MB, generated in 9.3 s. Two consecutive runs → identical SHA-1.
 - Next: User Timing marks.
+
+### 2026-10-19 01:20 EDT | Phase 02 | Claude Code (Opus 5.5) | User Timing marks
+- Changes: src/core/perf-marks.ts (book:open-start, book:opened, page:rendered{pageIndex}; cleared
+  on each new open); App marks open start/opened; viewer marks each finished page.
+- Red: e2e "opening a book records timing marks…" → "missing book:open-start mark" (chromium, webkit).
+- Green: same test passes in chromium and webkit; unit tests still pass.

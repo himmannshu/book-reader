@@ -1,6 +1,7 @@
 // Continuous-scroll PDF viewer. Plain TypeScript, outside React (D4).
 // Only pages near the viewport get a canvas; pages that leave that range are cancelled and
 // their canvases released, which keeps memory bounded on long books (D2).
+import { markPageRendered } from '../core/perf-marks';
 import { RenderCancelledError, type PageSize, type PdfDoc, type RenderTask } from '../engine/types';
 import {
   anchorAt,
@@ -169,7 +170,9 @@ export class Viewer {
 
     task.promise.then(
       () => {
-        if (slot.task === task) this.#setState(slot, 'rendered');
+        if (slot.task !== task) return;
+        this.#setState(slot, 'rendered');
+        markPageRendered(index);
       },
       (error: unknown) => {
         if (slot.task !== task || error instanceof RenderCancelledError) return;

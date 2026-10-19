@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
+import { markOpened, markOpenStart } from '../core/perf-marks';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
 import { ReaderView } from './ReaderView';
@@ -41,10 +42,12 @@ export function App({ engine = pdfjsEngine }: { engine?: PdfEngine }) {
     input.value = ''; // Allow choosing the same file again.
     if (!file) return;
 
+    markOpenStart();
     setOpening(true);
     setError(null);
     try {
       const doc = await engine.open(new Uint8Array(await file.arrayBuffer()));
+      markOpened();
       setBook({ doc, fileName: file.name });
     } catch (err) {
       if (!(err instanceof PdfOpenError) || err.kind === 'unknown') {
