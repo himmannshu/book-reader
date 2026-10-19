@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 03 | Complete | phase-03-local-book-persistence | verify PASS; items 1–11 observed, 12 user-checked in Safari; CI 39200828535 green | none |
 | 02 | Complete | phase-02-performance-baseline | verify PASS; items 1–11 observed (11 on a real book); CI on main 39198849866 green | none |
 | 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
@@ -391,3 +392,11 @@ Template:
   single scroll from 20% never hit it. The median keeps verify stable but hides it; per-scroll samples
   are in perf-results/heavy/*.json. Proposed to the user as a follow-up investigation.
 - Verification: `scripts/verify.sh` → PASS (unit 46, browser 36, perf 8; webkit p95 samples [30,32,31]).
+
+### 2026-10-19 00:59 EDT | Phase 03 | Claude Code (Opus 5.5) | Item 12 user-checked in real Safari; phase complete
+- Verification: 12. User-observed (reported in chat by Himanshu): "I imported a real book in Safari, closed the
+  tab, reopened it, and the book was listed and opened." Not independently verified by the agent (real Safari
+  is not automated here).
+- All contract items 1–12 now have evidence. Phase 03 status → Complete.
+- Limitations: no independent review of phase 03 yet. Branch pushed, not merged. The local branch
+  perf-first-page-investigation (first-page fix, 47cceaa) is not merged either.

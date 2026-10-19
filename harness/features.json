@@ -33,8 +33,8 @@
       "id": "F-004",
       "phase": "03",
       "description": "An imported book is still listed and opens after a page reload, without re-importing",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 e2e/library.spec.ts 'an imported book is listed after a reload and opens from the list' passes in chromium+webkit; scripts/verify.sh PASS; user-checked in real Safari. See build-log Phase 03."
     },
     {
       "id": "F-005",

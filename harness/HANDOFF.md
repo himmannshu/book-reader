@@ -6,8 +6,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 03 In progress (contract items 1–11 observed; item 12 waits for the user)
-- Branch: phase-03-local-book-persistence (pushed; CI run 39200828535 green; not merged)
+- Phase: 03 Complete; 04 not started
+- Branch: phase-03-local-book-persistence (pushed; CI run 39200828535 green; not merged into main)
 
 ## Done
 
@@ -18,17 +18,14 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- Contract item 12: the user imports a real book in real Safari (`npm run dev`), closes the tab,
-  reopens, and checks it is listed and opens.
 - Branch `perf-first-page-investigation` (local only, from the first-page investigation session):
   draws visible pages before starting overscan; real-book first page 469 → 136 ms (Chromium).
   Not merged. It touches src/viewer, so merge it after phase 03, or ask the user.
 
 ## Next action
 
-1. Record the user's item 12 result; then set phase 03 Complete and refresh the handoff.
-2. Ask the user before merging phase 03 (and separately the investigation branch) into main.
-3. Then plan phase 04 (table of contents).
+1. Ask the user before merging phase 03 (and separately the investigation branch) into main.
+2. Then plan phase 04 (table of contents).
 
 ## Decisions worth remembering
 
