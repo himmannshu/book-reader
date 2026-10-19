@@ -26,8 +26,8 @@
       "id": "F-003",
       "phase": "02",
       "description": "Speed budgets for first page, scrolling, jumping and cache memory run in scripts/verify.sh and fail on regression",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 scripts/verify.sh PASS incl. `npm run test:perf` (8 passed, chromium+webkit at DPR 2); 300 ms per-page delay \u2192 perf step FAIL (firstPage/jump over budget); CI run 39197818164 green (chromium enforced \u00d74). See build-log Phase 02."
     },
     {
       "id": "F-004",

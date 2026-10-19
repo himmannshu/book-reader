@@ -5,28 +5,28 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), 2026-10-18
-- Phase: 01 Complete; 02 not started
-- Branch: main (phase 01 merged and pushed; CI run 39194398452 green)
+- Last agent: Claude Code (Opus 5.5), 2026-10-19
+- Phase: 02 In progress (contract items 1–10 observed; item 11 waits for the user)
+- Branch: phase-02-performance-baseline (pushed; CI run 39197818164 green; not merged)
 
 ## Done
 
-- Phase 00 complete and on origin/main; CI green.
-- Phase 01 complete: engine interface + PDF.js adapter (src/engine), virtualized viewer
-  (src/viewer), open flow and error messages (src/ui), deterministic fixtures, 20 unit + 16
-  browser tests, lint rule keeping PDF.js inside src/engine. Verify PASS; item 11 user-checked
-  with a real book.
+- Phases 00 and 01 complete and on main.
+- Phase 02: heavy benchmark book, User Timing marks, `npm run test:perf` (Chromium + WebKit, DPR 2),
+  user-agreed budgets in e2e/perf/budgets.json, perf step in verify and CI (CI enforces Chromium ×4,
+  reports WebKit: contract amendment 1), memory planner replacing the 8-page cap (B2), visible pages
+  drawn before overscan.
 
 ## In flight
 
-- Nothing
+- Contract item 11: the user runs `PERF_BOOK=/path/to/book.pdf npm run test:perf` on one real book.
 
 ## Next action
 
-1. Run `/start-session` (or harness/prompts/00-orient.md).
-2. Plan phase 02 (performance baseline): post the plan and contract, wait for approval.
-   Inputs: the CI WebKit slowness on the 300-page scroll test (build log 2026-10-19 00:40) and
-   deferred finding B2 both bear on budgets and main-thread drawing.
+1. Record the user's item 11 numbers in the build log. Then set phase 02 Complete (build file,
+   PLANS.md, build-log summary) and refresh the handoff.
+2. Ask before merging into main.
+3. Then plan phase 03 (local book persistence).
 
 ## Decisions worth remembering
 
@@ -38,10 +38,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Blockers and doubts
 
 - Deferred review findings (user's call, see harness/code_review/phase-01-review.md):
-  - B2: if more than 8 pages fit on screen, the extras stay blank. Revisit with phase 02 budgets.
   - B3: a page that fails to draw shows only a white box and is not retried.
   - B4: the PDF.js lint boundary misses dynamic `import()` and `.js` files under src/.
-- Page drawing is on the main thread; phase 02 benchmarks decide if that matters.
+- WebKit p95 frame time is 28–33 ms on the M2, right at the 34 ms target (main-thread drawing).
+  Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
 Snapshot 2026-10-18 23:26 EDT

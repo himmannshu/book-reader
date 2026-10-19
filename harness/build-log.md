@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 02 | In progress | phase-02-performance-baseline | verify PASS; CI 39197818164 green; items 1–10 observed | item 11 needs the user |
 | 01 | Complete | phase-01-open-and-read-pdf | verify PASS; items 1–10 observed; item 11 user-checked; review PASS; CI 39194398452 green | none |
 | 00 | Complete | phase-00-repository-foundation | verify PASS at 28a4c32; contract items 1–11 in log; CI run 39191648738 success | none |
 
@@ -275,3 +276,18 @@ Template:
   so its cost no longer grows with browser slowness. Local WebKit 4.9 s → 1.9 s.
   Mutation check: release disabled → "Expected: <= 8, Received: 80" in chromium and webkit.
 - Verification: `scripts/verify.sh` → PASS.
+
+### 2026-10-19 04:00 EDT | Phase 02 | Claude Code (Opus 5.5) | CI green; negative check; close-out (item 11 pending user)
+- CI: run 39197818164 on the branch → success.
+  https://github.com/himmannshu/book-reader/actions/runs/39197818164
+  Uploaded perf-results: chromium firstPage 437, jump 56, p95 33.4, blank 0, canvas 67.1 (enforced ×4, all within);
+  webkit firstPage 1535, jump 1074, p95 544, blank 75, canvas 67.1 (report-only per amendment 1).
+- Item 9: temporary `await setTimeout(300)` per page in src/engine/pdfjs-engine.ts → `scripts/verify.sh` exit 1:
+  browser tests 26 passed; perf step "firstPageMs = 443 exceeds budget 250 (perf-chromium)", "jumpMs = 332 …",
+  "firstPageMs = 463 exceeds budget 300 (perf-webkit)", "jumpMs = 402 …". Scroll metrics stayed within budget
+  (recorded as a limitation in the context file). Reverted with `git checkout`.
+- Contract evidence: 1 (regenerated when deleted; identical SHA-1 across runs), 2 (8 benchmarks, JSON in
+  perf-results/, table printed), 3 (budgets.json; user agreement 02:50 entry), 4–7 (`npm run test:perf` enforced
+  locally: 8 passed), 8 (B2 e2e + planner unit tests), 9 (above), 10 (local PASS + CI green, amendment 1).
+  11: NOT YET — needs `PERF_BOOK=<own book> npm run test:perf` from the user.
+- F-003 → passing. Phase 02 stays In progress until item 11.
