@@ -1,6 +1,6 @@
 # Phase 05: Bookmarks
 
-- Status: Not started
+- Status: In progress
 - Branch: phase-05-bookmarks
 - Depends on: 03
 
