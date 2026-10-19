@@ -50,14 +50,42 @@ test('the manifest is linked, valid, and its icons load', async ({ page }) => {
   expect(touch.ok()).toBe(true);
 });
 
-test('Chromium reports the app as installable', async ({ page, browserName }) => {
+test('Chromium reports the app as installable', async ({
+  playwright,
+  browserName,
+  baseURL,
+}, testInfo) => {
   test.skip(browserName !== 'chromium', 'Installability is reported through Chromium DevTools');
-  await loadControlled(page);
-  const cdp = await page.context().newCDPSession(page);
-  const { installabilityErrors } = (await cdp.send('Page.getInstallabilityErrors')) as {
-    installabilityErrors: unknown[];
-  };
-  expect(installabilityErrors).toEqual([]);
+  // The default headless shell reports no installability errors for any page, and normal test
+  // contexts are incognito, which is never installable. So use full Chromium with a real profile.
+  const context = await playwright.chromium.launchPersistentContext(
+    testInfo.outputPath('profile'),
+    {
+      channel: 'chromium',
+      baseURL,
+    },
+  );
+  try {
+    const page = context.pages()[0] ?? (await context.newPage());
+    const cdp = await context.newCDPSession(page);
+    const errors = async () =>
+      (
+        (await cdp.send('Page.getInstallabilityErrors')) as {
+          installabilityErrors: { errorId: string }[];
+        }
+      ).installabilityErrors.map((error) => error.errorId);
+
+    // The check is live: a page without a manifest is reported as not installable.
+    await page.goto('/icons/favicon-32.png');
+    expect(await errors()).toContain('no-manifest');
+
+    await page.goto('/');
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    expect(await errors()).toEqual([]);
+  } finally {
+    await context.close();
+  }
 });
 
 test('after the first load a service worker controls the app', async ({ page }) => {
