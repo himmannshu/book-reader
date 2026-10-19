@@ -141,6 +141,25 @@ export function useHighlights({
     };
   }, [viewer, scroller, body]);
 
+  // A relayout or page eviction removes the selected text without necessarily firing
+  // selectionchange. Observe only while offering Highlight, keeping idle scrolling untouched.
+  useEffect(() => {
+    const element = scroller.current;
+    const range = offeredRange.current;
+    if (action?.kind !== 'create' || !element || !range) return;
+    // Ranges are live: removal moves their endpoints to the parent. Keep the original nodes too.
+    const { startContainer, endContainer } = range;
+    const observer = new MutationObserver(() => {
+      if (offeredRange.current !== range) return;
+      if (!range.collapsed && startContainer.isConnected && endContainer.isConnected) return;
+      offeredRange.current = null;
+      if (actionsHaveFocus()) element.focus({ preventScroll: true });
+      setAction((shown) => (shown?.kind === 'create' ? null : shown));
+    });
+    observer.observe(element, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [action, scroller]);
+
   function report(error: unknown, action: 'save' | 'remove') {
     logUnexpectedAnnotationError(error, `Could not ${action} the highlight`);
     onError(annotationMessage(error, 'highlight', action));

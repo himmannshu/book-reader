@@ -54,8 +54,8 @@
       "id": "F-007",
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
-      "status": "failing",
-      "evidence": "2026-10-19 evaluator review FAIL at 9547db8 (harness/code_review/phase-06-review.md): B1, tapping Highlight/Remove does nothing in WebKit with touch (iPhone/iPad emulation); B2 double press saves twice; B3 stale button after a relayout. Failing until fixed and re-verified."
+      "status": "passing",
+      "evidence": "2026-10-19 scripts/verify.sh PASS after B1–B3 corrections (122 unit, 130 e2e, 8 perf). Regression checks in Chromium + WebKit: iPhone/iPad touch Highlight/Remove with reopen; repeated activation stores one record and removes fully; quota-failure retry; stale offers clear on resize, panel relayout and page eviction without selectionchange. Each blocker reproduced red before its fix. Existing alignment, PDF-coordinate and reload checks still pass. See build-log 15:15 and review correction appendix. Phase remains In progress pending CI and the user's real-book/device check; independent re-review not yet run."
     },
     {
       "id": "F-008",

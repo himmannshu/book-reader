@@ -277,6 +277,50 @@ test('a failed highlight save can be retried', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
+for (const change of ['resize', 'focused resize', 'side panel', 'scroll away']) {
+  test(`Highlight hides when selected text is released: ${change}`, async ({ page }) => {
+    await openBook(page);
+    await selectText(page, { page: 0, text: 'Bravo two' });
+    await expect(highlightButton(page)).toBeVisible();
+    const originalText = await pageSlot(page, 0).locator('.textLayer').elementHandle();
+    if (!originalText) throw new Error('no selected text layer');
+
+    // Removing a text layer can collapse a selection without selectionchange. Ensure the action
+    // tracks that lifecycle even if the browser delivers no event, including its saved focus range.
+    const suppression = await page.evaluateHandle(() => {
+      const controller = new AbortController();
+      document.addEventListener('selectionchange', (event) => event.stopImmediatePropagation(), {
+        capture: true,
+        signal: controller.signal,
+      });
+      return controller;
+    });
+    if (change === 'focused resize') await highlightButton(page).focus();
+    if (change === 'resize' || change === 'focused resize') {
+      await resize(page, 700, 800);
+    } else if (change === 'side panel') {
+      await page.getByRole('button', { name: 'Bookmarks', exact: true }).click();
+    } else {
+      await page.getByTestId('reader').evaluate((reader) => {
+        reader.scrollTop = reader.scrollHeight;
+      });
+    }
+    await expect.poll(() => originalText.evaluate((layer) => layer.isConnected)).toBe(false);
+    await expect(highlightButton(page)).toHaveCount(0);
+    expect(await stored(page)).toHaveLength(0);
+    if (change === 'focused resize') await expect(page.getByTestId('reader')).toBeFocused();
+
+    // A fresh selection still works after invalidation, in the same reader instance.
+    await suppression.evaluate((controller) => controller.abort());
+    await page.getByTestId('reader').evaluate((reader) => {
+      reader.scrollTop = 0;
+    });
+    await textReady(page, 0, 'Charlie three');
+    await highlight(page, { page: 0, text: 'Alpha one' });
+    expect((await stored(page)).map((h) => h.quote)).toEqual(['Alpha one']);
+  });
+}
+
 for (const deviceName of ['iPhone 13', 'iPad (gen 7)']) {
   test.describe(`touch on ${deviceName}`, () => {
     const device = devices[deviceName];

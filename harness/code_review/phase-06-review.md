@@ -116,3 +116,21 @@ right edge. `BUTTON_WIDTH = 170` (useHighlights.ts:13) is used for clamping, but
 
 **Process note.** harness/features.json marks F-007 `passing`. Its e2e evidence is real, but B1 means
 the feature doesn't work on the touch devices the project targets. Items 13 and 14 are also open.
+
+## Correction verification (Codex, 2026-10-19)
+
+Written by the author of the corrections; this does not replace the independent review above or
+issue a new evaluator verdict. The user authorized addressing B1–B3. The contract is unchanged.
+
+| Finding | Correction and observed result |
+|---|---|
+| B1 | Removed pointerdown cancellation, retained mousedown selection protection and the saved range. All four iPhone/iPad WebKit touch checks failed before the fix. Eight checks now pass across Chromium + WebKit: tap Highlight, tap Remove, and persistence after reopening. Physical-device confirmation still pending. |
+| B2 | Added a synchronous pending-save guard, released in finally. Two immediate activations stored two records before the fix in both browsers. They now store one; one removal leaves nothing after reopening. A simulated quota failure can be retried successfully. |
+| B3 | While offering Highlight, observe text removal and capture original range endpoint nodes. Clear the action/range on disconnection or collapse; return action-button focus to the reader. All eight regressions failed before the fix and now pass: resize, focused resize, panel relayout, page eviction, both browsers, with selectionchange suppressed. A fresh highlight works afterward in the same reader. |
+
+Final `scripts/verify.sh`: PASS (122 unit, 130 browser, 8 perf). WebKit p95 31 ms (budget 40),
+first page 216 ms, jump 50 ms; Chromium p95 16.8 ms, first page 174 ms, jump 24 ms. Canvas 67.1 MB.
+The observer exists only while a create offer is visible; idle scrolling adds no observer/layout work.
+An existing viewer test's fixed 5 ms wait failed during verification; it now waits for its actual result.
+N4's duplicate import is consolidated. N1–N3 remain open. F-007 is passing again on local evidence.
+Contract item 13 still needs CI after an authorized push; item 14 needs the real-book/device user check.

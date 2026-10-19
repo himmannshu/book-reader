@@ -732,3 +732,25 @@ Template:
   after reopening, and a quota failure can be retried successfully with the error cleared.
   Chromium firstPage 185 ms, jump 27, p95 16.8; WebKit firstPage 166, jump 58, p95 33; canvas 67.1 MB.
 - B3 still open; F-007 remains failing. Contract unchanged; no push or external writes.
+
+### 2026-10-19 15:15 EDT | Phase 06 | Codex | B3 stale selection actions fixed; blockers verified
+- Red: all eight new browser checks failed at the stale Highlight button (Chromium + WebKit;
+  window resize, focused-button resize, opening a side panel, scrolling the selected page away).
+  Tests suppress selectionchange during removal, verify the original text layer disconnected, and
+  require the offer to disappear with no record saved. A fresh selection must then work in the same reader.
+- Fix: while offering Highlight, observe child removals in the scroller. Capture original range
+  endpoint nodes (a live Range moves them on removal); invalidate on collapse/disconnection and
+  restore reader focus if the removed action had focus. Disconnect when the offer closes. No new
+  viewer callback, idle scroll work or layout reads. Material reasoning recorded in the phase context.
+- First full verify stopped at the existing viewer unit test's 5 ms text-layer wait (expected page 6,
+  got none). Replaced that test's fixed waits with condition-based waits; viewer production code unchanged.
+- `scripts/verify.sh` on the B3 working tree based on 1c5834c: PASS, exit 0. Lint, format, types;
+  122/122 unit, 130/130 e2e (Chromium + WebKit), 8/8 perf. Chromium firstPage 174 ms, jump 24,
+  p95 16.8; WebKit firstPage 216, jump 50, p95 31, blank 1.1%; canvas 67.1 MB. Budgets unchanged.
+- Local contract coverage remains items 1–12: highlights e2e covers selection/alignment, multi-line
+  mouse drag, page break, resize, reload, stored PDF coordinates/quote, removal/cascade, invalid
+  selections/unsaved/error states, keyboard; unit covers conversions and schema upgrade; perf above.
+  Added 20 browser checks overall: 8 touch, 4 duplicate/retry, 8 selection lifecycle. Each blocker's
+  regression failed before its fix. The review appendix records author verification, not a new independent verdict.
+- F-007 restored to passing after observing the full run. Phase stays In progress: item 13 needs a
+  permitted push and green CI; item 14 needs the user's real-book/device report. No push or deployment.

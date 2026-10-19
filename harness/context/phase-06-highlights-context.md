@@ -40,3 +40,9 @@ Material decisions only. The user chose the interaction choices in chat on 2026-
 - Do not prevent pointerdown on the floating actions: WebKit suppresses the subsequent touch click,
   breaking both Highlight and Remove on iPhone/iPad. Keep only the mouse-specific prevention. The
   touch regression checks run in both browsers with iPhone and iPad device settings and real tap events.
+- A live Range can move its endpoints when the viewer removes a text layer without selectionchange.
+  While a create action is offered, observe child removals in the scroller and retain its original
+  endpoint nodes. If either disconnects or the saved range collapses, clear the offer (and return
+  action-button focus to the reader). Disconnect the observer when the offer closes, so idle
+  scrolling gains no observer or layout work. This covers viewport resize, panel relayout and
+  virtualized page release without adding React callbacks to the viewer's scroll path.

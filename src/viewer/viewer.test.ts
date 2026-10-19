@@ -296,14 +296,12 @@ describe('Viewer text and highlights', () => {
     const { doc, render, liveText } = fakeDoc(10);
     viewer = new Viewer(scroller(1000, 600), doc, noTextDelay);
     render(0).finish();
-    await wait(5);
-    expect(liveText()).toEqual([0]);
+    await vi.waitFor(() => expect(liveText()).toEqual([0]));
 
     viewer.scrollToPage(6);
     expect(liveText()).toEqual([]);
     render(6).finish();
-    await wait(5);
-    expect(liveText()).toEqual([6]);
+    await vi.waitFor(() => expect(liveText()).toEqual([6]));
   });
 
   it('draws highlight boxes in percent of the page, so they follow any scale', () => {
