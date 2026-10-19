@@ -54,8 +54,8 @@
       "id": "F-007",
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
-      "status": "passing",
-      "evidence": "2026-10-19 e2e/highlights.spec.ts (exact text, mouse-drag multi-line, across a page break, aligned after resize 1280->700, reload, stored PDF points + quote at two window sizes, remove, book removal, no button for whitespace/outside, unsaved reason, failed save, keyboard) passes in chromium+webkit; scripts/verify.sh PASS at c4be6a2 (122 unit, 110 e2e, 8 perf). CI, user check and review pending."
+      "status": "failing",
+      "evidence": "2026-10-19 evaluator review FAIL at 9547db8 (harness/code_review/phase-06-review.md): B1, tapping Highlight/Remove does nothing in WebKit with touch (iPhone/iPad emulation); B2 double press saves twice; B3 stale button after a relayout. Failing until fixed and re-verified."
     },
     {
       "id": "F-008",
