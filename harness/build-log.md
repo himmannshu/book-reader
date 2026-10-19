@@ -662,3 +662,22 @@ Template:
   but has not been re-reviewed. Minor findings N2 (tooltip-only reason), unused Viewer.currentPage, 320 px
   toggle overflow stay open.
 - Not merged into main; commits after fdaa254 are harness docs only and not pushed.
+
+### 2026-10-19 14:20 EDT | Phase 06 | Claude Code (Opus 5.5) | Highlights built test-first; e2e green
+- User-approved plan: branch phase-06-highlights from main (a9c3832); contract (14 items) and context file.
+- Fixture: `npm run fixtures` adds text-4-pages.pdf (Helvetica lines with known x/baseline/width in the
+  manifest; no "Page N" labels so a cross-page selection follows the text alone). Regenerating twice gives the
+  same bytes; existing fixtures unchanged.
+- Red → green, unit: core/highlights (import failed → 15 pass: points at any scale, line merging, page split,
+  clipping, rounding, quote normalizing, text joining, sort, hit test); store v3 + per-book helper shared with
+  bookmarks (6 failing → 22 pass, incl. v2→v3 keeps books and bookmarks); viewer text layer only for visible
+  pages after the canvas + percent-placed boxes (3 failing → pass); SelectionActions (import failed → 4 pass).
+- Engine: `PdfDoc.renderTextLayer` wraps PDF.js TextLayer; selection fix ported from PDF.js's viewer
+  (src/engine/text-selection.ts, Apache-2.0) and minimal text-layer CSS.
+- Found by e2e and fixed: (1) quote ran pages together ("page oneand") → joinTextPieces adds a space between
+  lines/pages; (2) Chromium rounds selection-box heights to whole px (24 px at 1280 vs 16 px at 700 → 1.3 pt
+  drift) → line top/height now from the text span's box (14.0 pt at both sizes); (3) WebKit clears the selection
+  when focus moves to the Highlight button → the offered range is kept and used.
+- `npx vitest run`: 121 passed. `npm run test:e2e`: 108 passed (22 new highlight tests, Chromium + WebKit).
+- Early perf check with text layers on (before UI): `npm run test:perf` 8/8 twice; webkit firstPage 208 ms
+  (budget 300), p95 35 ms (budget 40).
