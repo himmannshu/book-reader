@@ -77,18 +77,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 18:07 EDT
+Snapshot 2026-10-19 18:16 EDT
 - Branch: phase-07-notes
-- HEAD: 26875e4 phase 07: record verified push and CI authorization
-- Uncommitted files: 2
-- Last verify: PASS at 2026-10-19 17:57 EDT (commit 43c3efa)
+- HEAD: a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
+- Uncommitted files: 0
+- Last verify: PASS at 2026-10-19 18:13 EDT (commit 26875e4)
 - Recent commits:
+    a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
     26875e4 phase 07: record verified push and CI authorization
     43c3efa handoff: clarify PDF versus printed page numbering
     04da1da handoff: record reported notes and bookmark jump failures
     798c536 handoff: Codex 2026-10-19 phase 07 locally verified
-    117ed45 phase 07: keep highlight note actions inside reader bounds
-- Changed files:
-     M harness/HANDOFF.md
-     M harness/build-log.md
 <!-- AUTO:END -->
