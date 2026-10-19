@@ -11,6 +11,10 @@ interface SelectionActionsProps {
   unsavedReason: string | null;
   onHighlight(): void;
   onRemove(id: string): void;
+  onNote?(id: string): void;
+  noteLabel?: string;
+  noteUnavailableReason?: string | null;
+  removeUnavailableReason?: string | null;
 }
 
 // Keep desktop selections on mouse press. Touch pointerdown must remain uncancelled so WebKit
@@ -23,6 +27,10 @@ export function SelectionActions({
   unsavedReason,
   onHighlight,
   onRemove,
+  onNote,
+  noteLabel = 'Add note',
+  noteUnavailableReason = null,
+  removeUnavailableReason = null,
 }: SelectionActionsProps) {
   if (!action) return null;
   return (
@@ -44,9 +52,29 @@ export function SelectionActions({
           {unsavedReason && <p className="selection-note">{unsavedReason}</p>}
         </>
       ) : (
-        <button type="button" className="button" onClick={() => onRemove(action.id)}>
-          Remove highlight
-        </button>
+        <>
+          {onNote && (
+            <button
+              type="button"
+              className="button"
+              disabled={noteUnavailableReason !== null}
+              onClick={() => onNote(action.id)}
+            >
+              {noteLabel}
+            </button>
+          )}
+          <button
+            type="button"
+            className="button"
+            disabled={removeUnavailableReason !== null}
+            onClick={() => onRemove(action.id)}
+          >
+            Remove highlight
+          </button>
+          {(noteUnavailableReason || removeUnavailableReason) && (
+            <p className="selection-note">{noteUnavailableReason || removeUnavailableReason}</p>
+          )}
+        </>
       )}
     </div>
   );

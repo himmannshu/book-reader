@@ -20,10 +20,11 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 - Recorded accepted choices and reasoning as D7/D8 in architecture-decisions.md: keep the established
   direction unless evidence shows a major improvement; support notes on highlights and whole pages.
-- Preflight `scripts/verify.sh` at 8372a99 PASS (122 unit, 130 browser, 8 perf; WebKit p95 30 ms).
-  Existing uncommitted planning handoff/log edits preserved. No application code changed.
-- Created phase-07-notes carrying completed phase 06. Updated the phase plan and drafted
-  harness/contracts/phase-07-contract.md, explicitly Pending approval. Phase 07 stays Not started.
+- Preflight `scripts/verify.sh` at 8372a99 PASS (122 unit, 130 browser, 8 perf).
+- Contract approved (Amendment 01), phase/roadmap In progress. Core/schema v4 implemented with
+  transactional note cascades and a populated v3 migration test (3381801).
+- Notes hook/editor/panel, App navigation guard and passage jumps implemented. All 135 unit tests,
+  typecheck and initial 4 notes browser checks pass. Broader contract coverage/full verify pending.
 - User confirmed the real-book/device check (9463bfc) and authorized pushing/running CI.
 - First CI run failed one Chromium width check: fixture metadata used kerned widths for plain Tj
   text. Fixed the generator and regenerated ten manifest widths (7ac8b1e); PDF bytes unchanged.
@@ -36,20 +37,14 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- Nothing half done. B1 fixed in 4341f7c, B2 in 1c5834c, B3 in 57fa6ad; fixture metadata in 7ac8b1e.
-- Phase 07: plan/contract approved; implementation starting. Approved defaults:
+- Phase 07 implementation is not fully verified yet. Approved defaults:
   one editable note per highlight/page, explicit Save/Cancel in Notes, guarded draft navigation, and
   confirmation before removing a highlight together with its note. Baseline verify PASS (122/130/8).
 
 ## Next action
 
-1. Implement the notes hook/editor/panel and viewer/App integration against the red browser checks.
-   Keep D7–D9 and phase-07-notes-context.md. Phase 07 push/deploy and main merge remain unauthorized.
-
-Storage checkpoint: core notes and schema v4 implemented. Focused 8 note tests and all 130 unit
-tests pass; typecheck passes. Initial two Chromium notes e2e fail at missing Notes/Add note UI.
-Core/storage tests first failed on missing core/notes; no feature status changed. Full verify after
-implementation remains required. No UI half edits yet; e2e/notes.spec.ts intentionally red.
+1. Expand notes contract checks (deletion, dirty navigation, failures, keyboard/touch, passage jumps),
+   fix observed failures, then run full scripts/verify.sh. Keep D7–D9. No push/deploy/main merge.
 
 ## Decisions worth remembering
 
@@ -71,8 +66,8 @@ implementation remains required. No UI half edits yet; e2e/notes.spec.ts intenti
 
 ## Blockers and doubts
 
-- Phase 07: approved, not built yet. Main lacks the completed Phase 06 dependency; the Phase 07
-  branch deliberately starts at 8372a99 instead of main.
+- Phase 07: implementation in progress; CI/user check outstanding. Main lacks the completed
+  Phase 06 dependency; the Phase 07 branch deliberately starts at 8372a99 instead of main.
 - Phase 06:
   - No blocking contract items remain. B1–B3 corrected, user check confirmed, CI green.
   - N1 Highlight before highlights load silently does nothing; N2 WebKit has thin performance headroom
@@ -94,25 +89,31 @@ implementation remains required. No UI half edits yet; e2e/notes.spec.ts intenti
   this session). An occasional ~2.4 s WebKit scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:10 EDT
+Snapshot 2026-10-19 17:17 EDT
 - Branch: phase-07-notes
-- HEAD: b1ceea0 phase 07: record approved notes contract and implementation context
-- Uncommitted files: 9
+- HEAD: 3381801 wip: phase 07 note core and transactional storage; UI checks red
+- Uncommitted files: 16
 - Last verify: PASS at 2026-10-19 17:06 EDT (commit 8372a99)
 - Recent commits:
+    3381801 wip: phase 07 note core and transactional storage; UI checks red
     b1ceea0 phase 07: record approved notes contract and implementation context
     8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
     7ac8b1e phase 06: measure fixture widths without kerning
     9463bfc phase 06: record user device check and pre-CI verification
-    ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
 - Changed files:
+     M e2e/notes.spec.ts
      M harness/HANDOFF.md
      M harness/build-log.md
-     M src/storage/indexeddb-book-store.test.ts
-     M src/storage/indexeddb-book-store.ts
-     M src/storage/types.ts
-    ?? e2e/notes.spec.ts
-    ?? src/core/notes.test.ts
-    ?? src/core/notes.ts
-    ?? src/storage/notes-store.test.ts
+     M src/ui/App.tsx
+     M src/ui/ReaderView.test.tsx
+     M src/ui/ReaderView.tsx
+     M src/ui/SelectionActions.tsx
+     M src/ui/annotation-messages.ts
+     M src/ui/app.css
+     M src/ui/useHighlights.ts
+     M src/viewer/viewer.test.ts
+     M src/viewer/viewer.ts
+    ?? src/ui/ConfirmDialog.tsx
+    ?? src/ui/NotesPanel.tsx
+    ?? src/ui/useNotes.test.tsx
 <!-- AUTO:END -->

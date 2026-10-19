@@ -174,6 +174,14 @@ describe('Viewer.scrollToPage', () => {
     viewer.scrollToPage(-5);
     expect(element.scrollTop).toBe(24);
   });
+
+  it('brings a PDF-coordinate passage near the foot of a page into view', () => {
+    const { doc } = fakeDoc(5);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+    viewer.scrollToRect({ pageIndex: 2, x: 72, y: 600, width: 100, height: 14 });
+    expect(element.scrollTop).toBe(24 + 2 * (1260 + 16) + 600 * 1.8 - 24);
+  });
 });
 
 describe('Viewer current page', () => {

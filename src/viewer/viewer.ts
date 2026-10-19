@@ -164,6 +164,18 @@ export class Viewer {
     this.#drawHighlights();
   }
 
+  /** Brings a passage's first PDF-coordinate box into view, leaving a small reading margin. */
+  scrollToRect(rect: HighlightRect): void {
+    if (this.#destroyed) return;
+    const box = this.#layout.pages[rect.pageIndex];
+    if (!box) return;
+    this.#scroller.scrollTop = Math.max(
+      0,
+      box.top + rect.y * box.scale - this.#options.layout.padding,
+    );
+    this.#update();
+  }
+
   /**
    * The boxes of the text a range covers, in PDF points on each page, or null if it covers no
    * text in the pages. Only text in the text layers counts, never line breaks or other elements.

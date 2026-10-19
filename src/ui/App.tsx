@@ -9,9 +9,10 @@ import {
   type BookStore,
   type BookmarkStore,
   type HighlightStore,
+  type NoteStore,
 } from '../storage/types';
 import { Library } from './Library';
-import { ReaderView } from './ReaderView';
+import { ReaderView, type ReaderHandle } from './ReaderView';
 
 interface OpenBook {
   /** New for every opened book, so the reader (and its panels) start fresh. */
@@ -65,12 +66,15 @@ export function App({
   store = defaultStores.books,
   bookmarks = defaultStores.bookmarks,
   highlights = defaultStores.highlights,
+  notes = defaultStores.notes,
 }: {
   engine?: PdfEngine;
   store?: BookStore;
   bookmarks?: BookmarkStore;
   highlights?: HighlightStore;
+  notes?: NoteStore;
 }) {
+  const reader = useRef<ReaderHandle>(null);
   const [book, setBook] = useState<OpenBook | null>(null);
   const nextBookId = useRef(0);
   const [books, setBooks] = useState<BookRecord[]>([]);
@@ -140,12 +144,22 @@ export function App({
     }
   }
 
-  async function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
+  function requestNavigation(proceed: () => void) {
+    if (reader.current) reader.current.requestNavigation(proceed);
+    else proceed();
+  }
+
+  function onFileChosen(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const file = input.files?.[0];
     input.value = ''; // Allow choosing the same file again.
     if (!file) return;
+    requestNavigation(() => {
+      void openFile(file);
+    });
+  }
 
+  async function openFile(file: File) {
     const opened = await show(
       async () => new Uint8Array(await file.arrayBuffer()),
       file.name,
@@ -191,9 +205,11 @@ export function App({
   }
 
   function backToLibrary() {
-    setBook(null);
-    setNotice(null);
-    void refreshBooks();
+    requestNavigation(() => {
+      setBook(null);
+      setNotice(null);
+      void refreshBooks();
+    });
   }
 
   return (
@@ -233,11 +249,13 @@ export function App({
       )}
       {book ? (
         <ReaderView
+          ref={reader}
           key={book.id}
           doc={book.doc}
           bookId={book.bookId}
           bookmarks={bookmarks}
           highlights={highlights}
+          notes={notes}
         />
       ) : (
         <Library

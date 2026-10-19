@@ -873,7 +873,7 @@ Template:
 - No push, deployment or main merge authorized. Contract items 17 (CI) and 18 (user check) will
   remain open until separately observed; do not mark the phase Complete based on local tests alone.
 
-### 2026-10-19 17:11 EDT | Phase 07 | Codex | Core/storage checkpoint; UI checks red
+### 2026-10-19 17:10 EDT | Phase 07 | Codex | Core/storage checkpoint; UI checks red
 - Red first: core/storage note suites failed on missing core/notes; initial Chromium page-note and
   passage-note browser checks failed at missing Notes/Add note buttons (2 failed, expected).
 - Implemented deterministic per-target identity, plain-text validation/order and schema v4 notes.
@@ -882,3 +882,13 @@ Template:
 - Focused note unit tests 8/8; all unit tests 130/130; typecheck PASS (development checks, not full
   phase verification). Updated the schema inventory test for v4. Full verify not yet run on this step;
   browser notes checks remain red until UI integration. F-008 remains failing.
+
+### 2026-10-19 | Phase 07 | Codex | Initial notes UI green
+- Added draft controller, Notes editor/list, guarded panel/Library/file navigation, confirmation
+  dialog, highlight Add/Edit note actions and PDF-coordinate passage jumps. Pending-write, failed-save,
+  blank-text and dirty-navigation hook checks and the passage jump unit went red before implementation.
+- All 135 units and typecheck pass. Initial notes browser flows PASS (4/4, Chromium + WebKit).
+  One Chromium persistence check initially reloaded before its async save completed; waiting for the
+  saved row/editor dismissal resolves that test race. No product persistence change needed.
+- These are development checks, not canonical phase evidence. Full verify and broader contract
+  cases remain pending; no feature marked passing. No push/deploy/main merge.

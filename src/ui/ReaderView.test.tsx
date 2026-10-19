@@ -1,9 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Bookmark } from '../core/bookmarks';
 import type { PdfDoc } from '../engine/types';
 import { StorageError, type BookmarkStore, type HighlightStore } from '../storage/types';
-import { ReaderView } from './ReaderView';
+import { ReaderView as Reader } from './ReaderView';
+
+const noNotes = { list: async () => [], put: async () => {}, remove: async () => {} };
+function ReaderView(props: Omit<ComponentProps<typeof Reader>, 'notes'>) {
+  return <Reader {...props} notes={noNotes} />;
+}
 
 function memoryBookmarks(initial: Bookmark[] = []): BookmarkStore {
   let marks = [...initial];

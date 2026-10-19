@@ -215,8 +215,10 @@ export function useHighlights({
       );
       setAction(null);
       scroller.current?.focus({ preventScroll: true });
+      return true;
     } catch (error) {
       report(error, 'remove');
+      return false;
     }
   }
 
@@ -247,6 +249,7 @@ export function useHighlights({
   }
 
   return {
+    items,
     action,
     unavailableReason,
     highlightSelection,

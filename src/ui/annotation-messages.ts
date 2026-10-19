@@ -1,6 +1,6 @@
 import { StorageError } from '../storage/types';
 
-export type AnnotationKind = 'bookmark' | 'highlight';
+export type AnnotationKind = 'bookmark' | 'highlight' | 'note';
 
 /** A readable message for a bookmark or highlight that couldn't be saved or removed. */
 export function annotationMessage(

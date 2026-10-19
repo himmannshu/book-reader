@@ -40,6 +40,8 @@ test('an existing highlight accepts a passage note', async ({ page }) => {
   await page.getByRole('button', { name: 'Add note', exact: true }).click();
   await page.getByRole('textbox', { name: 'Note text' }).fill('A passage thought');
   await page.getByRole('button', { name: 'Save note', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Note text' })).toHaveCount(0);
+  await expect(page.locator('.note-row')).toContainText('A passage thought');
   await reopen(page);
   await page.getByRole('button', { name: 'Notes', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Notes' })).toContainText('A passage thought');

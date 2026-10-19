@@ -1,20 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
+import type { Highlight } from '../core/highlights';
+import type { Note, NoteTarget } from '../core/notes';
 import type { OutlineItem, PdfDoc } from '../engine/types';
-import type { BookmarkStore, HighlightStore } from '../storage/types';
+import type { BookmarkStore, HighlightStore, NoteStore } from '../storage/types';
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
 import { ContentsPanel, type OutlineState } from './ContentsPanel';
 import { SelectionActions } from './SelectionActions';
 import { useHighlights } from './useHighlights';
+import { useNotes } from './useNotes';
+import { NotesPanel } from './NotesPanel';
+import { ConfirmDialog } from './ConfirmDialog';
 
 /** Below this width a side panel covers the pages instead of sitting beside them. */
 const NARROW_QUERY = '(max-width: 699px)';
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
+const NOTES_ID = 'notes-panel';
+const NO_HIGHLIGHTS: readonly Highlight[] = [];
 
-type Panel = 'contents' | 'bookmarks';
+type Panel = 'contents' | 'bookmarks' | 'notes';
+
+export interface ReaderHandle {
+  requestNavigation(proceed: () => void): void;
+}
 
 /** A book's bookmarks once read; `bookId` says which book they belong to. */
 type LoadedBookmarks =
@@ -26,6 +37,8 @@ interface ReaderViewProps {
   bookId: string | null;
   bookmarks: BookmarkStore;
   highlights: HighlightStore;
+  notes: NoteStore;
+  ref?: Ref<ReaderHandle>;
   now?: () => number;
   newId?: () => string;
 }
@@ -38,6 +51,8 @@ export function ReaderView({
   bookId,
   bookmarks,
   highlights,
+  notes,
+  ref,
   now = Date.now,
   newId = randomId,
 }: ReaderViewProps) {
@@ -46,6 +61,7 @@ export function ReaderView({
   const viewerRef = useRef<Viewer | null>(null);
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
   const bookmarksButtonRef = useRef<HTMLButtonElement>(null);
+  const notesButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -119,17 +135,24 @@ export function ReaderView({
   }
 
   function buttonFor(panel: Panel) {
-    return panel === 'contents' ? contentsButtonRef : bookmarksButtonRef;
+    return panel === 'contents'
+      ? contentsButtonRef
+      : panel === 'bookmarks'
+        ? bookmarksButtonRef
+        : notesButtonRef;
   }
 
   function togglePanel(panel: Panel) {
-    if (openPanel === panel) {
-      setOpenPanel(null);
-      buttonFor(panel).current?.focus();
-      return;
-    }
-    setOpenPanel(panel);
-    if (panel === 'contents') void loadOutline();
+    written.request(() => {
+      marked.dismiss();
+      if (openPanel === panel) {
+        setOpenPanel(null);
+        buttonFor(panel).current?.focus();
+        return;
+      }
+      setOpenPanel(panel);
+      if (panel === 'contents') void loadOutline();
+    });
   }
 
   function choose(pageIndex: number) {
@@ -206,7 +229,55 @@ export function ReaderView({
     newId,
     onError: setAnnotationError,
   });
+  const highlightList = marked.items ?? NO_HIGHLIGHTS;
+  const written = useNotes({ bookId, store: notes, highlights: highlightList, now });
+  useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
+
+  function openNote(target: NoteTarget) {
+    written.open(target, () => {
+      marked.dismiss();
+      setOpenPanel('notes');
+    });
+  }
+
+  function chooseNote(note: Note) {
+    written.request(() => {
+      const target = note.target;
+      const passage =
+        target.kind === 'highlight'
+          ? highlightList.find((highlight) => highlight.id === target.highlightId)
+          : undefined;
+      const rect = passage?.rects[0];
+      if (rect) viewerRef.current?.scrollToRect(rect);
+      else viewerRef.current?.scrollToPage(note.target.pageIndex);
+      if (window.matchMedia(NARROW_QUERY).matches) setOpenPanel(null);
+      scrollerRef.current?.focus({ preventScroll: true });
+    });
+  }
+
+  function removeHighlight(id: string) {
+    written.request(() => {
+      const attached = written.items?.find(
+        (note) => note.target.kind === 'highlight' && note.target.highlightId === id,
+      );
+      const remove = async () => {
+        if (await marked.removeHighlight(id)) written.forgetHighlight(id);
+      };
+      if (attached)
+        written.ask({
+          title: 'Remove highlight and note?',
+          message: 'This removes the highlight and its attached note.',
+          label: 'Remove both',
+          run: () => {
+            void remove();
+          },
+        });
+      else void remove();
+    });
+  }
   const dismissHighlightAction = marked.dismiss;
+  const requestNoteNavigation = written.request;
+  const noteConfirmation = written.confirmation;
 
   // Escape first hides a floating highlight button. Otherwise, while a panel is open, it closes the
   // panel wherever focus is: in the panel, on a button, in the pages, or on the page body (in
@@ -214,14 +285,17 @@ export function ReaderView({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      if (noteConfirmation) return;
       if (dismissHighlightAction()) return;
       if (!openPanel) return;
-      setOpenPanel(null);
-      (openPanel === 'contents' ? contentsButtonRef : bookmarksButtonRef).current?.focus();
+      requestNoteNavigation(() => {
+        setOpenPanel(null);
+        buttonFor(openPanel).current?.focus();
+      });
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel, dismissHighlightAction]);
+  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation]);
 
   return (
     <div className="reader">
@@ -257,6 +331,16 @@ export function ReaderView({
         >
           Bookmark page
         </button>
+        <button
+          ref={notesButtonRef}
+          type="button"
+          className="button secondary"
+          aria-expanded={openPanel === 'notes'}
+          aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
+          onClick={() => togglePanel('notes')}
+        >
+          Notes
+        </button>
       </div>
       {annotationError && (
         <p className="error" role="alert">
@@ -275,6 +359,16 @@ export function ReaderView({
             onRemove={removeBookmark}
           />
         )}
+        {openPanel === 'notes' && (
+          <NotesPanel
+            id={NOTES_ID}
+            notes={written}
+            highlights={highlightList}
+            currentPage={currentPage}
+            onOpen={openNote}
+            onChoose={chooseNote}
+          />
+        )}
         <div
           ref={scrollerRef}
           className="reader-scroller"
@@ -288,9 +382,34 @@ export function ReaderView({
           action={marked.action}
           unsavedReason={marked.unavailableReason}
           onHighlight={() => void marked.highlightSelection()}
-          onRemove={(id) => void marked.removeHighlight(id)}
+          onRemove={removeHighlight}
+          onNote={(id) => {
+            const highlight = highlightList.find((item) => item.id === id);
+            if (highlight)
+              openNote({ kind: 'highlight', pageIndex: highlight.pageIndex, highlightId: id });
+          }}
+          noteLabel={
+            marked.action?.kind === 'remove' &&
+            written.items?.some(
+              (note) =>
+                note.target.kind === 'highlight' &&
+                marked.action?.kind === 'remove' &&
+                note.target.highlightId === marked.action.id,
+            )
+              ? 'Edit note'
+              : 'Add note'
+          }
+          noteUnavailableReason={written.unavailableReason}
+          removeUnavailableReason={written.unavailableReason}
         />
       </div>
+      {written.confirmation && (
+        <ConfirmDialog
+          question={written.confirmation}
+          onConfirm={written.acceptConfirmation}
+          onCancel={written.rejectConfirmation}
+        />
+      )}
     </div>
   );
 }
