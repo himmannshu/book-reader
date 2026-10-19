@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type RefObject } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import { normalizeQuote, sortByPosition, type Highlight } from '../core/highlights';
 import type { ScreenRect } from '../core/highlights';
 import type { HighlightStore } from '../storage/types';
@@ -23,14 +23,17 @@ function below(rect: ScreenRect, gap: number, area: DOMRect | undefined) {
   };
 }
 
-/** Where to offer "Highlight" for the current selection, or null if it holds no page text. */
-function selectionSpot(viewer: Viewer | null, area: DOMRect | undefined) {
+/** The current selection's range if it holds page text, else null. */
+function pageTextSelection(viewer: Viewer | null): Range | null {
   const selection = document.getSelection();
   if (!viewer || !selection || selection.isCollapsed || selection.rangeCount === 0) return null;
   if (!normalizeQuote(selection.toString())) return null;
-  const end = viewer.selectionEnd(selection.getRangeAt(0));
-  return end ? below(end, 6, area) : null;
+  const range = selection.getRangeAt(0);
+  return viewer.selectionEnd(range) ? range : null;
 }
+
+/** True while focus is on the floating buttons (moving focus there can clear the selection). */
+const actionsHaveFocus = () => document.activeElement?.closest('.selection-actions') != null;
 
 interface UseHighlightsOptions {
   bookId: string | null;
@@ -63,6 +66,9 @@ export function useHighlights({
     { bookId: string; items: Highlight[] } | { bookId: string; failed: true } | null
   >(null);
   const [action, setAction] = useState<SelectionAction | null>(null);
+  // The selection "Highlight" was offered for. Safari clears a selection when focus moves to a
+  // button (Tab, or a tap on iOS), so pressing it uses this copy.
+  const offeredRange = useRef<Range | null>(null);
   const current = loaded?.bookId === bookId ? loaded : null;
   const items = current && 'items' in current ? current.items : null;
   const unavailableReason =
@@ -99,9 +105,15 @@ export function useHighlights({
   // and as the pages scroll. Scrolling drops "Remove highlight", whose highlight has moved.
   useEffect(() => {
     const follow = () => {
-      const spot = selectionSpot(viewer.current, body.current?.getBoundingClientRect());
-      if (spot) setAction({ kind: 'create', ...spot });
-      else setAction((shown) => (shown?.kind === 'create' ? null : shown));
+      const range = pageTextSelection(viewer.current);
+      const end = range && viewer.current?.selectionEnd(range);
+      if (range && end) {
+        offeredRange.current = range.cloneRange();
+        setAction({ kind: 'create', ...below(end, 6, body.current?.getBoundingClientRect()) });
+      } else if (!actionsHaveFocus()) {
+        offeredRange.current = null;
+        setAction((shown) => (shown?.kind === 'create' ? null : shown));
+      }
     };
     const onScroll = () => {
       setAction((shown) => (shown?.kind === 'remove' ? null : shown));
@@ -122,10 +134,10 @@ export function useHighlights({
   }
 
   async function highlightSelection() {
-    const selection = document.getSelection();
-    if (bookId === null || !items || !selection || selection.rangeCount === 0) return;
-    const rects = viewer.current?.selectionRects(selection.getRangeAt(0));
-    const quote = normalizeQuote(selection.toString());
+    const range = pageTextSelection(viewer.current) ?? offeredRange.current;
+    if (bookId === null || !items || !range) return;
+    const rects = viewer.current?.selectionRects(range);
+    const quote = normalizeQuote(viewer.current?.selectionText(range) ?? '');
     const first = rects?.[0];
     if (!rects || !first || !quote) {
       setAction(null);
@@ -147,7 +159,8 @@ export function useHighlights({
           ? { bookId, items: sortByPosition([...shown.items, highlight]) }
           : shown,
       );
-      selection.removeAllRanges();
+      document.getSelection()?.removeAllRanges();
+      offeredRange.current = null;
       setAction(null);
       scroller.current?.focus({ preventScroll: true });
     } catch (error) {
@@ -191,6 +204,8 @@ export function useHighlights({
   /** Hides the floating button. Returns whether one was showing. */
   function dismiss(): boolean {
     if (!action) return false;
+    if (actionsHaveFocus()) scroller.current?.focus({ preventScroll: true });
+    offeredRange.current = null;
     setAction(null);
     return true;
   }

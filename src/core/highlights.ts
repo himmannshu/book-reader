@@ -139,6 +139,31 @@ export function toPageRects(
   }));
 }
 
+/** A selected piece of page text and where it sits on screen. */
+export interface TextPiece {
+  text: string;
+  pageIndex: number;
+  top: number;
+  height: number;
+}
+
+/**
+ * The selected text, in order. The text layer has no whitespace between lines or pages, so a
+ * space goes wherever the next piece starts on another page or lower than the previous one's middle.
+ * Pieces of one line join as they are, since PDF text can split a word across pieces.
+ */
+export function joinTextPieces(pieces: readonly TextPiece[]): string {
+  let text = '';
+  pieces.forEach((piece, i) => {
+    const before = pieces[i - 1];
+    const newLine =
+      before !== undefined &&
+      (piece.pageIndex !== before.pageIndex || piece.top > before.top + before.height / 2);
+    text += (newLine ? ' ' : '') + piece.text;
+  });
+  return text;
+}
+
 /** The quote as stored: runs of whitespace (including line and page breaks) become one space. */
 export function normalizeQuote(text: string): string {
   return text.replace(/\s+/g, ' ').trim();

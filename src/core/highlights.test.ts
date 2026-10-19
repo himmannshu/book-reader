@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   highlightAt,
+  joinTextPieces,
   normalizeQuote,
   sortByPosition,
   toPageRects,
@@ -89,6 +90,29 @@ describe('toPageRects', () => {
     for (const value of [r?.x, r?.y, r?.width, r?.height]) {
       expect(Math.round((value ?? 0) * 100) / 100).toBe(value);
     }
+  });
+});
+
+describe('joinTextPieces', () => {
+  const piece = (text: string, pageIndex: number, top: number) => ({
+    text,
+    pageIndex,
+    top,
+    height: 20,
+  });
+
+  it('puts a space between lines and between pages, where the text layer has none', () => {
+    expect(
+      joinTextPieces([
+        piece('foot of page one', 0, 1100),
+        piece('and the top', 1, 1400),
+        piece('of the next line', 1, 1430),
+      ]),
+    ).toBe('foot of page one and the top of the next line');
+  });
+
+  it('joins pieces of one line as they are, so split words stay whole', () => {
+    expect(joinTextPieces([piece('high', 0, 300), piece('lights', 0, 301)])).toBe('highlights');
   });
 });
 

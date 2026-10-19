@@ -4,11 +4,13 @@
 // Each page stacks its canvas, a highlight layer and (for visible pages) a selectable text layer.
 import {
   highlightAt as findHighlightAt,
+  joinTextPieces,
   toPageRects,
   type Highlight,
   type HighlightRect,
   type PageOnScreen,
   type ScreenRect,
+  type TextPiece,
 } from '../core/highlights';
 import { markPageRendered } from '../core/perf-marks';
 import { RenderCancelledError, type PageSize, type PdfDoc, type RenderTask } from '../engine/types';
@@ -160,13 +162,24 @@ export class Viewer {
    * text in the pages. Only text in the text layers counts, never line breaks or other elements.
    */
   selectionRects(range: Range): HighlightRect[] | null {
-    const found = toPageRects(this.#textRectsIn(range), this.#pagesOnScreen());
+    const rects = this.#textIn(range).flatMap((piece) => piece.rects);
+    const found = toPageRects(rects, this.#pagesOnScreen());
     return found.length > 0 ? found : null;
+  }
+
+  /** The page text inside a range, with spaces between lines and pages (see joinTextPieces). */
+  selectionText(range: Range): string {
+    const pieces: TextPiece[] = [];
+    for (const { text, pageIndex, rects } of this.#textIn(range)) {
+      const first = rects[0];
+      if (first) pieces.push({ text, pageIndex, top: first.top, height: first.height });
+    }
+    return joinTextPieces(pieces);
   }
 
   /** The screen box of the last selected piece of page text (to place a button by), or null. */
   selectionEnd(range: Range): ScreenRect | null {
-    return this.#textRectsIn(range).at(-1) ?? null;
+    return this.#textIn(range).at(-1)?.rects.at(-1) ?? null;
   }
 
   /** The id of the newest highlight under a point on screen (client coordinates), or null. */
@@ -320,23 +333,36 @@ export class Viewer {
     slot.text = undefined;
   }
 
-  /** Screen boxes of the page text inside a range, in document order. Ignores other elements. */
-  #textRectsIn(range: Range): ScreenRect[] {
-    const rects: ScreenRect[] = [];
+  /** The pieces of page text inside a range, in document order, with their screen boxes. */
+  #textIn(range: Range): { text: string; pageIndex: number; rects: ScreenRect[] }[] {
+    const pieces: { text: string; pageIndex: number; rects: ScreenRect[] }[] = [];
     const root = range.commonAncestorContainer;
-    if (this.#destroyed || !this.#content.contains(root)) return rects;
+    if (this.#destroyed || !this.#content.contains(root)) return pieces;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let node: Node | null = walker.currentNode; node; node = walker.nextNode()) {
-      if (node.nodeType !== Node.TEXT_NODE || !range.intersectsNode(node)) continue;
-      if (!node.parentElement?.closest('.textLayer')) continue;
+      if (!(node instanceof Text) || !range.intersectsNode(node)) continue;
+      const page = node.parentElement
+        ?.closest<HTMLElement>('.textLayer')
+        ?.closest<HTMLElement>('[data-page-index]');
+      if (!page) continue;
       const part = document.createRange();
       part.selectNodeContents(node);
       if (node === range.startContainer) part.setStart(node, range.startOffset);
       if (node === range.endContainer) part.setEnd(node, range.endOffset);
-      for (const rect of part.getClientRects())
-        if (rect.width > 0 && rect.height > 0) rects.push(rect);
+      // Left and right from the selected characters; top and height from the text's own box,
+      // which scales exactly (browsers round selection boxes to whole pixels).
+      const line = node.parentElement?.getBoundingClientRect();
+      const rects = [...part.getClientRects()]
+        .filter((r) => r.width > 0 && r.height > 0)
+        .map((r) =>
+          line && line.height > 0
+            ? { left: r.left, width: r.width, top: line.top, height: line.height }
+            : r,
+        );
+      if (rects.length === 0) continue;
+      pieces.push({ text: part.toString(), pageIndex: Number(page.dataset.pageIndex), rects });
     }
-    return rects;
+    return pieces;
   }
 
   /** Where each page with a canvas is on screen, and its scale (CSS px per point). */
