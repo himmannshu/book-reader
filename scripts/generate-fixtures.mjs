@@ -25,7 +25,11 @@ function bandColor(index) {
   return [40 + ((index * 67) % 180), 40 + ((index * 131) % 180), 40 + ((index * 29) % 180)];
 }
 
-async function makePdf(name, sizes, decorate) {
+/**
+ * `labels: false` leaves out the "Page N" text, so the only text is what `decorate` adds and a
+ * selection across a page break follows it alone (the text layer follows content order).
+ */
+async function makePdf(name, sizes, decorate, { labels = true } = {}) {
   const doc = await PDFDocument.create();
   doc.setTitle(name);
   doc.setAuthor('book-reader fixtures');
@@ -46,6 +50,7 @@ async function makePdf(name, sizes, decorate) {
       height: bandHeight,
       color: rgb(r / 255, g / 255, b / 255),
     });
+    if (!labels) return;
     page.drawText(`Page ${index + 1}`, { x: 36, y: height / 2, size: 28, font });
     page.drawText(`${name}, ${width} x ${height} pt`, {
       x: 36,
@@ -55,10 +60,51 @@ async function makePdf(name, sizes, decorate) {
     });
   });
 
-  decorate?.(doc);
+  decorate?.(doc, font);
   const bytes = await doc.save({ useObjectStreams: false });
   writeFileSync(join(outDir, `${name}.pdf`), bytes);
   return { file: `${name}.pdf`, pages: sizes.map(([width, height]) => ({ width, height })) };
+}
+
+/**
+ * Lines of selectable text for highlight tests (phase 06). Each line is distinct, so tests can find
+ * it by its words. Positions are in PDF points from the page's top-left corner (the app's space):
+ * `x` is the left edge, `baseline` the baseline's distance from the top, `width` the drawn width.
+ * Page 1 ends with a sentence that continues at the top of page 2.
+ */
+const TEXT_SIZE = 14;
+const TEXT_LINES = [
+  [
+    'Alpha one: the first line of selectable text on page one.',
+    'Bravo two: a second line, with different words in it.',
+    'Charlie three: highlights should cover exactly this text.',
+    'Delta four: the fourth line closes the first paragraph.',
+  ],
+  ['Echo five: page two starts its own paragraph here.', 'Foxtrot six: one more line on page two.'],
+  ['Golf seven: page three has a single paragraph line.'],
+  ['Hotel eight: and page four is the last page of the book.'],
+];
+const SPLIT_TAIL = 'India nine: this sentence starts at the foot of page one';
+const SPLIT_HEAD = 'and Juliet ten finishes it at the top of page two.';
+
+function textLines(pageIndex, height) {
+  const lines = TEXT_LINES[pageIndex].map((text, i) => ({ text, baseline: 200 + i * 26 }));
+  if (pageIndex === 0) lines.push({ text: SPLIT_TAIL, baseline: height - 40 });
+  if (pageIndex === 1) lines.unshift({ text: SPLIT_HEAD, baseline: 174 });
+  return lines;
+}
+
+function addTextLines(doc, font) {
+  const placed = [];
+  doc.getPages().forEach((page, pageIndex) => {
+    const { height } = page.getSize();
+    for (const { text, baseline } of textLines(pageIndex, height)) {
+      page.drawText(text, { x: 72, y: height - baseline, size: TEXT_SIZE, font });
+      const width = Math.round(font.widthOfTextAtSize(text, TEXT_SIZE) * 100) / 100;
+      placed.push({ pageIndex, text, x: 72, baseline, size: TEXT_SIZE, width });
+    }
+  });
+  return placed;
 }
 
 /**
@@ -153,6 +199,19 @@ const manifest = {
         { 'chapter-3': 8 },
       ),
   ),
+  // Selectable text with known positions, for highlights (phase 06).
+  'text-4-pages': await (async () => {
+    let lines = [];
+    const entry = await makePdf(
+      'text-4-pages',
+      Array.from({ length: 4 }, () => LETTER),
+      (doc, font) => {
+        lines = addTextLines(doc, font);
+      },
+      { labels: false },
+    );
+    return { ...entry, lines };
+  })(),
   // Thin strips: many pages fit on screen at once (review finding B2).
   'strips-40-pages': await makePdf(
     'strips-40-pages',
