@@ -754,3 +754,9 @@ Template:
   regression failed before its fix. The review appendix records author verification, not a new independent verdict.
 - F-007 restored to passing after observing the full run. Phase stays In progress: item 13 needs a
   permitted push and green CI; item 14 needs the user's real-book/device report. No push or deployment.
+
+### 2026-10-19 15:17 EDT | Phase 06 | Codex | Correction pass handoff
+- B1 committed as 4341f7c; B2 as 1c5834c; B3 as 57fa6ad. Latest full verify is PASS as recorded above;
+  only evidence/handoff files changed afterward, and their formatting plus git diff --check pass.
+- Handoff refreshed with the correction commits and pending contract items 13–14. Phase remains
+  In progress; no push or deployment. A fresh agent should start with harness/prompts/00-orient.md.

@@ -31,7 +31,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- No code is half done. B1 committed as 4341f7c; B2 as 1c5834c; B3 complete and verified locally.
+- No code is half done. B1 committed as 4341f7c; B2 as 1c5834c; B3 as 57fa6ad, all verified locally.
 
 ## Next action
 
@@ -78,24 +78,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 15:16 EDT
+Snapshot 2026-10-19 15:17 EDT
 - Branch: phase-06-highlights
-- HEAD: 1c5834c phase 06: prevent duplicate pending highlight saves
-- Uncommitted files: 8
+- HEAD: 57fa6ad phase 06: dismiss stale highlight offers when text is released
+- Uncommitted files: 2
 - Last verify: PASS at 2026-10-19 15:15 EDT (commit 1c5834c)
 - Recent commits:
+    57fa6ad phase 06: dismiss stale highlight offers when text is released
     1c5834c phase 06: prevent duplicate pending highlight saves
     4341f7c phase 06: restore touch highlight actions in WebKit
     db28d3c handoff: build-log times match their commits
     f30eb4c handoff: correct build-log timestamp
-    c701158 handoff: Claude Code (Opus 5.5) 2026-10-19
 - Changed files:
-     M e2e/highlights.spec.ts
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/code_review/phase-06-review.md
-     M harness/context/phase-06-highlights-context.md
-     M harness/features.json
-     M src/ui/useHighlights.ts
-     M src/viewer/viewer.test.ts
 <!-- AUTO:END -->
