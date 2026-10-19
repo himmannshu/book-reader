@@ -470,3 +470,19 @@ Template:
 - Red: e2e "choosing a chapter in Contents brings its page to the top" timed out (no Contents button), both browsers.
 - Green: unit 61 passed; `npx playwright test` → 38 passed (chromium + webkit), including the older tests
   after the reader layout change.
+
+### 2026-10-19 01:22 EDT | Phase 04 | Claude Code (Opus 5.5) | E2E for items 1, 3–7; arrow-key navigation
+- Changes: e2e/contents.spec.ts tests for order and nesting (1), named destination (3), disabled broken entry
+  with no alert (4), empty state (5), keyboard + Escape + focus return (6), narrow-window overlay that closes
+  after a choice (7). ContentsPanel: ArrowUp/ArrowDown/Home/End move between enabled entries.
+- Finding: in WebKit, Tab did not move between the panel's buttons ("Chapter 2 … Received: inactive"), which is
+  Safari's default on macOS. Added arrow-key navigation (red first: the arrow-key test failed in both browsers).
+  Item 6 ("entries are reachable … with Enter") is met with arrow keys; recorded here.
+- Red: items 1, 3, 4, 5, 7 passed on first run (UI already built). Deliberate breaks, chromium: flat list (1),
+  named destinations ignored (3), entries never disabled (4), no empty note (5), panel not overlaid (7), panel
+  stays open on narrow (7) → each failed.
+- Mistake and redo: my break/restore helper uses `git checkout`, which also discarded the uncommitted
+  arrow-key change. Items 1/4/5 results are unaffected (no arrow keys involved); the item 6 breaks were
+  invalid. Re-applied the change, committed (303578d), then re-ran item 6 breaks in both browsers:
+  Escape ignored → 2 failed; focus not returned → 2 failed; no arrow keys → 2 failed; restored → 2 passed.
+- Green: e2e/contents.spec.ts 14 passed (chromium + webkit).
