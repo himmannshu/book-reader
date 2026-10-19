@@ -349,3 +349,27 @@ Template:
   All breaks reverted with `git checkout`.
 - Item 7 evidence: App unit tests "explains a full disk…" and "…browser mode cannot save books…" (fake
   stores failing with quota/unavailable; book info still shown) and adapter `toStorageError` tests.
+
+### 2026-10-19 00:42 EDT | Phase 03 | Claude Code (Opus 5.5) | CORRECTION: entry timestamps
+- Correction to every entry from "2026-10-19 01:10 EDT | Phase 02" through "2026-10-19 06:05 EDT | Phase 03":
+  those times were estimates written by the agent, not clock readings. The real times are the matching
+  commit times (`git log --date=iso`), roughly 2026-10-18 23:20 to 2026-10-19 00:35 EDT. The order of
+  events and all recorded results are unaffected. From this entry on, times come from `date`.
+
+### 2026-10-19 00:42 EDT | Phase 03 | Claude Code (Opus 5.5) | Storage lint boundary; verify with perf
+- Changes: eslint.config.js forbids `indexedDB`, `window/globalThis/self.indexedDB` and
+  `navigator.storage` in src/** outside src/storage (item 9); context file; AGENTS.md project paragraph,
+  layout and conventions (IndexedDB, ArrayBuffers, never run perf in two worktrees at once);
+  harness/SWITCHING.md perf note.
+- Red: probe file using all three → `npm run lint` exit 0 before the rule.
+- Green: with the rule → exit 1 with three errors (no-restricted-globals / no-restricted-properties);
+  probe removed → exit 0.
+- Concurrency incident: a first verify run failed at the perf step (WebKit p95 50 ms over budget 40,
+  plus errors) and the next runs failed with "port 4174 is already used". Cause: the first-page
+  investigation session was running `npm run test:perf` in its worktree at the same time. Agreed a
+  hand-off with that session by message. Timings from the overlapping run are not evidence either way.
+- Verification (non-overlapping run, started after port 4174 was free for 30 s): `scripts/verify.sh` →
+  PASS: unit 46, browser 36, perf 8 passed. Perf: chromium first 179, jump 25, p95 16.7, blank 0,
+  canvas 67.1; webkit first 158, jump 89, p95 39 (budget 40; was ~29 before phase 03), blank 1, canvas 67.1.
+- Open question: whether the background save (SHA-256 + IndexedDB write of the 58 MB book) causes the
+  WebKit p95 rise. To be measured with and without saving once the other session finishes its perf runs.

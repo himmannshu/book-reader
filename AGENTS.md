@@ -10,7 +10,7 @@ A Kindle-like reader for PDF books, built as an installable web app (PWA) that r
 iPad and iPhone. It is a personal tool first, but it should be able to open up to other people
 later. Core features: fast native PDF reading (continuous scroll), table of contents,
 bookmarks, highlights and notes. The stack is TypeScript, React and Vite, with PDF.js for
-rendering. Data is local-first (OPFS and IndexedDB), and Cloudflare (R2, D1, Workers, Pages)
+rendering. Data is local-first (IndexedDB, D5a), and Cloudflare (R2, D1, Workers, Pages)
 is the cloud for backup and moving books between devices. Claude Code and Codex build it in
 turns. The reasoning behind each choice is in harness/context/architecture-decisions.md.
 
@@ -100,7 +100,7 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   - `src/core`: DOM-free logic (annotations, library model, reading position). No browser APIs.
   - `src/engine`: PDF engine interface and the PDF.js adapter and worker.
   - `src/viewer`: plain-TS viewer (virtualized pages, bitmap cache).
-  - `src/storage`: storage interfaces, plus local (OPFS/IndexedDB) and cloud adapters.
+  - `src/storage`: the `BookStore` interface, plus the IndexedDB adapter and (later) cloud adapters.
   - `src/ui`: React components.
   - `e2e/`: Playwright tests and performance benchmarks.
   - `tests/fixtures/`: test PDFs. Generated or public domain only, never the user's own books.
@@ -108,9 +108,13 @@ Do not reverse one silently. Append a superseding entry there and note it in the
 - Annotations are stored in PDF coordinates (page index plus rectangles in PDF points) together
   with the quoted text. Never store screen pixels.
 - All persistence goes through the `src/storage` interfaces. UI and viewer code never call
-  IndexedDB, OPFS or `fetch` to the cloud directly.
+  IndexedDB, `navigator.storage` or `fetch` to the cloud directly (lint enforces the first two).
 - Tests never touch the network or the live cloud. Cloudflare pieces are tested with local
   `wrangler` emulation.
+- Book files are stored as ArrayBuffers, not Blobs: Safari private browsing and Playwright's WebKit
+  reject Blobs in IndexedDB.
+- Never run `npm run test:perf` in two worktrees at once. The runs share port 4174 and the CPU, so
+  timings from overlapping runs are meaningless.
 - Speed is a feature. A change that makes a benchmark in `e2e/perf/` fail is a regression, even if
   every other test passes. Change a budget only with the user's agreement, recorded in the build log.
 - Errors: never swallow them silently. Show the user a readable message for failures they can

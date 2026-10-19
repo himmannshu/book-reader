@@ -33,6 +33,31 @@ export default tseslint.config(
     },
   },
   {
+    // Only the storage adapters may touch browser storage, so persistence stays behind the
+    // BookStore interface and the cloud adapter (phase 09) can slot in.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/storage/**'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'indexedDB', message: 'Use the BookStore interface (src/storage) instead.' },
+      ],
+      'no-restricted-properties': [
+        'error',
+        ...['window', 'globalThis', 'self'].map((object) => ({
+          object,
+          property: 'indexedDB',
+          message: 'Use the BookStore interface (src/storage) instead.',
+        })),
+        {
+          object: 'navigator',
+          property: 'storage',
+          message: 'Use the BookStore interface (src/storage) instead.',
+        },
+      ],
+    },
+  },
+  {
     files: ['*.config.{js,ts}', 'e2e/**', 'scripts/**'],
     languageOptions: {
       globals: globals.node,

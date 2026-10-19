@@ -35,6 +35,8 @@ Use full reviews only for risky phases.
 
 ## Practical notes
 
+- Performance benchmarks (`npm run test:perf`) must not run in two worktrees at once: they share
+  port 4174 and the CPU, and the timings become meaningless.
 - Never run both agents on the same working tree at once. If you want parallel work, use
   `git worktree add ../proj-phase-NN phase-NN-<slug>` and give each agent its own tree.
 - Put agent-neutral rules in AGENTS.md. Put tool-specific tips in CLAUDE.md only.

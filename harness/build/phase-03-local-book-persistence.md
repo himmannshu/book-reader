@@ -11,7 +11,7 @@ Books that have been opened stay on the device. After a reload, a simple list sh
 ## In scope
 
 - Storage interface for books and metadata
-- Local adapter: PDF bytes in OPFS, metadata in IndexedDB
+- Local adapter: PDF bytes in OPFS, metadata in IndexedDB (superseded by D5a during planning: everything in IndexedDB; see the contract)
 - Simple list of stored books with title; open and remove
 - Readable error when storage is full or unavailable
 
