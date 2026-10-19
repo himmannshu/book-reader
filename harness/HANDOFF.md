@@ -6,8 +6,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 04 In progress (items 1–9 observed, verify PASS; CI, item 11 and evaluator review pending)
-- Branch: phase-04-table-of-contents (not pushed yet)
+- Phase: 04 In progress. The evaluator review FAILED (harness/code_review/phase-04-review.md);
+  fixing its findings now.
+- Branch: phase-04-table-of-contents (not pushed)
 
 ## Done
 
@@ -17,13 +18,17 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- The user asked for an evaluator review after phase 04.
+- The user asked (2026-10-19): fix the phase 04 findings with tests, re-run the phase 04 review,
+  then run evaluator reviews for phases 02 and 03 one at a time. Skip phase 00.
+- Findings to fix: (1) Contents stuck on "Loading contents…" after opening another book with the
+  panel open; (2) Escape ignored when no entry has focus; (3) no test for lazy outline loading or
+  for (1)/(2); minor: focus stays on the entry after a wide-layout jump.
 
 ## Next action
 
-1. Run the evaluator (`/evaluate 04`), relay the verdict.
-2. With the user's OK: push the branch for CI. The user checks Contents on a real book (item 11).
-3. Mark phase 04 Complete only when items 10 (CI) and 11 have evidence; ask before merging.
+1. Failing tests for the findings, then fixes, then `scripts/verify.sh`.
+2. Re-run `/evaluate 04`. Then `/evaluate 02`, then `/evaluate 03` (never overlapping: each runs perf).
+3. Phase 04 still needs CI (ask before pushing) and the user's real-book check (item 11).
 
 ## Decisions worth remembering
 
