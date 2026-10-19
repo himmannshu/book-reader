@@ -44,15 +44,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 23:26 EDT
-- Branch: main
-- HEAD: 794d4b8 phase 01: record merge and green CI
+Snapshot 2026-10-19 00:12 EDT
+- Branch: phase-02-performance-baseline
+- HEAD: fb0676e phase 02: context, evidence and handoff (item 11 awaits user)
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-18 23:22 EDT (commit fd874e8)
+- Last verify: FAIL at 2026-10-19 00:12 EDT (commit 7d95724)
 - Recent commits:
-    794d4b8 phase 01: record merge and green CI
-    844e7a5 phase 01: make the 300-page scroll test fit CI WebKit time limits
-    fd874e8 phase 01: refresh handoff snapshot
-    922e9db phase 01: fix review findings B1 (height resize), B5 (keyboard focus), B6 (top gap)
-    eecdf5a phase 01: evaluator review (PASS)
+    fb0676e phase 02: context, evidence and handoff (item 11 awaits user)
+    7d95724 phase 02: steadier 300-page scroll test (fixed number of evenly spread stops)
+    77faa5b phase 02: CI enforces Chromium perf budgets, reports WebKit (contract amendment 1)
+    e6d23f8 phase 02: record CI baseline; soft budget checks so every metric is recorded
+    b2688e0 phase 02: agreed budgets; perf benchmarks run in verify and CI
 <!-- AUTO:END -->
