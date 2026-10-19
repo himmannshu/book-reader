@@ -40,9 +40,12 @@ test('scrolling through a 300-page book keeps at most 8 canvases and draws the l
     const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     let maxCanvases = 0;
     let maxActive = 0;
-    // About 60 stops spread over the whole book; each lands on pages not drawn before.
-    for (let y = 0; y <= el.scrollHeight; y += el.clientHeight * 5) {
-      el.scrollTop = y;
+    // 20 stops spread evenly from the first page to the last; each lands on pages not drawn
+    // before. A fixed count keeps the test's cost independent of how slow the browser is.
+    const stops = 20;
+    const maxTop = el.scrollHeight - el.clientHeight;
+    for (let i = 0; i <= stops; i++) {
+      el.scrollTop = (maxTop * i) / stops;
       await frame();
       await frame();
       maxCanvases = Math.max(maxCanvases, el.querySelectorAll('canvas').length);

@@ -266,3 +266,12 @@ Template:
 - Verification: simulated `CI=1` with both firstPage budgets temporarily 1 ms → chromium failed
   ("exceeds budget 4"), webkit passed (report-only); budgets.json restored. Local `scripts/verify.sh`
   (both browsers enforced) → PASS.
+
+### 2026-10-19 03:40 EDT | Phase 02 | Claude Code (Opus 5.5) | CI flake in phase 01's 300-page scroll test
+- Observed: run 39197270919 → failure before the perf step: "[webkit] scrolling through a 300-page book…"
+  hit the 90 s limit (browser step 3.8 min; same code passed in run 39196422528 with the step at 1.9 min).
+  Runner variance on Linux CI WebKit, not an app change.
+- Fix: the test visits 20 positions spread evenly from first to last page (was ~60 stops of 5 viewports),
+  so its cost no longer grows with browser slowness. Local WebKit 4.9 s → 1.9 s.
+  Mutation check: release disabled → "Expected: <= 8, Received: 80" in chromium and webkit.
+- Verification: `scripts/verify.sh` → PASS.
