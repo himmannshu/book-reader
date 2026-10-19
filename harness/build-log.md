@@ -720,3 +720,15 @@ Template:
   including reopening after creation/removal. Chromium firstPage 236 ms, jump 31, p95 16.8;
   WebKit firstPage 166, jump 74, p95 31; canvas 67.1 MB. Budgets unchanged.
 - B2 and B3 still open; F-007 remains failing. CI and the real-device user check remain pending.
+
+### 2026-10-19 15:12 EDT | Phase 06 | Codex | B2 duplicate saves fixed
+- Red: repeated-press e2e dispatched two activations before the async save resolved. Both Chromium
+  and WebKit stored two identical records (expected one). The separate quota-failure retry check passed.
+- Fix: synchronous ref guard in useHighlights, released in finally on success or failure. It ignores
+  another activation during the write without dropping keyboard focus. Consolidated the duplicate
+  core/highlights import (review N4).
+- `scripts/verify.sh`: initial attempt caught import formatting; formatted the hook and reran.
+  PASS, exit 0: 122 unit, 122 e2e, 8 perf. New checks prove exactly one record, removal leaves nothing
+  after reopening, and a quota failure can be retried successfully with the error cleared.
+  Chromium firstPage 185 ms, jump 27, p95 16.8; WebKit firstPage 166, jump 58, p95 33; canvas 67.1 MB.
+- B3 still open; F-007 remains failing. Contract unchanged; no push or external writes.

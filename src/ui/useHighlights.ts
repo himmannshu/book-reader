@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react';
-import { normalizeQuote, sortByPosition, type Highlight } from '../core/highlights';
-import type { ScreenRect } from '../core/highlights';
+import {
+  normalizeQuote,
+  sortByPosition,
+  type Highlight,
+  type ScreenRect,
+} from '../core/highlights';
 import type { HighlightStore } from '../storage/types';
 import type { Viewer } from '../viewer/viewer';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
@@ -69,6 +73,8 @@ export function useHighlights({
   // The selection "Highlight" was offered for. Safari clears a selection when focus moves to a
   // button (Tab, or a tap on iOS), so pressing it uses this copy.
   const offeredRange = useRef<Range | null>(null);
+  // Synchronous guard: a second activation can arrive before React renders the pending save.
+  const saving = useRef(false);
   // Read by the scroll listener, which must cost nothing while no button is showing.
   const shownAction = useRef<SelectionAction | null>(null);
   useEffect(() => {
@@ -141,6 +147,7 @@ export function useHighlights({
   }
 
   async function highlightSelection() {
+    if (saving.current) return;
     const range = pageTextSelection(viewer.current) ?? offeredRange.current;
     if (bookId === null || !items || !range) return;
     const rects = viewer.current?.selectionRects(range);
@@ -158,6 +165,7 @@ export function useHighlights({
       quote,
       createdAt: now(),
     };
+    saving.current = true;
     onError(null);
     try {
       await store.put(highlight);
@@ -172,6 +180,8 @@ export function useHighlights({
       scroller.current?.focus({ preventScroll: true });
     } catch (error) {
       report(error, 'save');
+    } finally {
+      saving.current = false;
     }
   }
 

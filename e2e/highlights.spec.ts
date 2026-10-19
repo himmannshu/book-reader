@@ -232,6 +232,51 @@ test('selecting text and pressing Highlight highlights exactly that text', async
   await expect(highlightButton(page)).toHaveCount(0);
 });
 
+test('repeated presses while saving create only one highlight', async ({ page }) => {
+  await openBook(page);
+  await selectText(page, { page: 0, text: 'Bravo two' });
+  // Both activations happen before the asynchronous save can finish, independent of disk speed.
+  await highlightButton(page).evaluate((button: HTMLButtonElement) => {
+    button.click();
+    button.click();
+  });
+  await expect(highlightButton(page)).toHaveCount(0);
+  expect(await stored(page)).toHaveLength(1);
+  await expect(page.locator('.highlight-box')).toHaveCount(1);
+
+  await clickHighlight(page);
+  await removeButton(page).click();
+  await expect(page.locator('.highlight-box')).toHaveCount(0);
+  expect(await stored(page)).toHaveLength(0);
+  await reloadAndReopen(page);
+  await expect(page.locator('.highlight-box')).toHaveCount(0);
+});
+
+test('a failed highlight save can be retried', async ({ page }) => {
+  await openBook(page);
+  await page.evaluate(() => {
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args: Parameters<typeof put>) {
+      if (this.name === 'highlights') {
+        IDBObjectStore.prototype.put = put;
+        throw new DOMException('Storage full', 'QuotaExceededError');
+      }
+      return put.apply(this, args);
+    };
+  });
+  await selectText(page, { page: 0, text: 'Bravo two' });
+  await highlightButton(page).click();
+  await expect(page.getByRole('alert')).toHaveText(
+    "There isn't enough storage space to save this highlight.",
+  );
+  expect(await stored(page)).toHaveLength(0);
+
+  await highlightButton(page).click();
+  await expect(page.locator('.highlight-box')).toHaveCount(1);
+  expect((await stored(page)).map((h) => h.quote)).toEqual(['Bravo two']);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
 for (const deviceName of ['iPhone 13', 'iPad (gen 7)']) {
   test.describe(`touch on ${deviceName}`, () => {
     const device = devices[deviceName];
