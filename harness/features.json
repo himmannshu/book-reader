@@ -47,8 +47,8 @@
       "id": "F-006",
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
-      "status": "failing",
-      "evidence": "2026-10-19 user now reports bookmark entries land on the wrong page during the Phase 07 check. Tracked at https://github.com/himmannshu/book-reader/issues/1; not reproduced yet, device/PDF/expected-versus-actual details requested. Full verify at 798c536 still PASS (137 unit, 166 browser, 8 perf); isolated 300-page/page-201 jumps pass both engines at three widths. Status reflects the unresolved user report, not an observed automated failure. Historical evidence: after the B1 fix e2e/bookmarks.spec.ts passed both engines; scripts/verify.sh PASS at aa73b5c (94/86/8), mutation checks failed as expected, CI 39291151035 green and earlier real-book check passed."
+      "status": "passing",
+      "evidence": "2026-10-19 user withdrew the wrong-page report: printed book numbers were being compared with physical PDF page numbers. Issue https://github.com/himmannshu/book-reader/issues/1 closed with this clarification; numbering clarity retained as a UX follow-up, no navigation fix needed. scripts/verify.sh PASS at 04da1da (137 unit, 166 browser, 8 perf); bookmark jump/persistence/order checks pass both engines. Earlier isolated page-201 jumps passed both engines at three widths. Historical Phase 05 CI 39291151035 green and real-book check passed."
     },
     {
       "id": "F-007",
@@ -61,8 +61,8 @@
       "id": "F-008",
       "phase": "07",
       "description": "Notes can be attached to a highlight or a page, listed in a panel, and survive a reload",
-      "status": "failing",
-      "evidence": "2026-10-19 user reports Notes jumps land on the wrong page; Phase 07 contract 8/18 remains unresolved. Not reproduced yet; device/browser, note target type and expected-versus-actual page requested. Baseline scripts/verify.sh at 798c536 PASS (137 unit, 166 browser, 8 perf; WebKit p95 32 ms), and isolated page-201 jumps in a generated 300-page book pass both engines at three widths. Earlier 117ed45 verification covered both targets, edits/reload, Unicode, deletion/cascades/rollback, isolation, drafts, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad taps; v3 migration preserves existing data. Status reflects the unresolved user report, not an observed automated failure. CI still not authorized/run. See build-log."
+      "status": "passing",
+      "evidence": "2026-10-19 user clarified that the reported Notes jump failure was a printed-book versus physical-PDF page-number mismatch, not an actual navigation defect. scripts/verify.sh PASS at 04da1da: 137 unit, 166 browser, 8 perf; WebKit p95 34 ms, budgets unchanged. Notes checks cover both targets, edits/reload, Unicode, deletion/cascades/rollback, isolation, drafts, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad taps; v3 migration preserves existing data. Physical PDF page numbering is unchanged; clearer labeling is only a UX follow-up. Phase 07 stays In progress: separately authorized CI and confirmation of the full real-book/device acceptance checklist remain pending. See build-log."
     },
     {
       "id": "F-009",

@@ -984,3 +984,17 @@ Contract evidence from this final canonical run (contract unchanged after approv
   supplied direct wording without claiming a retrieved style match.
 - F-006/F-008 marked failing with explicit user-report evidence (not fabricated red tests).
   Historical test results retained. Phase 07 stays In progress; no fix attempted without a repro.
+
+### 2026-10-19 17:52 EDT | Phase 07 | Codex | Page-number clarification; navigation report withdrawn
+- User: "actually never mind ... page numbers ... printed on the book page vs actual pdf page
+  number." This resolves the reported wrong-page behavior without an application fix. The UX
+  concern is clearer physical-PDF versus printed-book numbering, not broken stored associations.
+- Closed GitHub issue #1 with the clarification (reason NOT_PLANNED); read back state CLOSED.
+  Retained numbering clarity as a local UX follow-up; no new external issue, UI feature, metadata
+  support, fixed offset or OCR work inferred/implemented. No push/deploy/main merge.
+- Startup clean at 04da1da. `scripts/verify.sh` PASS: lint, format, types, 137 unit, 166 browser,
+  8 perf. Chromium firstPage 169 ms, jump 32, p95 16.8; WebKit firstPage 146, jump 77, p95 34;
+  blank frames 0%/1%, canvas 67.1 MB. Budgets unchanged.
+- Restored F-006/F-008 passing using the observed checks plus withdrawn failure report. Prior
+  entries remain historical evidence. Phase 07 stays In progress for authorized CI and confirmation
+  of the full real-book/device checklist; this clarification does not confirm every contract-18 action.
