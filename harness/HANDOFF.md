@@ -43,15 +43,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Page drawing is on the main thread; phase 02 benchmarks decide if that matters.
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-18 23:04 EDT
+Snapshot 2026-10-18 23:16 EDT
 - Branch: phase-01-open-and-read-pdf
-- HEAD: 53729a6 phase 01: item 11 user-checked; phase complete
+- HEAD: 922e9db phase 01: fix review findings B1 (height resize), B5 (keyboard focus), B6 (top gap)
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-18 23:04 EDT (commit 433fd62)
+- Last verify: PASS at 2026-10-18 23:16 EDT (commit eecdf5a)
 - Recent commits:
+    922e9db phase 01: fix review findings B1 (height resize), B5 (keyboard focus), B6 (top gap)
+    eecdf5a phase 01: evaluator review (PASS)
+    5a41e4b phase 01: refresh handoff snapshot
     53729a6 phase 01: item 11 user-checked; phase complete
     433fd62 phase 01: refresh handoff snapshot
-    1f9e6e7 phase 01: context, evidence and handoff (item 11 awaits user)
-    5d07bf2 phase 01: lint rule keeps PDF.js inside src/engine
-    a83c512 phase 01: e2e coverage for scrolling, memory cap, sizes, errors, replace and resize
 <!-- AUTO:END -->
