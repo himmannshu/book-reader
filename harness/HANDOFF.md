@@ -6,29 +6,30 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 04 In progress. Items 1–9 pass (re-review confirmed; N1/T1 also fixed since). Only item 10
-  (CI: branch never pushed; needs the user's OK) and item 11 (user's real-book check) remain.
-- Branch: phase-04-table-of-contents (not pushed)
+- Phase: 04 In progress. Items 1–9 pass (evaluator re-review); item 11 user-checked ("Contents look
+  good."). Only item 10 is open: CI run 39279260419 on aaafd9f was still queued at hand-off.
+- Branch: phase-04-table-of-contents (pushed at aaafd9f; later commits are harness docs only, not pushed)
 
 ## Done
 
 - Phases 00–03 complete and on main (plus the first-page fix).
 - Phase 04: Contents panel; review findings fixed (fresh reader per book, Escape from anywhere,
   focus pages after a jump, tests for lazy loading and the unreadable-outline state).
-- Evaluator reviews: phase 01 PASS, phase 02 PASS, phase 03 PASS, phase 04 re-review FAIL only on
-  items 10/11. Phase 00 skipped by the user's choice. Reviews in harness/code_review/.
+- Evaluator reviews: phase 01 PASS, 02 PASS, 03 PASS, 04 re-review FAIL only on items 10/11 (11 now
+  done). Phase 00 skipped by the user's choice. Reviews in harness/code_review/.
 - D5b recorded (ArrayBuffers supersede D5a's Blobs) with a phase 03 contract amendment.
 
 ## In flight
 
-- Nothing running.
+- CI run 39279260419 (phase-04-table-of-contents @ aaafd9f), queued on GitHub at hand-off.
 
 ## Next action
 
-1. Ask the user to OK pushing phase-04-table-of-contents for CI (item 10) and to check Contents on
-   a real book (item 11). Then mark phase 04 Complete and ask before merging.
-2. Ask the user which non-blocking review findings to fix (listed below), and when.
-3. Then plan phase 05 (bookmarks).
+1. Run `/start-session`. Check the run: `gh run view 39279260419 --json status,conclusion,url`.
+   If it is green, record it in the build log, set phase 04 Complete (build file, PLANS.md,
+   build-log summary row), and refresh this handoff. If it failed, read the log first.
+2. Ask the user before merging phase 04 into main (and before pushing again).
+3. Ask the user which non-blocking review findings to fix (listed below), then plan phase 05 (bookmarks).
 
 ## Decisions worth remembering
 

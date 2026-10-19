@@ -568,3 +568,11 @@ Template:
   expected kinds aren't logged; F8 remove confirmation buttons aren't disabled while opening.
 - F7 (process) fixed now: added D5b to architecture-decisions.md (ArrayBuffers supersede D5a's Blobs; gives up
   Blob.slice partial reads) and Amendment 1 to phase-03-contract.md. To be pointed out to the user.
+
+### 2026-10-19 11:47 EDT | Phase 04 | Claude Code (Opus 5.5) | Item 11 user-checked; CI queued
+- Item 11: user-observed (reported in chat by Himanshu): "Contents look good." on a real book, in the dev server.
+  Not independently verified by the agent.
+- Item 10: branch pushed (user-authorized) at aaafd9f. GitHub Actions run 39279260419 was still "queued" when
+  this session ended (not run yet). https://github.com/himmannshu/book-reader/actions/runs/39279260419
+- Phase 04 stays In progress until that run (or a later one on this branch) is green.
+- Commits after aaafd9f are harness docs only and are not pushed.
