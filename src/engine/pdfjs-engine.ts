@@ -1,8 +1,10 @@
 // PDF.js adapter for the engine interface. This is the only module allowed to import pdfjs-dist.
 // PDF.js parses and decodes in its own Web Worker; drawing onto the canvas happens here.
-import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
+import { GlobalWorkerOptions, TextLayer, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { resolveOutline, type RawOutlineItem } from './outline';
+import './text-layer.css';
+import { trackTextLayer, untrackTextLayer } from './text-selection';
 import {
   PdfOpenError,
   RenderCancelledError,
@@ -82,6 +84,40 @@ class PdfjsDoc implements PdfDoc {
       cancel() {
         cancelled = true;
         pdfjsTask?.cancel();
+      },
+    };
+  }
+
+  renderTextLayer(index: number, container: HTMLElement, scale: number): RenderTask {
+    let cancelled = false;
+    let layer: TextLayer | undefined;
+
+    const promise = (async () => {
+      const page = await this.#doc.getPage(index + 1);
+      if (cancelled) throw new RenderCancelledError();
+      container.classList.add('textLayer');
+      container.style.setProperty('--total-scale-factor', String(scale));
+      layer = new TextLayer({
+        textContentSource: page.streamTextContent({ includeMarkedContent: true }),
+        container,
+        viewport: page.getViewport({ scale }),
+      });
+      try {
+        await layer.render();
+      } catch (error) {
+        if (cancelled || errorName(error) === 'AbortException') throw new RenderCancelledError();
+        throw error;
+      }
+      if (cancelled) throw new RenderCancelledError();
+      trackTextLayer(container);
+    })();
+
+    return {
+      promise,
+      cancel() {
+        cancelled = true;
+        layer?.cancel();
+        untrackTextLayer(container);
       },
     };
   }

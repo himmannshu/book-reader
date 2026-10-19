@@ -34,6 +34,12 @@ export interface PdfDoc {
    * Sets the canvas's pixel size; the caller controls its CSS size.
    */
   renderPage(index: number, canvas: HTMLCanvasElement, scale: number): RenderTask;
+  /**
+   * Fills `container` with page `index`'s selectable text, laid out at `scale` CSS pixels per PDF
+   * point, over a page drawn at the same scale. The text is transparent; only selection shows.
+   * Rejects with RenderCancelledError if cancelled. Pages without text leave it empty.
+   */
+  renderTextLayer(index: number, container: HTMLElement, scale: number): RenderTask;
   /** The book's table of contents; empty if it has none. Never rejects for a broken entry. */
   outline(): Promise<OutlineItem[]>;
   destroy(): Promise<void>;

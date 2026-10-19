@@ -28,6 +28,7 @@ function fakeDoc() {
     firstPageSize: { width: 612, height: 792 },
     loadPageSizes: () => new Promise(() => {}),
     renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
+    renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
     outline,
     destroy: () => Promise.resolve(),
   };

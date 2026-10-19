@@ -125,6 +125,20 @@ body,
   height: 100%;
 }
 
+/* Below the text layer, so text stays selectable through a highlight. */
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.highlight-box {
+  position: absolute;
+  background: rgb(255 212 0 / 45%);
+  mix-blend-mode: multiply;
+  border-radius: 2px;
+}
+
 .button.secondary {
   background: transparent;
   color: var(--accent);
