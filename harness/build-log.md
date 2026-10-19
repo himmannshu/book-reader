@@ -696,3 +696,11 @@ Template:
 - Ran the dev server myself (browser pane): a selection from "two:" to "the fourth" over three lines became one
   highlight drawn over exactly that text (screenshot).
 - Open: 13 (CI, needs a push), 14 (user's real-book check, iPhone/iPad if possible), evaluator review.
+
+### 2026-10-19 15:15 EDT | Phase 06 | Claude Code (Opus 5.5) | Evaluator FAIL; handoff
+- Evaluator review (fresh context) at 9547db8: FAIL. B1 (high) tapping Highlight/Remove does nothing in WebKit
+  with touch (Playwright iPhone 13 / iPad profiles; pointerdown preventDefault suppresses the click); B2 double
+  press saves twice; B3 the Highlight button outlives a selection lost to a relayout. Minor N1–N4. Review
+  committed (52724f8); F-007 set failing.
+- `scripts/verify.sh` at 52724f8: PASS (122 unit, 110 e2e, 8 perf; webkit p95 37, firstPage 162, jump 78).
+- Not pushed. Waiting on the user: fix B1–B3 first, or push now.

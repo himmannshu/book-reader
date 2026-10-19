@@ -6,26 +6,33 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase: 06 In progress. Highlights built; `scripts/verify.sh` PASS; items 1–12 observed (build log 14:45).
-  Open: 13 (CI, needs a push the user approves), 14 (user's real-book check), evaluator review.
-- Branch: phase-06-highlights (from main at a9c3832; not pushed). main has one unpushed commit (a9c3832).
+- Phase: 06 (highlights) In progress. Built; `scripts/verify.sh` PASS at 52724f8 (122 unit, 110 e2e, 8 perf;
+  WebKit p95 37 ms). Evaluator review FAIL (harness/code_review/phase-06-review.md): B1–B3 below.
+  F-007 set failing until they are fixed.
+- Branch: phase-06-highlights (not pushed). main is one commit ahead of origin (a9c3832, handoff only).
 
-## Done
+## Done this session
 
-- Phases 00–05 complete and on main (pushed at be88ca0).
-- Phase 06: PDF.js text layer through the engine (visible pages, after a scroll pause), floating Highlight
-  button, Remove highlight on click, highlights in PDF points + quote, may span pages, IndexedDB v3.
-- Evaluator reviews: 01–03 PASS, 04 FAIL only on 10/11 (since done), 05 FAIL on B1 (fixed, not re-reviewed).
+- Phase 04 closed (CI 39279260419 green); phase 05 (bookmarks) built, reviewed (its B1 page-tie bug fixed),
+  CI 39291151035 green, user-checked. Both merged to main and pushed (be88ca0).
+- Phase 06 built test-first (build log 14:20, 14:45): text-4-pages fixture; src/core/highlights.ts; IndexedDB
+  v3 with one per-book store shared with bookmarks; engine `renderTextLayer` (PDF.js TextLayer + ported
+  selection fix, src/engine/text-selection.ts); viewer text layers for visible pages after a 200 ms scroll
+  pause; floating Highlight / Remove highlight (src/ui/SelectionActions.tsx, src/ui/useHighlights.ts);
+  e2e/highlights.spec.ts (Chromium + WebKit). A WebKit scroll p95 regression was found and fixed (c4be6a2).
 
 ## In flight
 
-- Nothing running.
+- No code is half done. The user has not answered yet whether to fix B1–B3 before pushing (their last
+  instruction was "review, then push"; the review failed, so this was asked first).
 
 ## Next action
 
-1. Ask the user to push phase-06-highlights (CI, item 13) and to check item 14 on a real book.
-2. Run the evaluator review (`/evaluate 06`) if the user wants it before closing.
-3. When 13 and 14 have evidence: set phase 06 Complete, ask before merging.
+1. Ask the user whether to fix B1–B3 (plus N1, N4) before pushing. If yes, start with B1 and a touch e2e test
+   (Playwright WebKit `iPhone 13` / `iPad (gen 7)` profiles with `hasTouch`, `tap()`): drop the
+   `onPointerDown` preventDefault in src/ui/SelectionActions.tsx (touch WebKit then fires no click), keep
+   `onMouseDown` preventDefault for desktop, and rely on the saved `offeredRange` in useHighlights.ts. The unit
+   test in SelectionActions.test.tsx that requires pointerdown preventDefault changes with it.
 
 ## Decisions worth remembering
 
@@ -33,9 +40,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Layout uses page 1's size as an estimate, then corrects after loadPageSizes() (anchor kept).
 - pdfjs-dist 6.4 → minimum Safari/iOS 17.4.
 - TypeScript pinned to 6.0.x until typescript-eslint supports 7 (phase-00 context file).
+- Highlights: rects in PDF points, top-left origin, rotation applied (same space as PageSize); line top/height
+  from the text span's box, since Chromium rounds selection boxes to whole px (phase-06 context file).
+- Text layers only for visible pages, after a scroll pause; the highlight hook's scroll listener must stay idle
+  while no floating button shows, or WebKit p95 reaches the 40 ms budget.
 
 ## Blockers and doubts
 
+- Phase 06 review (blocking until fixed):
+  - B1 (high): touch WebKit (iPhone/iPad emulation): tapping Highlight or Remove does nothing; pointerdown
+    preventDefault suppresses the click. Confirm on a real device with contract item 14.
+  - B2 (medium): a double press on Highlight saves two records (no in-flight guard in useHighlights.ts).
+  - B3 (low-medium): after a resize/rotation rebuilds the text layer, the Highlight button stays but does
+    nothing (no selectionchange fires).
+  - N1 Highlight before highlights load silently does nothing; N2 WebKit p95 36–39 ms (budget 40) and the
+    benchmark never measures text layers; N3 unsaved note touches the edge at 320 px; N4 duplicate import.
 - Open, non-blocking review findings (user to decide):
   - Phase 05 minor: disabled toggle's reason only a tooltip (iOS can't show it); unused Viewer.currentPage;
     toggle ~2 px past the edge at 320 px.
@@ -52,19 +71,17 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is pre-existing and uninvestigated (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 14:09 EDT
+Snapshot 2026-10-19 14:42 EDT
 - Branch: phase-06-highlights
-- HEAD: c4be6a2 phase 06: keep scrolling cheap: text layers wait for a scroll pause; scroll listener idle without a button
-- Uncommitted files: 3
-- Last verify: PASS at 2026-10-19 14:09 EDT (commit c4be6a2)
+- HEAD: 52724f8 phase 06: evaluator review (FAIL on B1 touch, B2, B3); F-007 failing until fixed
+- Uncommitted files: 1
+- Last verify: PASS at 2026-10-19 14:42 EDT (commit 52724f8)
 - Recent commits:
+    52724f8 phase 06: evaluator review (FAIL on B1 touch, B2, B3); F-007 failing until fixed
+    9547db8 phase 06: perf headroom restored; verify PASS; items 1–12 observed; F-007 passing; handoff
     c4be6a2 phase 06: keep scrolling cheap: text layers wait for a scroll pause; scroll listener idle without a button
     ac5f44d phase 06: e2e for the unsaved-book Highlight reason
     f7e4871 phase 06: log build progress
-    7195126 phase 06: highlights e2e (Chromium + WebKit); quote spaces across lines and pages; line height from the text box; keep the offered selection when focus moves (Safari)
-    1fd619a phase 06: Highlight button under a selection, Remove highlight on click; highlights load with the book
 - Changed files:
      M harness/HANDOFF.md
-     M harness/build-log.md
-     M harness/features.json
 <!-- AUTO:END -->
