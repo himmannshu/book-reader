@@ -106,3 +106,17 @@ Template:
   band color of page 1 read from canvas pixels).
 - Limitations: contract items 2–11 not yet exercised.
 - Next: e2e for items 2–7.
+
+### 2026-10-18 23:30 EDT | Phase 01 | Claude Code (Opus 5.5) | E2E for contract items 2–7
+- Changes: e2e/open-pdf.spec.ts gains tests for items 2 (last page short + long book), 3 (≤8
+  canvases while stepping through 300 pages; page 1 released), 4 (mixed sizes), 5 (invalid file then
+  valid), 6 (second book replaces first), 7 (resize re-fit + page kept in view).
+- Red: NOT observed first. The viewer was written in the previous step, so these tests passed on
+  their first run. To prove they bite, each was run against a deliberate break (chromium):
+  no canvas release → item 3 failed; ignore real page sizes → item 4 failed; error not cleared →
+  item 5 failed; no anchor restore on resize → item 7 failed; old content kept (append instead of
+  replace) → item 6 failed (Expected 3, Received 303). A weaker break (skip content.remove())
+  did not fail item 6 because the next viewer replaces the content anyway; not a behavior change.
+  All breaks reverted with `git checkout`.
+- Green: `npx playwright test e2e/open-pdf.spec.ts` → 14 passed (7 tests × chromium, webkit).
+- Next: lint import boundary (item 8), then close-out checks.
