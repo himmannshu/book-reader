@@ -50,20 +50,13 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 <!-- AUTO:BEGIN -->
 Snapshot 2026-10-19 00:39 EDT
 - Branch: perf-first-page-investigation
-- HEAD: d841b09 phase 02: refresh handoff snapshot
-- Uncommitted files: 6
+- HEAD: 4a92ad3 phase 02: draw overscan pages after visible ones (real-book first page 469 → 133 ms)
+- Uncommitted files: 0
 - Last verify: PASS at 2026-10-19 00:38 EDT (commit d841b09)
 - Recent commits:
+    4a92ad3 phase 02: draw overscan pages after visible ones (real-book first page 469 → 133 ms)
     d841b09 phase 02: refresh handoff snapshot
     bf249ca phase 02: real-book benchmark recorded; clean perf results per run; phase complete
     b21023e phase 02: refresh handoff snapshot
     fb0676e phase 02: context, evidence and handoff (item 11 awaits user)
-    7d95724 phase 02: steadier 300-page scroll test (fixed number of evenly spread stops)
-- Changed files:
-     M harness/HANDOFF.md
-     M harness/build-log.md
-     M harness/context/phase-02-performance-baseline-context.md
-     M src/viewer/viewer.ts
-    ?? harness/context/first-page-investigation-context.md
-    ?? src/viewer/viewer.test.ts
 <!-- AUTO:END -->
