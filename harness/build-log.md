@@ -200,3 +200,20 @@ Template:
   on each new open); App marks open start/opened; viewer marks each finished page.
 - Red: e2e "opening a book records timing marks…" → "missing book:open-start mark" (chromium, webkit).
 - Green: same test passes in chromium and webkit; unit tests still pass.
+
+### 2026-10-19 01:45 EDT | Phase 02 | Claude Code (Opus 5.5) | Benchmarks: red with impossible budgets, then local baseline
+- Changes: playwright.perf.config.ts (perf-chromium, perf-webkit at DPR 2, 1 worker, global setup
+  generates the heavy book when missing); e2e/perf/{perf-helpers.ts,reader.perf.ts,global-setup.ts,
+  budgets.json (placeholder)}; scripts/perf-report.mjs; `npm run test:perf`; main e2e config ignores perf/.
+- Red: with placeholder budgets (1 ms / 0% / 1 MB) and the heavy book deleted first:
+  "Generating the heavy benchmark fixture…" → regenerated (57.8 MB, 9.2 s) (item 1); all 8 tests failed,
+  e.g. "firstPageMs = 143 exceeds budget 1 (perf-chromium)", "maxCanvasMB = 67.1 exceeds budget 1 (perf-webkit)".
+- Memory test took 2.1 min in WebKit (≈100 stops × up to 1.5 s settle); changed to 30 evenly spread stops,
+  1 s settle cap → ~2–3 s.
+- Baseline, 3 report-only runs (`PERF_REPORT_ONLY=1`), Apple M2 8 GB, values per run:
+  firstPageMs chromium [144,144,143] webkit [146,144,126]; jumpMs chromium [34,32,35] webkit [65,84,83];
+  p95FrameMs chromium [16.7,16.7,16.8] webkit [32,28,30]; blankFramePct chromium [0,0,0] webkit [1.1,1,1.1];
+  maxCanvasMB 67.1 both (4 canvases × 1800×2328 px).
+- All within the provisional product targets. WebKit p95 frame is closest (30 vs 34 ms).
+- Order change (recorded): B2 memory planner is done before the budget checkpoint, because it changes the
+  viewer that the budgets measure.

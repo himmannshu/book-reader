@@ -1,0 +1,20 @@
+{
+  "note": "PLACEHOLDER budgets, deliberately impossible, to prove the checks fail. Replaced after the user agrees the baseline.",
+  "machine": "none yet",
+  "measuredOn": "none yet",
+  "ciTimeMultiplier": 4,
+  "perf-chromium": {
+    "firstPageMs": 1,
+    "jumpMs": 1,
+    "p95FrameMs": 1,
+    "blankFramePct": 0,
+    "maxCanvasMB": 1
+  },
+  "perf-webkit": {
+    "firstPageMs": 1,
+    "jumpMs": 1,
+    "p95FrameMs": 1,
+    "blankFramePct": 0,
+    "maxCanvasMB": 1
+  }
+}

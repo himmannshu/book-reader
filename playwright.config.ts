@@ -6,6 +6,8 @@ const port = 4173;
 // which is what iPad and iPhone use).
 export default defineConfig({
   testDir: './e2e',
+  // Benchmarks have their own config (playwright.perf.config.ts).
+  testIgnore: '**/perf/**',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

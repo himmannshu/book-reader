@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "fixtures": "node scripts/generate-fixtures.mjs"
+    "fixtures": "node scripts/generate-fixtures.mjs",
+    "test:perf": "playwright test -c playwright.perf.config.ts; status=$?; node scripts/perf-report.mjs; exit $status"
   },
   "dependencies": {
     "pdfjs-dist": "6.4.299",
