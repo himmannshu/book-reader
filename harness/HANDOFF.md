@@ -47,15 +47,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   Off-main-thread drawing or PDFium is a user decision (phase-02 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 00:22 EDT
-- Branch: main
-- HEAD: e7442ac phase 02: record merge and green CI
+Snapshot 2026-10-19 00:56 EDT
+- Branch: phase-03-local-book-persistence
+- HEAD: 511803b phase 03: scroll benchmark is a median of 3; record save A/B, CI and WebKit stall finding
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 00:16 EDT (commit b21023e)
+- Last verify: PASS at 2026-10-19 00:55 EDT (commit c6c3f9e)
 - Recent commits:
-    e7442ac phase 02: record merge and green CI
-    d841b09 phase 02: refresh handoff snapshot
-    bf249ca phase 02: real-book benchmark recorded; clean perf results per run; phase complete
-    b21023e phase 02: refresh handoff snapshot
-    fb0676e phase 02: context, evidence and handoff (item 11 awaits user)
+    511803b phase 03: scroll benchmark is a median of 3; record save A/B, CI and WebKit stall finding
+    c6c3f9e phase 03: lint boundary for browser storage; docs; correct build-log timestamps
+    c1095e5 phase 03: e2e for remove with confirmation, dedupe, recency order, Library button
+    a597856 phase 03: library list, reopen after reload, saved-state notice; store bytes as ArrayBuffers
+    39d7880 phase 03: storage interface and IndexedDB book store with unit tests
 <!-- AUTO:END -->
