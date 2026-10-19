@@ -472,3 +472,17 @@ body,
     box-shadow: 4px 0 16px rgb(0 0 0 / 18%);
   }
 }
+
+.update-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid #ddd6c8;
+  font-size: 0.9rem;
+}
+
+.update-notice span {
+  margin-right: auto;
+}
