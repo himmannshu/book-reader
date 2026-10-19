@@ -697,7 +697,7 @@ Template:
   highlight drawn over exactly that text (screenshot).
 - Open: 13 (CI, needs a push), 14 (user's real-book check, iPhone/iPad if possible), evaluator review.
 
-### 2026-10-19 15:15 EDT | Phase 06 | Claude Code (Opus 5.5) | Evaluator FAIL; handoff
+### 2026-10-19 14:43 EDT | Phase 06 | Claude Code (Opus 5.5) | Evaluator FAIL; handoff
 - Evaluator review (fresh context) at 9547db8: FAIL. B1 (high) tapping Highlight/Remove does nothing in WebKit
   with touch (Playwright iPhone 13 / iPad profiles; pointerdown preventDefault suppresses the click); B2 double
   press saves twice; B3 the Highlight button outlives a selection lost to a relayout. Minor N1–N4. Review
