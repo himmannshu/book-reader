@@ -82,17 +82,40 @@ function firstPageEndingAfter(layout: Layout, y: number): number {
   return lo;
 }
 
+export interface RenderOptions {
+  /** Extra pages to draw above and below the viewport, if memory allows. */
+  overscan: number;
+  /** Device pixels per CSS pixel to draw at (already capped by the caller). */
+  pixelRatio: number;
+  /** Budget for the total size of all page canvases (width × height × 4 bytes). */
+  maxCanvasBytes: number;
+}
+
+export interface RenderPlan extends PageRange {
+  /** The pages actually inside the viewport; draw these before the overscan pages. */
+  visibleFirst: number;
+  visibleLast: number;
+  /** The pixel ratio to draw at. Lower than requested only if the visible pages alone exceed the budget. */
+  pixelRatio: number;
+}
+
+/** Canvas bytes for one page drawn at `pixelRatio`. */
+export function canvasBytes(box: PageBox, pixelRatio: number): number {
+  return Math.floor(box.width * pixelRatio) * Math.floor(box.height * pixelRatio) * 4;
+}
+
 /**
- * Pages that overlap the viewport, widened by `overscan` pages on each side, never more than
- * `maxPages` in total. When the cap bites, visible pages are kept and overscan is trimmed.
+ * Which pages to draw, and at what resolution. Every page overlapping the viewport is always
+ * included. Overscan pages are added alternately below and above while the total canvas size
+ * stays within budget. If the visible pages alone exceed the budget, they are drawn at a lower
+ * pixel ratio instead of being left blank.
  */
-export function visibleRange(
+export function planRender(
   layout: Layout,
   scrollTop: number,
   viewportHeight: number,
-  overscan: number,
-  maxPages: number,
-): PageRange | null {
+  { overscan, pixelRatio, maxCanvasBytes }: RenderOptions,
+): RenderPlan | null {
   const { pages } = layout;
   if (pages.length === 0) return null;
   const lastIndex = pages.length - 1;
@@ -102,23 +125,36 @@ export function visibleRange(
   let last = first;
   while (last < lastIndex && pageAt(layout, last + 1).top < viewBottom) last++;
 
-  if (last - first + 1 >= maxPages) return { first, last: first + maxPages - 1 };
+  let used = 0;
+  for (let i = first; i <= last; i++) used += canvasBytes(pageAt(layout, i), pixelRatio);
+  if (used > maxCanvasBytes) {
+    // Area scales with the square of the pixel ratio; round down so the result stays in budget.
+    const reduced = Math.floor(pixelRatio * Math.sqrt(maxCanvasBytes / used) * 100) / 100;
+    return {
+      first,
+      last,
+      visibleFirst: first,
+      visibleLast: last,
+      pixelRatio: Math.max(reduced, 0.01),
+    };
+  }
 
-  // Grow alternately below and above so both directions get overscan.
   let lo = first;
   let hi = last;
-  let budget = maxPages - (last - first + 1);
-  for (let step = 0; step < overscan && budget > 0; step++) {
-    if (hi < lastIndex && budget > 0) {
-      hi++;
-      budget--;
-    }
-    if (lo > 0 && budget > 0) {
-      lo--;
-      budget--;
-    }
+  const fits = (index: number) => {
+    const bytes = canvasBytes(pageAt(layout, index), pixelRatio);
+    if (used + bytes > maxCanvasBytes) return false;
+    used += bytes;
+    return true;
+  };
+  for (let step = 0; step < overscan; step++) {
+    const grewDown = hi < lastIndex && fits(hi + 1);
+    if (grewDown) hi++;
+    const grewUp = lo > 0 && fits(lo - 1);
+    if (grewUp) lo--;
+    if (!grewDown && !grewUp) break;
   }
-  return { first: lo, last: hi };
+  return { first: lo, last: hi, visibleFirst: first, visibleLast: last, pixelRatio };
 }
 
 /** The reading position at vertical offset y. Gaps belong to the page that follows them. */

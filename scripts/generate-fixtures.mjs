@@ -59,6 +59,11 @@ const manifest = {
     'long-300-pages',
     Array.from({ length: 300 }, () => LETTER),
   ),
+  // Thin strips: many pages fit on screen at once (review finding B2).
+  'strips-40-pages': await makePdf(
+    'strips-40-pages',
+    Array.from({ length: 40 }, () => [792, 60]),
+  ),
 };
 writeFileSync(join(outDir, 'not-a-pdf.pdf'), 'This is plain text with a .pdf name, not a PDF.\n');
 writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');

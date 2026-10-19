@@ -217,3 +217,20 @@ Template:
 - All within the provisional product targets. WebKit p95 frame is closest (30 vs 34 ms).
 - Order change (recorded): B2 memory planner is done before the budget checkpoint, because it changes the
   viewer that the budgets measure.
+
+### 2026-10-19 02:30 EDT | Phase 02 | Claude Code (Opus 5.5) | B2: canvas memory budget replaces the 8-page cap
+- Changes: layout.ts `planRender` (always all visible pages; overscan only within `maxCanvasBytes`;
+  lower pixel ratio if visible pages alone exceed it; reports visible bounds) replaces `visibleRange`;
+  viewer uses it with a 96 MB budget, releases before allocating, redraws a page whose pixel ratio
+  changes, and draws visible pages before overscan. New fixture strips-40-pages.pdf (40 × 792×60 pt).
+- Red: planner unit tests failed ("planRender is not a function"). B2 e2e at 1280×1200 against the
+  committed viewer (layout.ts stashed): {"visible": true, "allDrawn": false} in chromium and webkit.
+  (Two earlier attempts were not valid reds: the fixture edit had not applied, then the 720px window
+  showed only ~8 strips. Both fixed before the valid red above.)
+- Green: unit 25 passed; `npx playwright test` 26 passed (incl. B2 and phase 01's ≤8 canvases test).
+- Benchmark finding: after the switch, WebKit jump rose to [117,137,129] ms (from [65,84,83]).
+  Drawing visible pages before overscan brought it to [96,88,88]; chromium jump [30,26,21].
+- Re-measured baseline, 3 report-only runs (M2): firstPageMs chromium [146,143,145] webkit [165,159,139];
+  jumpMs chromium [30,26,21] webkit [96,88,88]; p95FrameMs chromium [16.7,16.7,16.8] webkit [33,29,28];
+  blankFramePct chromium [0,0,0] webkit [1.1,1,1]; maxCanvasMB 67.1 both.
+- Next: checkpoint, user agrees budgets.

@@ -7,18 +7,21 @@ import {
   anchorAt,
   computeLayout,
   pageAt,
+  planRender,
   scrollTopFor,
-  visibleRange,
   type Layout,
   type LayoutOptions,
 } from './layout';
 
 export interface ViewerOptions {
   layout: LayoutOptions;
-  /** Extra pages drawn above and below the viewport. */
+  /** Extra pages drawn above and below the viewport, while memory allows. */
   overscan: number;
-  /** Hard cap on drawn pages at any time. */
-  maxRenderedPages: number;
+  /**
+   * Budget for all page canvases together (width × height × 4 bytes). Visible pages are always
+   * drawn; if they alone exceed it, they are drawn at a lower resolution (see planRender).
+   */
+  maxCanvasBytes: number;
   /** Cap on device pixel ratio for canvas resolution, to bound memory on high-DPI screens. */
   maxPixelRatio: number;
 }
@@ -26,7 +29,7 @@ export interface ViewerOptions {
 export const defaultViewerOptions: ViewerOptions = {
   layout: { gap: 16, padding: 24, maxPageWidth: 900 },
   overscan: 1,
-  maxRenderedPages: 8,
+  maxCanvasBytes: 96_000_000,
   maxPixelRatio: 2,
 };
 
@@ -37,6 +40,8 @@ interface Slot {
   state: SlotState;
   canvas?: HTMLCanvasElement;
   task?: RenderTask;
+  /** Pixel ratio the current canvas was drawn at. */
+  pixelRatio?: number;
 }
 
 export class Viewer {
@@ -144,28 +149,39 @@ export class Viewer {
   #update(): void {
     if (this.#destroyed) return;
     this.#viewportHeight = this.#scroller.clientHeight;
-    const range = visibleRange(
-      this.#layout,
-      this.#scroller.scrollTop,
-      this.#scroller.clientHeight,
-      this.#options.overscan,
-      this.#options.maxRenderedPages,
-    );
-    this.#slots.forEach((slot, index) => {
-      const inRange = range !== null && index >= range.first && index <= range.last;
-      if (!inRange) this.#release(slot);
-      else if (slot.state === 'placeholder') this.#render(slot, index);
+    const plan = planRender(this.#layout, this.#scroller.scrollTop, this.#scroller.clientHeight, {
+      overscan: this.#options.overscan,
+      pixelRatio: Math.min(window.devicePixelRatio || 1, this.#options.maxPixelRatio),
+      maxCanvasBytes: this.#options.maxCanvasBytes,
     });
+    // Release first, so memory is freed before new canvases are allocated.
+    this.#slots.forEach((slot, index) => {
+      const inPlan = plan !== null && index >= plan.first && index <= plan.last;
+      if (!inPlan || (slot.pixelRatio !== undefined && slot.pixelRatio !== plan.pixelRatio)) {
+        this.#release(slot);
+      }
+    });
+    if (!plan) return;
+    // Visible pages first, so the page the reader is looking at never waits behind overscan.
+    const order: number[] = [];
+    for (let i = plan.visibleFirst; i <= plan.visibleLast; i++) order.push(i);
+    for (let i = plan.first; i <= plan.last; i++) {
+      if (i < plan.visibleFirst || i > plan.visibleLast) order.push(i);
+    }
+    for (const index of order) {
+      const slot = this.#slots[index];
+      if (slot?.state === 'placeholder') this.#render(slot, index, plan.pixelRatio);
+    }
   }
 
-  #render(slot: Slot, index: number): void {
+  #render(slot: Slot, index: number, pixelRatio: number): void {
     const box = pageAt(this.#layout, index);
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, this.#options.maxPixelRatio);
     const canvas = document.createElement('canvas');
     slot.element.append(canvas);
     const task = this.#doc.renderPage(index, canvas, box.scale * pixelRatio);
     slot.canvas = canvas;
     slot.task = task;
+    slot.pixelRatio = pixelRatio;
     this.#setState(slot, 'rendering');
 
     task.promise.then(
@@ -187,6 +203,7 @@ export class Viewer {
   #release(slot: Slot): void {
     slot.task?.cancel();
     slot.task = undefined;
+    slot.pixelRatio = undefined;
     if (slot.canvas) {
       // Shrinking first makes Safari free the backing store immediately.
       slot.canvas.width = 0;

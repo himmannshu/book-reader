@@ -3,8 +3,8 @@ import {
   anchorAt,
   computeLayout,
   pageAt,
+  planRender,
   scrollTopFor,
-  visibleRange,
   type LayoutOptions,
 } from './layout';
 
@@ -36,15 +36,24 @@ describe('computeLayout', () => {
   });
 });
 
-describe('visibleRange', () => {
+describe('planRender', () => {
   // Pages are 100px tall at width 100 (square pages), 10px gaps, 20px padding.
+  // At pixel ratio 1 each page's canvas is 100 × 100 × 4 = 40,000 bytes.
   const square = Array.from({ length: 50 }, () => ({ width: 100, height: 100 }));
   const layout = computeLayout(square, 140, { gap: 10, padding: 20, maxPageWidth: 100 });
-  const range = (scrollTop: number, viewport: number, overscan = 0, maxPages = 100) =>
-    visibleRange(layout, scrollTop, viewport, overscan, maxPages);
+  const PAGE_BYTES = 40_000;
+  const plan = (scrollTop: number, viewport: number, overscan = 0, maxCanvasBytes = 1e12) =>
+    planRender(layout, scrollTop, viewport, { overscan, pixelRatio: 1, maxCanvasBytes });
+  const range = (...args: Parameters<typeof plan>) => {
+    const p = plan(...args);
+    return p && { first: p.first, last: p.last };
+  };
 
   it('returns null for an empty layout', () => {
-    expect(visibleRange({ pages: [], totalHeight: 0 }, 0, 500, 1, 8)).toBeNull();
+    const empty = { pages: [], totalHeight: 0 };
+    expect(
+      planRender(empty, 0, 500, { overscan: 1, pixelRatio: 1, maxCanvasBytes: 1e9 }),
+    ).toBeNull();
   });
 
   it('starts at the first page at the top', () => {
@@ -71,17 +80,40 @@ describe('visibleRange', () => {
     expect(range(layout.totalHeight - 150, 150, 3)).toEqual({ first: 45, last: 49 });
   });
 
-  it('never returns more than maxPages, trimming overscan first', () => {
-    const r = range(555, 150, 10, 5);
-    if (!r) throw new Error('expected a range');
-    expect(r.last - r.first + 1).toBe(5);
-    expect(r.first).toBeLessThanOrEqual(4);
-    expect(r.last).toBeGreaterThanOrEqual(6);
+  it('reports which pages are visible, separately from overscan', () => {
+    const p = plan(555, 150, 2);
+    expect(p).toMatchObject({ first: 2, last: 8, visibleFirst: 4, visibleLast: 6 });
+  });
+
+  it('adds overscan only while the canvas memory budget allows it', () => {
+    // 3 visible pages (120 KB) + room for 2 more under a 200 KB budget.
+    const p = plan(555, 150, 10, 5 * PAGE_BYTES);
+    if (!p) throw new Error('expected a plan');
+    expect(p.last - p.first + 1).toBe(5);
+    expect(p.first).toBeLessThanOrEqual(4);
+    expect(p.last).toBeGreaterThanOrEqual(6);
+    expect(p.pixelRatio).toBe(1);
+  });
+
+  it('always includes every visible page, lowering resolution when they exceed the budget', () => {
+    // 3 visible pages need 120 KB at full resolution; the budget is 60 KB.
+    const p = plan(555, 150, 2, 60_000);
+    if (!p) throw new Error('expected a plan');
+    expect({ first: p.first, last: p.last }).toEqual({ first: 4, last: 6 });
+    expect(p.pixelRatio).toBeLessThan(1);
+    expect(3 * PAGE_BYTES * p.pixelRatio ** 2).toBeLessThanOrEqual(60_000);
+  });
+
+  it('draws more than 8 pages when they are all visible and fit the budget', () => {
+    // A 1000px viewport shows 9 square pages.
+    const p = plan(0, 1000, 0, 100 * PAGE_BYTES);
+    expect(p && p.last - p.first + 1).toBe(9);
   });
 
   it('handles a single page book', () => {
     const one = computeLayout([LETTER], 1000, opts);
-    expect(visibleRange(one, 0, 500, 2, 8)).toEqual({ first: 0, last: 0 });
+    const p = planRender(one, 0, 500, { overscan: 2, pixelRatio: 2, maxCanvasBytes: 1e9 });
+    expect(p).toEqual({ first: 0, last: 0, visibleFirst: 0, visibleLast: 0, pixelRatio: 2 });
   });
 });
 

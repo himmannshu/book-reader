@@ -186,3 +186,26 @@ test('opening a book records timing marks for profiling and benchmarks', async (
   expect(start.at).toBeLessThanOrEqual(opened.at);
   expect(opened.at).toBeLessThanOrEqual(firstPage.at);
 });
+
+test('when more than 8 pages fit on screen, every visible page is drawn', async ({ page }) => {
+  // About 13 strip pages fit in a 1200px-tall window.
+  await page.setViewportSize({ width: 1280, height: 1200 });
+  await openFixture(page, 'strips-40-pages.pdf');
+  const reader = page.getByTestId('reader');
+  await expect(reader).toHaveAttribute('data-layout', 'measured');
+  await expect
+    .poll(() =>
+      reader.evaluate((scroller) => {
+        const view = scroller.getBoundingClientRect();
+        const visible = [...scroller.querySelectorAll<HTMLElement>('[data-page-index]')].filter(
+          (slot) => {
+            const r = slot.getBoundingClientRect();
+            return r.bottom > view.top && r.top < view.bottom;
+          },
+        );
+        const drawn = visible.filter((slot) => slot.dataset.state === 'rendered').length;
+        return { visible: visible.length > 8, allDrawn: drawn === visible.length };
+      }),
+    )
+    .toEqual({ visible: true, allDrawn: true });
+});
