@@ -1,5 +1,6 @@
 import type { Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
+import type { Note } from '../core/notes';
 
 // The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
 // IndexedDB adapter (and later the cloud adapter, phase 09) sits behind them.
@@ -38,6 +39,7 @@ export interface PerBookStore<T extends { id: string; bookId: string }> {
 
 export type BookmarkStore = PerBookStore<Bookmark>;
 export type HighlightStore = PerBookStore<Highlight>;
+export type NoteStore = PerBookStore<Note>;
 
 export type StorageErrorKind = 'quota' | 'unavailable' | 'not-found' | 'unknown';
 

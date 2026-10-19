@@ -43,8 +43,13 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Write failing note core/storage/browser checks, then implement the approved contract test-first.
+1. Implement the notes hook/editor/panel and viewer/App integration against the red browser checks.
    Keep D7–D9 and phase-07-notes-context.md. Phase 07 push/deploy and main merge remain unauthorized.
+
+Storage checkpoint: core notes and schema v4 implemented. Focused 8 note tests and all 130 unit
+tests pass; typecheck passes. Initial two Chromium notes e2e fail at missing Notes/Add note UI.
+Core/storage tests first failed on missing core/notes; no feature status changed. Full verify after
+implementation remains required. No UI half edits yet; e2e/notes.spec.ts intentionally red.
 
 ## Decisions worth remembering
 
@@ -89,23 +94,25 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   this session). An occasional ~2.4 s WebKit scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:08 EDT
+Snapshot 2026-10-19 17:10 EDT
 - Branch: phase-07-notes
-- HEAD: 8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
-- Uncommitted files: 7
+- HEAD: b1ceea0 phase 07: record approved notes contract and implementation context
+- Uncommitted files: 9
 - Last verify: PASS at 2026-10-19 17:06 EDT (commit 8372a99)
 - Recent commits:
+    b1ceea0 phase 07: record approved notes contract and implementation context
     8372a99 handoff: Codex 2026-10-19 phase 06 complete [skip ci]
     7ac8b1e phase 06: measure fixture widths without kerning
     9463bfc phase 06: record user device check and pre-CI verification
     ad3ec91 handoff: Codex 2026-10-19 phase 06 blockers corrected
-    57fa6ad phase 06: dismiss stale highlight offers when text is released
 - Changed files:
-     M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/build/phase-07-notes.md
-     M harness/context/architecture-decisions.md
-    ?? harness/context/phase-07-notes-context.md
-    ?? harness/contracts/phase-07-contract.md
+     M src/storage/indexeddb-book-store.test.ts
+     M src/storage/indexeddb-book-store.ts
+     M src/storage/types.ts
+    ?? e2e/notes.spec.ts
+    ?? src/core/notes.test.ts
+    ?? src/core/notes.ts
+    ?? src/storage/notes-store.test.ts
 <!-- AUTO:END -->

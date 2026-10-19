@@ -872,3 +872,13 @@ Template:
   and navigation decisions in phase-07-notes-context.md. Starting core/storage/browser checks red first.
 - No push, deployment or main merge authorized. Contract items 17 (CI) and 18 (user check) will
   remain open until separately observed; do not mark the phase Complete based on local tests alone.
+
+### 2026-10-19 17:11 EDT | Phase 07 | Codex | Core/storage checkpoint; UI checks red
+- Red first: core/storage note suites failed on missing core/notes; initial Chromium page-note and
+  passage-note browser checks failed at missing Notes/Add note buttons (2 failed, expected).
+- Implemented deterministic per-target identity, plain-text validation/order and schema v4 notes.
+  Parent book/highlight validation is transactional; removing books/highlights cascades notes atomically.
+  Injecting a notes-delete failure keeps both the highlight and note; v3 upgrade keeps all old data.
+- Focused note unit tests 8/8; all unit tests 130/130; typecheck PASS (development checks, not full
+  phase verification). Updated the schema inventory test for v4. Full verify not yet run on this step;
+  browser notes checks remain red until UI integration. F-008 remains failing.

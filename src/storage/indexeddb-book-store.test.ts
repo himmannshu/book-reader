@@ -87,17 +87,18 @@ describe('IndexedDB book store', () => {
     expect(persistCalls()).toBe(1);
   });
 
-  it('creates schema version 3 with metadata, file, bookmark and highlight stores', async () => {
+  it('creates schema version 4 with metadata, file and annotation stores', async () => {
     const { store, factory } = setup();
     await store.list();
     const db = await openRaw(factory);
     expect(db.version).toBe(DB_VERSION);
-    expect(DB_VERSION).toBe(3);
+    expect(DB_VERSION).toBe(4);
     expect([...db.objectStoreNames].sort()).toEqual([
       'bookFiles',
       'bookmarks',
       'books',
       'highlights',
+      'notes',
     ]);
     db.close();
   });
