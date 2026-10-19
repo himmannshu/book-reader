@@ -70,15 +70,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 18:16 EDT
-- Branch: phase-07-notes
-- HEAD: a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
+Snapshot 2026-10-19 18:29 EDT
+- Branch: main
+- HEAD: 64a0195 after phase 07: record merge and green CI on main
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 18:13 EDT (commit 26875e4)
+- Last verify: PASS at 2026-10-19 18:20 EDT (commit 5ba0694)
 - Recent commits:
+    64a0195 after phase 07: record merge and green CI on main
+    5ba0694 Merge branch 'phase-07-notes': phases 06 (highlights) and 07 (notes)
+    7d7798d phase 07: refresh handoff snapshot
     a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
     26875e4 phase 07: record verified push and CI authorization
-    43c3efa handoff: clarify PDF versus printed page numbering
-    04da1da handoff: record reported notes and bookmark jump failures
-    798c536 handoff: Codex 2026-10-19 phase 07 locally verified
 <!-- AUTO:END -->
