@@ -10,8 +10,19 @@ export function ReaderView({ doc }: { doc: PdfDoc }) {
     const scroller = scrollerRef.current;
     if (!scroller) return;
     const viewer = new Viewer(scroller, doc);
+    // Focus the pages so arrow keys, Page Down and Space scroll the book right away.
+    scroller.focus({ preventScroll: true });
     return () => viewer.destroy();
   }, [doc]);
 
-  return <div ref={scrollerRef} className="reader-scroller" data-testid="reader" />;
+  return (
+    <div
+      ref={scrollerRef}
+      className="reader-scroller"
+      data-testid="reader"
+      tabIndex={0}
+      role="region"
+      aria-label="Book pages"
+    />
+  );
 }

@@ -99,10 +99,30 @@ describe('anchorAt / scrollTopFor', () => {
     expect(scrollTopFor(after, anchor)).toBeCloseTo(afterSecond.top + afterSecond.height / 4);
   });
 
-  it('anchors to the next page when the offset falls in a gap', () => {
+  it('anchors an offset in a gap to the next page, a fixed distance above its top edge', () => {
     const layout = computeLayout([LETTER, LETTER], 2000, opts);
     const gapY = pageAt(layout, 0).top + pageAt(layout, 0).height + 5;
-    expect(anchorAt(layout, gapY)).toEqual({ pageIndex: 1, fraction: 0 });
+    // The gap is 10px, so 5px into it is 5px above page 2.
+    expect(anchorAt(layout, gapY)).toEqual({ pageIndex: 1, fraction: 0, pixelsAbove: 5 });
+  });
+
+  it('round-trips any offset in the same layout, including the padding above page 1', () => {
+    const layout = computeLayout([LETTER, LETTER, LETTER], 2000, opts);
+    const first = pageAt(layout, 0);
+    const gapY = first.top + first.height + 5;
+    for (const y of [0, 10, first.top, first.top + 100, gapY]) {
+      const anchor = anchorAt(layout, y);
+      if (!anchor) throw new Error('expected an anchor');
+      expect(scrollTopFor(layout, anchor)).toBeCloseTo(y);
+    }
+  });
+
+  it('keeps the top of the book at the top after the layout changes', () => {
+    const before = computeLayout([LETTER, LETTER], 2000, opts);
+    const after = computeLayout([LETTER, LETTER], 500, opts);
+    const anchor = anchorAt(before, 0);
+    if (!anchor) throw new Error('expected an anchor');
+    expect(scrollTopFor(after, anchor)).toBeCloseTo(0);
   });
 
   it('returns null for an empty layout', () => {

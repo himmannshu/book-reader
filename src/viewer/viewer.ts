@@ -48,6 +48,7 @@ export class Viewer {
   #sizes: PageSize[];
   #layout: Layout = { pages: [], totalHeight: 0 };
   #layoutWidth = -1;
+  #viewportHeight = -1;
   #frame = 0;
   #destroyed = false;
 
@@ -73,10 +74,13 @@ export class Viewer {
     });
     scroller.replaceChildren(this.#content);
 
+    scroller.dataset.layout = 'estimated';
     this.#relayout();
     scroller.addEventListener('scroll', this.#onScroll, { passive: true });
     this.#resizeObserver = new ResizeObserver(() => {
+      // A new width rescales every page; a new height only changes which pages are visible.
       if (this.#scroller.clientWidth !== this.#layoutWidth) this.#relayout();
+      else if (this.#scroller.clientHeight !== this.#viewportHeight) this.#update();
     });
     this.#resizeObserver.observe(scroller);
 
@@ -85,6 +89,7 @@ export class Viewer {
         if (this.#destroyed) return;
         this.#sizes = sizes;
         this.#relayout();
+        this.#scroller.dataset.layout = 'measured';
       },
       (error: unknown) => {
         if (this.#destroyed || this.#doc.destroyed) return;
@@ -99,6 +104,7 @@ export class Viewer {
     cancelAnimationFrame(this.#frame);
     this.#scroller.removeEventListener('scroll', this.#onScroll);
     this.#resizeObserver.disconnect();
+    delete this.#scroller.dataset.layout;
     this.#slots.forEach((slot) => this.#release(slot));
     this.#content.remove();
   }
@@ -136,6 +142,7 @@ export class Viewer {
 
   #update(): void {
     if (this.#destroyed) return;
+    this.#viewportHeight = this.#scroller.clientHeight;
     const range = visibleRange(
       this.#layout,
       this.#scroller.scrollTop,

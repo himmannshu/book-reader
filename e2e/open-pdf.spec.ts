@@ -127,3 +127,39 @@ test('resizing the window re-fits pages and keeps the current page in view', asy
   await expect(pageSlot(page, 49)).toBeInViewport();
   await expect(pageSlot(page, 49)).toHaveAttribute('data-state', 'rendered');
 });
+
+test('making the window taller draws the newly visible pages without scrolling', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 600, height: 400 });
+  await openFixture(page, 'long-300-pages.pdf');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+
+  await page.setViewportSize({ width: 600, height: 2000 });
+
+  await expect(pageSlot(page, 2)).toBeInViewport();
+  await expect(pageSlot(page, 2)).toHaveAttribute('data-state', 'rendered');
+});
+
+test('after opening a book, the keyboard scrolls it without clicking first', async ({ page }) => {
+  await openFixture(page, 'long-300-pages.pdf');
+  const reader = page.getByTestId('reader');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  await expect(reader).toBeFocused();
+
+  await page.keyboard.press('PageDown');
+  await expect.poll(() => reader.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+});
+
+test('the gap above page 1 stays visible after the book finishes loading', async ({ page }) => {
+  await openFixture(page, 'long-300-pages.pdf');
+  const reader = page.getByTestId('reader');
+  await expect(reader).toHaveAttribute('data-layout', 'measured');
+  expect(await reader.evaluate((el) => el.scrollTop)).toBe(0);
+  const gap = await pageSlot(page, 0).evaluate(
+    (slot) =>
+      slot.getBoundingClientRect().top -
+      (slot.closest('[data-testid="reader"]')?.getBoundingClientRect().top ?? 0),
+  );
+  expect(gap).toBeGreaterThan(10);
+});

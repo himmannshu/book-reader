@@ -152,3 +152,19 @@ Template:
 - All contract items 1–11 now have evidence. Phase 01 status → Complete.
 - Limitations: no independent review yet (recommended: `/evaluate 01` or Codex). Branch not pushed.
 - Next: review, then ask before pushing/merging; phase 02 (performance baseline) is not started.
+
+### 2026-10-19 00:20 EDT | Phase 01 | Claude Code (Opus 5.5) | Fix review findings B1, B5, B6
+- Source: harness/code_review/phase-01-review.md (evaluator verdict PASS; user asked to fix B1, B5, B6
+  and defer B2–B4).
+- Changes: viewer ResizeObserver redraws on height-only changes (B1); reader is a focusable
+  region and gets focus when a book opens (B5); Anchor gains `pixelsAbove` so offsets in padding or
+  gaps survive relayout unscaled, keeping the 24px gap above page 1 (B6); viewer sets
+  `data-layout="estimated|measured"` on the scroller (used by tests).
+- Red: 3 new unit tests failed (anchor round-trip/padding); 3 new e2e tests failed in chromium and
+  webkit (taller window: page 3 never rendered; keyboard: reader not focused; gap: no measured layout).
+  Mutation check: with only the `pixelsAbove` subtraction removed, the gap e2e fails
+  "Expected: 0, Received: 24", which is the reported B6 behavior.
+- Green: `scripts/verify.sh` → lint, format, typecheck, unit 22 passed, browser 22 passed
+  (chromium + webkit); "--- PASS".
+- Deferred by the user (not fixed): B2 (more than 8 visible pages leave extras blank), B3 (failed page
+  draw shows only a white box), B4 (lint boundary misses dynamic import and .js files).

@@ -37,6 +37,11 @@ export interface Anchor {
   pageIndex: number;
   /** 0 at the top edge of the page, 1 at the bottom edge. */
   fraction: number;
+  /**
+   * CSS pixels above the page's top edge, for offsets in the padding or a gap before it.
+   * Kept in pixels, not as a fraction, because padding and gaps don't scale with the page.
+   */
+  pixelsAbove: number;
 }
 
 /** Fit every page to the same width and stack them vertically. */
@@ -121,15 +126,15 @@ export function anchorAt(layout: Layout, y: number): Anchor | null {
   const { pages } = layout;
   if (pages.length === 0) return null;
   const index = firstPageEndingAfter(layout, y);
-  if (index >= pages.length) return { pageIndex: pages.length - 1, fraction: 1 };
+  if (index >= pages.length) return { pageIndex: pages.length - 1, fraction: 1, pixelsAbove: 0 };
   const page = pageAt(layout, index);
-  if (y < page.top) return { pageIndex: index, fraction: 0 };
-  return { pageIndex: index, fraction: (y - page.top) / page.height };
+  if (y < page.top) return { pageIndex: index, fraction: 0, pixelsAbove: page.top - y };
+  return { pageIndex: index, fraction: (y - page.top) / page.height, pixelsAbove: 0 };
 }
 
 /** The scroll offset that puts `anchor` at the top of the viewport. */
 export function scrollTopFor(layout: Layout, anchor: Anchor): number {
   const page = layout.pages[Math.min(anchor.pageIndex, layout.pages.length - 1)];
   if (!page) return 0;
-  return page.top + anchor.fraction * page.height;
+  return page.top + anchor.fraction * page.height - anchor.pixelsAbove;
 }

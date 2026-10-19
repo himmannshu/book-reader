@@ -23,7 +23,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Independent review recommended (`/evaluate 01`, or Codex with harness/prompts/03-evaluate.md).
+1. Evaluator review done (PASS, harness/code_review/phase-01-review.md); B1, B5, B6 fixed.
 2. Ask the user before pushing the branch or merging into main.
 3. Then plan phase 02 (performance baseline): post the plan and contract, wait for approval.
 
@@ -36,7 +36,11 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Blockers and doubts
 
-- None technical. The page drawing is on the main thread; phase 02 benchmarks decide if that matters.
+- Deferred review findings (user's call, see harness/code_review/phase-01-review.md):
+  - B2: if more than 8 pages fit on screen, the extras stay blank. Revisit with phase 02 budgets.
+  - B3: a page that fails to draw shows only a white box and is not retried.
+  - B4: the PDF.js lint boundary misses dynamic `import()` and `.js` files under src/.
+- Page drawing is on the main thread; phase 02 benchmarks decide if that matters.
 
 <!-- AUTO:BEGIN -->
 Snapshot 2026-10-18 23:04 EDT
