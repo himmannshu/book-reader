@@ -93,3 +93,16 @@ Template:
 - Correction to the earlier Phase 00 close entry: item 10's GitHub run is now observed (it was
   "NOT RUN" at the time).
 - Next: plan phase 01 (open and read a PDF) and wait for approval.
+
+### 2026-10-18 23:15 EDT | Phase 01 | Claude Code (Opus 5.5) | First page renders through the engine interface
+- Changes: branch phase-01-open-and-read-pdf; contract approved; fixtures (scripts/generate-fixtures.mjs,
+  deterministic: regenerated twice, identical hashes); src/viewer/layout.ts (+16 unit tests);
+  src/engine/{types.ts,pdfjs-engine.ts} (pdfjs-dist 6.4.299; destroy is on loadingTask in v6);
+  src/viewer/viewer.ts; src/ui/{App.tsx,ReaderView.tsx,app.css}; e2e/{helpers.ts,open-pdf.spec.ts};
+  tsconfig.node.json gains DOM lib for Playwright callbacks.
+- Red: layout tests failed (module missing); e2e "opening a PDF draws its first page" timed out
+  in chromium and webkit (no Open PDF input).
+- Green: `npx vitest run` → 20 passed; `npx playwright test` → 4 passed (item 1 in chromium + webkit,
+  band color of page 1 read from canvas pixels).
+- Limitations: contract items 2–11 not yet exercised.
+- Next: e2e for items 2–7.
