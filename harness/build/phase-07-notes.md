@@ -75,3 +75,6 @@ Do not start the next phase.
   F-008 locally passing. Detailed contract-item evidence is in harness/build-log.md.
 - Contract 17 remains open for CI (push not authorized); contract 18 awaits the user's Phase 07
   real-book/device check. Phase remains In progress, not Complete. No independent review yet.
+- Subsequent user check reports Notes and Bookmarks jumping to the wrong page. Contract 8/18
+  is unresolved; F-008/F-006 now failing on the user report despite green generated-fixture checks.
+  Bookmark report tracked in GitHub issue #1. Need environment/target details to reproduce.

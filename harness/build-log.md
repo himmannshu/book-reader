@@ -962,3 +962,25 @@ Contract evidence from this final canonical run (contract unchanged after approv
 | 16 | All existing reading/bookmark/highlight browser regressions pass; 8 perf checks pass unchanged |
 | 17 | Local PASS above; CI NOT RUN — requires separately authorized push |
 | 18 | NOT OBSERVED — ask user to create/edit/reopen/jump/delete both note types in a real book, on iPhone/iPad if possible |
+
+### 2026-10-19 17:44 EDT | Phase 07 | Codex | User-reported jump failures; bookmark issue filed
+- User reports choosing Notes and Bookmarks does not land on the right page, and requests a
+  GitHub issue for Bookmarks. This supersedes the earlier locally-ready interpretation: contract
+  8/18 is unresolved. Asked asynchronously for device/browser, page versus highlight note and
+  expected-versus-actual page. No answer received yet; no cause claimed and no app code changed.
+- Startup: handoff/log/status/history read; clean tree on phase-07-notes at 798c536. Read AGENTS,
+  phase/contract and navigation/layout code. `scripts/verify.sh` PASS: 137 unit, 166 browser, 8 perf;
+  Chromium firstPage 168 ms, jump 29, p95 16.7; WebKit firstPage 170, jump 75, p95 32; canvas 67.1 MB.
+- Additional isolated Playwright diagnostic against the production preview: import generated
+  long-300-pages.pdf, mark physical page 201, add its page note, scroll away, choose each entry,
+  compare page top immediately and after 600ms settling. Both Chromium/WebKit at widths 1280,
+  810 and 390 landed within 1px of the intended page top (12 jumps). These checks did not reproduce
+  the report; no private book read/copied. Hypotheses such as page labels or layout remain unconfirmed.
+- GitHub reads initially failed inside the network sandbox; escalated retry succeeded. Checked
+  repository and open issues (none), then created and verified OPEN issue #1 under the user's request:
+  https://github.com/himmannshu/book-reader/issues/1 . Issue clearly separates user report from
+  generated-fixture observations. No push, deployment, main merge or credential-file access.
+- Used writing-style skill for the issue; retrieval tools were unavailable, so followed the user's
+  supplied direct wording without claiming a retrieved style match.
+- F-006/F-008 marked failing with explicit user-report evidence (not fabricated red tests).
+  Historical test results retained. Phase 07 stays In progress; no fix attempted without a repro.

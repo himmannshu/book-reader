@@ -47,8 +47,8 @@
       "id": "F-006",
       "phase": "05",
       "description": "Bookmarks can be added, listed, jumped to and removed, and survive a reload",
-      "status": "passing",
-      "evidence": "2026-10-19 after the B1 fix: e2e/bookmarks.spec.ts (incl. several whole pages and thin strips on screen, page order after reload) passes in chromium+webkit; scripts/verify.sh PASS at aa73b5c (94 unit, 86 e2e, 8 perf); mutation checks (no tie tolerance, no sortByPage) fail the new tests. CI run 39291151035 on fdaa254 green; user-checked on a real book. Fix not re-reviewed."
+      "status": "failing",
+      "evidence": "2026-10-19 user now reports bookmark entries land on the wrong page during the Phase 07 check. Tracked at https://github.com/himmannshu/book-reader/issues/1; not reproduced yet, device/PDF/expected-versus-actual details requested. Full verify at 798c536 still PASS (137 unit, 166 browser, 8 perf); isolated 300-page/page-201 jumps pass both engines at three widths. Status reflects the unresolved user report, not an observed automated failure. Historical evidence: after the B1 fix e2e/bookmarks.spec.ts passed both engines; scripts/verify.sh PASS at aa73b5c (94/86/8), mutation checks failed as expected, CI 39291151035 green and earlier real-book check passed."
     },
     {
       "id": "F-007",
@@ -61,8 +61,8 @@
       "id": "F-008",
       "phase": "07",
       "description": "Notes can be attached to a highlight or a page, listed in a panel, and survive a reload",
-      "status": "passing",
-      "evidence": "2026-10-19 scripts/verify.sh PASS at 117ed45: 137 unit, 166 browser, 8 perf. e2e/notes.spec.ts covers both targets, edits/reload, one note per target, Unicode, confirmed deletion/cascades/rollback, isolation, draft guards, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad tap workflows (36 cases across Chromium/WebKit). Schema-v3 migration and storage/core units preserve existing annotations/bytes. Budgets unchanged; WebKit p95 35 ms. Local feature verified; Phase 07 remains In progress pending separately authorized CI and the real-book/device user check. See build-log contract evidence."
+      "status": "failing",
+      "evidence": "2026-10-19 user reports Notes jumps land on the wrong page; Phase 07 contract 8/18 remains unresolved. Not reproduced yet; device/browser, note target type and expected-versus-actual page requested. Baseline scripts/verify.sh at 798c536 PASS (137 unit, 166 browser, 8 perf; WebKit p95 32 ms), and isolated page-201 jumps in a generated 300-page book pass both engines at three widths. Earlier 117ed45 verification covered both targets, edits/reload, Unicode, deletion/cascades/rollback, isolation, drafts, failures/retry, PDF-order/passage jumps, keyboard and iPhone/iPad taps; v3 migration preserves existing data. Status reflects the unresolved user report, not an observed automated failure. CI still not authorized/run. See build-log."
     },
     {
       "id": "F-009",

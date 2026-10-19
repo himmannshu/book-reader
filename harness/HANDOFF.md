@@ -6,11 +6,12 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Codex, 2026-10-19
-- Current session: Phase 07 implementation, following prompt 02. User approved the plan, contract
-  and all interaction defaults. Implementation/normal local commits are authorized; no push/deploy.
-- Phase: 07 (notes) In progress. Local implementation ready at 117ed45. Final `scripts/verify.sh`
-  PASS: 137 unit, 166 browser, 8 perf; WebKit p95 35 ms; unchanged budgets. F-008 locally passing.
-  Contract 17 needs CI; contract 18 needs the user's Phase 07 real-book/device check.
+- Current session: user reports Notes/Bookmarks jumps land on the wrong page. Diagnosed generated
+  cases and filed requested bookmark issue #1; no application code changed. No push/deploy authorized.
+- Phase: 07 (notes) In progress. Earlier local implementation verify at 117ed45 passed
+  (137 unit, 166 browser, 8 perf; WebKit p95 35 ms; unchanged budgets).
+  Latest baseline at 798c536 also PASS (137/166/8, WebKit p95 32). User report now reopens contract
+  8/18; F-006/F-008 failing pending reproduction. Contract 17 still needs authorized CI.
 - Phase 06 Complete (all 14 items observed), F-007 passing.
   CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897.
   User confirmed the real-book/device check works as expected (contract 14).
@@ -20,6 +21,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Done this session
 
+- Verified clean baseline; investigated shared viewer/navigation paths and 12 long-book jumps.
+  No reproduction yet. Created/verified requested bookmark issue #1; details in the latest build log.
+- Updated feature statuses to reflect the unresolved user report, rather than treating fixture
+  success as user acceptance. The implementation history below is retained for context.
 - Recorded accepted choices and reasoning as D7/D8 in architecture-decisions.md: keep the established
   direction unless evidence shows a major improvement; support notes on highlights and whole pages.
 - Contract approved (Amendment 01), phase/roadmap In progress. Core/schema v4 implemented with
@@ -34,14 +39,19 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## In flight
 
-- No half-edited app code. Local implementation is committed/verified; CI and user check remain.
+- No half-edited app code. User-reported jumps are unresolved despite green automated checks.
+- https://github.com/himmannshu/book-reader/issues/1 is OPEN for Bookmarks. Notes has the same
+  reported symptom; shared cause not established. Both engines passed page-201 jumps on a generated
+  300-page book at widths 1280/810/390 (12 jumps, checked immediately and after 600ms).
+- Asked for device/browser, page versus highlight note, expected-versus-actual page; no reply yet.
 - No independent Phase 07 review yet. A different agent can use prompt 03 after prompt 00.
 
 ## Next action
 
-1. Ask permission to push phase-07-notes and run CI; observe/log its result. Ask the user to create,
-   edit, reopen, jump and delete both note types in a real book (iPhone/iPad if possible).
-   Keep Phase 07 In progress until both gates are observed. No deployment/main merge authorized.
+1. Get the missing reproduction details for Notes/Bookmarks, reproduce red before proposing a
+   correction, and update issue #1 with observed evidence. Do not infer a shared cause or dismiss
+   the user report because fixture tests pass. No app fix implemented in this diagnostic turn.
+   CI/user acceptance remain open; no push/deployment/main merge authorized.
 
 ## Decisions worth remembering
 
@@ -63,7 +73,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Blockers and doubts
 
-- Phase 07: implementation in progress; CI/user check outstanding. Main lacks the completed
+- Phase 07: wrong-page Notes/Bookmarks user report unresolved (issue #1); CI outstanding. Main lacks the completed
   Phase 06 dependency; the Phase 07 branch deliberately starts at 8372a99 instead of main.
 - Phase 06:
   - No blocking contract items remain. B1–B3 corrected, user check confirmed, CI green.
@@ -86,17 +96,17 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 17:37 EDT
+Snapshot 2026-10-19 17:45 EDT
 - Branch: phase-07-notes
-- HEAD: 117ed45 phase 07: keep highlight note actions inside reader bounds
+- HEAD: 798c536 handoff: Codex 2026-10-19 phase 07 locally verified
 - Uncommitted files: 4
-- Last verify: PASS at 2026-10-19 17:31 EDT (commit 117ed45)
+- Last verify: PASS at 2026-10-19 17:43 EDT (commit 798c536)
 - Recent commits:
+    798c536 handoff: Codex 2026-10-19 phase 07 locally verified
     117ed45 phase 07: keep highlight note actions inside reader bounds
     e4a8e58 phase 07: cover note lifecycle failures and touch keyboard flows
     52a80c0 phase 07: add notes editor and guarded reader navigation
     3381801 wip: phase 07 note core and transactional storage; UI checks red
-    b1ceea0 phase 07: record approved notes contract and implementation context
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
