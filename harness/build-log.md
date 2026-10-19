@@ -314,3 +314,13 @@ Template:
 - Separate session started by the user: investigation of the real-book first-page time
   (branch from phase-02-performance-baseline, its own worktree). Not merged here.
 - Next: plan phase 03 (local book persistence).
+
+### 2026-10-19 05:10 EDT | Phase 03 | Claude Code (Opus 5.5) | Library helpers and IndexedDB adapter
+- Changes: branch phase-03-local-book-persistence; contract approved; D5a appended (books in IndexedDB);
+  src/core/library.ts (titleFromFileName, sortByRecentlyOpened); src/storage/types.ts (BookStore,
+  StorageError); src/storage/indexeddb-book-store.ts (db "book-reader" v1, stores books + bookFiles,
+  SHA-256 ids, one transaction per add/remove, persist() after first save, error mapping);
+  dev dependency fake-indexeddb 6.2.6 (Apache-2.0).
+- Red: library tests failed (module missing); adapter tests failed (module missing).
+- Green: library 7 passed; adapter 11 passed (one expectation in my own test was wrong: byteSize 13
+  for a 12-byte string; fixed the test). `npx vitest run` → all unit tests pass.
