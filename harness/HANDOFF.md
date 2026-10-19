@@ -72,15 +72,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 18:29 EDT
-- Branch: main
-- HEAD: 64a0195 after phase 07: record merge and green CI on main
+Snapshot 2026-10-19 19:11 EDT
+- Branch: phase-08-installable-and-hosted
+- HEAD: b46f3d3 phase 08: deploy guide, AGENTS deploy note, context and handoff
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 18:20 EDT (commit 5ba0694)
+- Last verify: PASS at 2026-10-19 19:09 EDT (commit 4c293cf)
 - Recent commits:
-    64a0195 after phase 07: record merge and green CI on main
-    5ba0694 Merge branch 'phase-07-notes': phases 06 (highlights) and 07 (notes)
-    7d7798d phase 07: refresh handoff snapshot
-    a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
-    26875e4 phase 07: record verified push and CI authorization
+    b46f3d3 phase 08: deploy guide, AGENTS deploy note, context and handoff
+    73c6d30 phase 08: log verify and dev-server check
+    4c293cf phase 08: log PWA build, mutation checks and the installability test fix
+    1f9d405 phase 08: installability test uses full Chromium with a real profile (headless shell never reports errors)
+    3ab1bf9 phase 08: installable PWA: manifest, icons, offline service worker, update notice, Pages headers
 <!-- AUTO:END -->
