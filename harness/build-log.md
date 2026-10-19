@@ -461,3 +461,12 @@ Template:
   (clamped, uses the existing anchor math). Test fakes gain outline().
 - Red: outline tests failed (module missing); scrollToPage tests failed ("viewer.scrollToPage is not a function").
 - Green: `npx vitest run` → 61 passed (10 outline, 2 scrollToPage).
+
+### 2026-10-19 01:17 EDT | Phase 04 | Claude Code (Opus 5.5) | Contents panel
+- Changes: src/ui/ContentsPanel.tsx (nav "Table of contents", nested entry buttons, disabled entries without
+  a page, loading/failed/empty notes, Escape closes, focus moves to the first entry); ReaderView gains a
+  reader-tools bar with the Contents toggle (aria-expanded), loads the outline lazily once per book, jumps via
+  Viewer.scrollToPage, closes the panel after a choice in windows under 700 px; layout CSS.
+- Red: e2e "choosing a chapter in Contents brings its page to the top" timed out (no Contents button), both browsers.
+- Green: unit 61 passed; `npx playwright test` → 38 passed (chromium + webkit), including the older tests
+  after the reader layout change.
