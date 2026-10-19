@@ -495,3 +495,14 @@ Template:
 - Note: WebKit p95 medians are now 31 → 36 → 37 ms over the last three verifies (budget 40). Within the
   spread seen so far, but trending close to the budget.
 - F-005 → passing. Remaining: CI on the branch, item 11 (user), evaluator review.
+
+### 2026-10-19 01:32 EDT | Phase 04 | Claude Code (Opus 5.5) | Evaluator review: FAIL
+- Evaluator subagent (fresh context, given only the phase number and harness/prompts/03-evaluate.md) →
+  FAIL. Contract fidelity 3/5, functionality 3/4, robustness 3/4; code quality, tests, depth and design 3.
+  Review: harness/code_review/phase-04-review.md.
+- Findings: (1, high) opening another book while Contents is open leaves "Loading contents…" forever
+  (ReaderView not keyed by doc; outline only requested from the click handler); (2, medium) Escape does
+  nothing when no entry has focus (empty, all-disabled, loading, focus in pages): breaks item 6; (3) no
+  test that the outline loads lazily, none for (1) or (2); minor: after a wide-layout jump, focus stays on
+  the entry, so Space or Enter repeats the jump instead of scrolling.
+- F-005 set back to failing until these are fixed. Phase stays In progress.
