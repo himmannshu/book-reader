@@ -443,3 +443,5 @@ Template:
 - Verification on the merged tree: `scripts/verify.sh` → PASS: unit 49 (3 new viewer drawing-order tests),
   browser 36, perf 8. Perf: chromium first 175, jump 18, p95 16.8; webkit first 175, jump 56 (was 89),
   p95 36 (samples [36, 2419, 33]: the known pre-existing WebKit freeze appeared in one scroll), canvas 67.1.
+- Pushed main (user-authorized). GitHub Actions run 39202555390 → success.
+  https://github.com/himmannshu/book-reader/actions/runs/39202555390
