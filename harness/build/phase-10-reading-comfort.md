@@ -1,6 +1,6 @@
 # Phase 10: Reading comfort
 
-- Status: In progress
+- Status: In progress (built, CI green; waiting on the user's device check)
 - Branch: phase-10-reading-comfort (cloud: phase-10-reading-comfort-k8v7pk)
 - Depends on: 01
 

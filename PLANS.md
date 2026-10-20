@@ -32,7 +32,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 08 | Installable and hosted | The app installs to Dock and Home Screen, opens offline, and is hosted behind a personal login | 03 | Complete |
 | 09a | Sync library and annotations | Bookmarks, highlights and notes match across devices that have the same book; books added on one device are listed on the other; deletions reach every device | 05, 06, 07, 08 | Complete |
 | 09b | Sync book files | A book added on one device can be opened on another without importing it again | 09a | Complete |
-| 10 | Reading comfort | Dark and sepia themes, zoom and fit modes, and each book reopens where I left off | 01 | In progress |
+| 10 | Reading comfort | Dark and sepia themes, zoom and fit modes, and each book reopens where I left off | 01 | In progress (built, CI green; waiting on the user's device check) |
 | 11 | Library view | A shelf with covers and reading progress, with sort and filter | 03 | In progress |
 | 12 | Export highlights and notes | A book's highlights and notes export to a Markdown file | 07 | In progress |
 | 13 | Search inside a book | Full-text search in the open book, with results that jump to each match | 02 | Not started |

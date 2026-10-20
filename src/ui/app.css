@@ -670,6 +670,8 @@ body {
 .library-open .library-title {
   font-weight: 600;
   font-size: 0.95rem;
+  line-height: 1.3;
+  max-height: 2.6em;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -694,12 +696,14 @@ body {
 }
 
 .cover-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
+  /* A long title shows its start, cut at the end (review: centring cut off the beginning). */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  padding: 16px 12px;
   text-align: center;
   font-size: 0.85rem;
+  line-height: 1.35;
   color: var(--muted);
   background: var(--reader-bg);
   overflow: hidden;
