@@ -13,6 +13,7 @@ import {
 } from '../storage/types';
 import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
+import { UpdateNotice } from './UpdateNotice';
 
 interface OpenBook {
   /** New for every opened book, so the reader (and its panels) start fresh. */
@@ -242,6 +243,7 @@ export function App({
           </p>
         )}
       </header>
+      <UpdateNotice />
       {error && (
         <p className="error" role="alert">
           {error}

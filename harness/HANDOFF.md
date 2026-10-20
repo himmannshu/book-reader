@@ -6,26 +6,28 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phases 00–07 Complete and merged into main (5ba0694); main pushed; CI run 39334209183 green.
-- Branch: main. No phase in progress.
+- Phase 08 (installable and hosted) In progress on branch phase-08-installable-and-hosted (not pushed).
+  Items 1–9 observed locally (verify PASS 142/175+1 skipped/8). Waiting on the user's Cloudflare setup.
+- Phases 00–07 Complete and on main.
 
-## Done (this session)
+## Done (phase 08)
 
-- Took over phase 07 from Codex; recorded CI and the user's check; phase 07 Complete.
-- Merged phase-07-notes (with phase 06) into main; verify PASS (137/166/8); CI green on main.
-- Issue #2 diagnosed: the book's embedded outline only contains the Preface (5 entries, 152 pages);
-  the app shows it faithfully. Contents generation would be a new enhancement.
+- PWA: vite-plugin-pwa (prompt mode), manifest, generated icons, iOS meta tags, UpdateNotice,
+  public/_headers; offline shell and offline book opening tested in both browsers; installability
+  tested in full Chromium (the default headless shell can't evaluate it).
+- docs/deploy.md (user's Cloudflare steps); AGENTS.md: every push is also a deploy.
 
 ## In flight
 
-- Nothing running.
+- User to follow docs/deploy.md steps 1–2 (Pages project with Git integration; Access with one-time PIN).
 
 ## Next action
 
-1. Ask the user what comes next. Options already raised: an independent review of phase 07
-   (`/evaluate 07`, never done); commenting the issue #2 diagnosis on GitHub (needs OK); a
-   contents-generation enhancement for books with incomplete outlines; the printed page-number UX
-   follow-up; open review findings (below); then plan phase 08 (installable and hosted).
+1. When the user reports the Pages project URL: with their OK, push the branch (CI run + preview
+   deploy). Check item 11 with `curl -sI https://<branch>.<project>.pages.dev` (expect a redirect to
+   <team>.cloudflareaccess.com), record the CI run (item 10).
+2. With their OK, merge into main and push (production deploy). Check production with curl the same way.
+3. User installs on iPhone/iPad and Mac and checks offline reading (item 12, docs/deploy.md 3–4).
 
 ## Decisions worth remembering
 
@@ -70,15 +72,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 18:29 EDT
-- Branch: main
-- HEAD: 64a0195 after phase 07: record merge and green CI on main
+Snapshot 2026-10-19 19:11 EDT
+- Branch: phase-08-installable-and-hosted
+- HEAD: b46f3d3 phase 08: deploy guide, AGENTS deploy note, context and handoff
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 18:20 EDT (commit 5ba0694)
+- Last verify: PASS at 2026-10-19 19:09 EDT (commit 4c293cf)
 - Recent commits:
-    64a0195 after phase 07: record merge and green CI on main
-    5ba0694 Merge branch 'phase-07-notes': phases 06 (highlights) and 07 (notes)
-    7d7798d phase 07: refresh handoff snapshot
-    a09b202 phase 07: takeover; CI green and user check recorded; phase complete; issue #2 diagnosis
-    26875e4 phase 07: record verified push and CI authorization
+    b46f3d3 phase 08: deploy guide, AGENTS deploy note, context and handoff
+    73c6d30 phase 08: log verify and dev-server check
+    4c293cf phase 08: log PWA build, mutation checks and the installability test fix
+    1f9d405 phase 08: installability test uses full Chromium with a real profile (headless shell never reports errors)
+    3ab1bf9 phase 08: installable PWA: manifest, icons, offline service worker, update notice, Pages headers
 <!-- AUTO:END -->

@@ -1049,3 +1049,87 @@ Contract evidence from this final canonical run (contract unchanged after approv
   jump 19, p95 16.7; WebKit first 198, jump 48, p95 32; blank 0%/1%; canvas 67.1 MB. Budgets unchanged.
 - Pushed main (user-authorized). GitHub Actions run 39334209183 on 5ba0694 → completed, success.
   https://github.com/himmannshu/book-reader/actions/runs/39334209183
+
+### 2026-10-19 18:58 EDT | Phase 08 | Claude Code (Opus 5.5) | Contract and icons
+- Planning: probe (scratchpad, read-only for the repo) showed both Playwright browsers register a service worker,
+  take control, and reload a cached page offline. User decisions: Cloudflare Pages Git integration, Access with
+  email one-time code, update prompt before reload. Contract approved.
+- Changes: branch phase-08-installable-and-hosted; contract; scripts/png.mjs (shared PNG encoder);
+  scripts/generate-heavy-fixture.mjs uses it (output byte-identical: SHA-1 10240f7… before and after);
+  scripts/generate-icons.mjs + `npm run icons` → public/icons/ (192, 512, maskable 512, apple-touch 180, favicon 32).
+- Verification: icons generated twice → identical hashes; inspected 512, maskable 512 and 192 visually (fixed a
+  thin line sliver at the top of each page).
+
+### 2026-10-19 19:07 EDT | Phase 08 | Claude Code (Opus 5.5) | PWA: manifest, service worker, offline, update notice, headers
+- Changes: vite-plugin-pwa 2.0.0 + workbox-window 7.4.1 (MIT, exact pins) in prompt mode, SW off in dev; manifest
+  (name, short name, start URL/scope /, standalone, theme/background colours, 192/512/maskable icons); index.html
+  icon and iOS meta tags; src/ui/UpdateNotice.tsx ("A new version is ready." Reload/Later, injectable hook);
+  public/_headers (no-cache for sw.js, registerSW.js, index.html, /, manifest; /assets/* immutable for a year);
+  tests/config/headers.test.ts (Node-side unit test; tests/ added to the Vitest include and tsconfig.node).
+- Red: e2e/pwa.spec.ts failed in both browsers (no manifest, no service worker); UpdateNotice and headers unit
+  tests failed (missing component/file).
+- Green: unit 142; e2e/pwa.spec.ts 9 passed + 1 skipped (installability is Chromium-only); full browser suite
+  175 passed, 1 skipped.
+- Mutation checks (each reverted): worker .mjs not precached → offline-book test failed (item 5); no maskable icon,
+  no apple-touch-icon, display "browser" → manifest test failed (item 1); auto reload → UpdateNotice tests failed
+  (item 6); sw.js cached an hour → headers test failed (item 8).
+- Found and fixed: my first installability test (item 2) was vacuous. Headless Chromium (the default headless
+  shell) returned no installability errors even for a page without a manifest; normal test contexts are incognito
+  ("in-incognito"). The test now launches full Chromium (channel "chromium") with a persistent profile, first
+  checks that a manifest-less page reports "no-manifest", then requires no errors for the app. Breaks: icons
+  removed → failed; manifest removed → failed. (1f9d405)
+
+### 2026-10-19 19:10 EDT | Phase 08 | Claude Code (Opus 5.5) | Verify incl. perf; dev server has no service worker
+- Item 9/10 (local): port 4174 free first. `scripts/verify.sh` → PASS: unit 142, browser 175 passed + 1 skipped, perf 8.
+  Chromium first 171, jump 17, p95 16.7; WebKit first 152, jump 49, p95 33 (samples [33, 2455, 29]: the known
+  pre-existing freeze in one scroll); blank 0%/1%; canvas 67.1 MB. Budgets unchanged; first page unaffected by the
+  service worker's first-visit install.
+- Item 7: `npm run dev` in the Claude browser pane (port 5174; 5173 was held by an existing dev server from this
+  repo, left running): navigator.serviceWorker.getRegistrations() → 0, controller false, no manifest link.
+
+### 2026-10-19 19:11 EDT | Phase 08 | Claude Code (Opus 5.5) | Deploy guide, AGENTS notes, context
+- New folder docs/ (user-facing guides; explained here as AGENTS.md requires): docs/deploy.md with the Cloudflare
+  Pages project settings, Access (Zero Trust Free, one-time PIN, production + preview domains, email policy),
+  install steps (iPhone/iPad, Mac), the offline check, and how updates appear.
+- AGENTS.md: every push is also a deploy (main → production, branches → previews); `npm run icons`; no deploy
+  command; folder layout gains tests/config/, public/ and docs/.
+- harness/context/phase-08-installable-and-hosted-context.md written.
+- Remaining: user's Cloudflare setup (docs/deploy.md 1–2), then with the user's OK: push branch (CI + preview),
+  check logged-out requests reach Access (item 11), merge/push main (production), user install + offline check (12).
+
+### 2026-10-19 20:06 EDT | Phase 08 | Claude Code (Opus 5.5) | Hosted URL check; login method; branch pushed
+- User set up Cloudflare Pages: production URL https://book-reader-cpi.pages.dev/ (project book-reader-cpi).
+- Logged-out checks (curl, no credentials, read-only): `/` and `/sw.js` → HTTP 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/book-reader-cpi.pages.dev (www-authenticate:
+  Cloudflare-Access). https://main.book-reader-cpi.pages.dev/ → 404 (no alias for the production branch).
+- The Access login page shows "Log in to *" and only "Sign in with: Cloudflare" (Cloudflare-account login, likely
+  the Pages built-in access policy), not the agreed email one-time PIN. Private, but not the planned method.
+- User decision: switch to the email one-time code (user changing Zero Trust settings: add One-time PIN, enable it on
+  the application, policy Emails = the user's address, add *.book-reader-cpi.pages.dev for previews).
+- User authorized pushing the branch: pushed phase-08-installable-and-hosted at bc2b12f (CI + preview deploy).
+  Watching CI and probing the preview alias logged-out.
+
+### 2026-10-19 20:07 EDT | Phase 08 | Claude Code (Opus 5.5) | Preview deploy is public; headers work when hosted
+- Preview https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ (branch alias truncated to 28 chars)
+  answered a logged-out GET with HTTP 200 and no redirect: previews are NOT behind Access yet. It serves the phase 08
+  build (title "Book Reader", manifest link /manifest.webmanifest, apple-touch-icon). Exposure: the app code only;
+  books and annotations live in each browser's IndexedDB, never on the server. User told to add
+  *.book-reader-cpi.pages.dev to the Access application (item 11 not yet met for previews).
+- Item 8 (hosted): GET /sw.js on the preview → 200 with "cache-control: no-cache" (from public/_headers).
+- CI run 39345677490 on bc2b12f in progress (the first watch attempt failed only because it looked up the run id
+  before GitHub registered it).
+
+### 2026-10-19 20:10 EDT | Phase 08 | Claude Code (Opus 5.5) | Deploy guide corrected (One-time PIN location)
+- User could not find One-time PIN. Web search of current Cloudflare docs: the provider is under Zero Trust →
+  Integrations → Identity providers (my guide said Settings → Authentication). Previews are protected through the
+  Pages project's Settings → Access policy. docs/deploy.md section 2 rewritten accordingly. No Cloudflare settings
+  changed by the agent.
+
+### 2026-10-19 20:19 EDT | Phase 08 | Claude Code (Opus 5.5) | Item 11: production and previews behind the email-code login
+- User reports: added One-time PIN, enabled the preview access policy, set the email policy.
+- Logged-out checks (curl, no credentials): https://book-reader-cpi.pages.dev/ and /sw.js, and
+  https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ and /sw.js → all HTTP 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/<host>. Both login pages now read "Log in to
+  book-reader - Cloudflare Pages | Email | Send login code" (One-time PIN), no longer "Sign in with: Cloudflare".
+- Item 11 observed for production and previews (the user's own email-code login is theirs to confirm in item 12).
+- CI run 39345677490 on bc2b12f still in progress at the verify step.

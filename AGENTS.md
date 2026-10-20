@@ -59,7 +59,8 @@ Do not trust a status line over what the tests show.
 - Small commits on a phase branch named `phase-NN-<slug>`. Commit format: `phase NN: <what>`.
   Use `wip:` prefix for checkpoints. Commit before you stop, always.
 - Ask before: pushing, deploying, touching credentials, adding a paid dependency, or any write
-  to an external system.
+  to an external system. Pushing `main` deploys production (Cloudflare Pages Git integration), and
+  pushing any other branch creates a preview deployment, so every push is also a deploy.
 
 ## Keeping the handoff alive
 
@@ -82,6 +83,8 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
   e2e/perf/budgets.json; results in perf-results/). `PERF_BOOK=/path/to/book.pdf npm run test:perf`
   measures your own book without enforcing budgets or copying it into the repo.
 - Regenerate test PDFs: `npm run fixtures` (writes tests/fixtures/, deterministic)
+- Regenerate app icons: `npm run icons` (writes public/icons/, deterministic)
+- Deploy: there is no deploy command. Cloudflare Pages builds from GitHub (see docs/deploy.md).
 - What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → perf)
 
 ## Conventions
@@ -104,6 +107,9 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   - `src/ui`: React components.
   - `e2e/`: Playwright tests and performance benchmarks.
   - `tests/fixtures/`: test PDFs. Generated or public domain only, never the user's own books.
+  - `tests/config/`: Node-side unit tests for config files (for example `public/_headers`).
+  - `public/`: static files copied as-is into the build (icons, Cloudflare `_headers`).
+  - `docs/`: guides for the user, such as `docs/deploy.md` (Cloudflare setup).
 - Unit tests sit next to the code as `*.test.ts`.
 - Annotations are stored in PDF coordinates (page index plus rectangles in PDF points) together
   with the quoted text. Never store screen pixels.
