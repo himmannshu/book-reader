@@ -36,9 +36,10 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 11 | Library view | A shelf with covers and reading progress, with sort and filter | 03 | Not started |
 | 12 | Export highlights and notes | A book's highlights and notes export to a Markdown file | 07 | Not started |
 | 13 | Search inside a book | Full-text search in the open book, with results that jump to each match | 02 | Not started |
-| 14 | Voice notes | Record a spoken note on a page or highlight, play it back from the notes panel; it survives a reload | 07 | Not started |
-| 15 | Listen to a book | The book is read aloud from where I am, the spoken text is followed on the page, and I can pause and resume | 01 | Not started |
-| 16 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | Not started |
+| 14 | UI and UX design pass | The app looks and feels like a calm, polished reader on Mac, iPad and iPhone: a consistent visual design (type, spacing, color, icons) across library, reader and panels, touch-friendly controls, and the rough edges found in reviews fixed | 10, 11 | Not started |
+| 15 | Voice notes | Record a spoken note on a page or highlight, play it back from the notes panel; it survives a reload | 07 | Not started |
+| 16 | Listen to a book | The book is read aloud from where I am, the spoken text is followed on the page, and I can pause and resume | 01 | Not started |
+| 17 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | Not started |
 
 Status values: Not started, In progress, Blocked, Complete. Only harness/build-log.md can
 justify a change to Complete.

@@ -1400,3 +1400,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
   on this first run, browsers installed in 42 s and the cache saved). Cloudflare Pages check on cb6ec8a → success.
 - Production: logged-out GET /api/files/<id> → 302 to the Access login.
 - Not yet observed: the `quick` job (next branch push) and a browser-cache hit (next full run).
+
+### 2026-10-20 01:05 EDT | Planning | Claude Code (Opus 5.5) | UI/UX phase added; standing instructions; moving to the cloud
+- User request: add "improving the UI/UX design" to the goals and plan. Added as phase 14 "UI and UX design pass"
+  (after 13 Search, before the later features); Voice notes, Listen and Share move to 15, 16, 17. GOALS.md Scope's
+  "Later" line updated. features.json gains F-017 to F-020 (failing) for phases 14 to 17.
+- User decision: keep building the roadmap (10 → 17) while away, using the original direction and the agent's
+  best judgment, in a cloud session. Standing instructions recorded in harness/HANDOFF.md (stacked phase
+  branches; no pushes to main; self-approved plans recorded as such; user-only checks left pending).

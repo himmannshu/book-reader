@@ -5,22 +5,48 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), 2026-10-20
-- Phases 09a and 09b Complete, merged into main (cb6ec8a) and deployed to production. Verify PASS;
-  main CI run 39369974201 green.
-- CI trimmed (user decision): branch pushes run quick checks only; the full suite runs on main,
-  pull requests and on demand. Before merging a phase: `gh workflow run verify.yml --ref <branch>`
-  and record that run. The quick job and the browser-cache hit are not observed yet.
-- Phase 08 Complete with exceptions (iPhone offline deferred). Phases 14–16 added for later.
+- Last agent: Claude Code (Opus 5.5), 2026-10-20, moving this session to a cloud session.
+- Phases 00–09b Complete (08 with the iPhone-offline exception). main = cb6ec8a + docs commits,
+  deployed to production. Verify PASS; main CI run 39369974201 green.
+- Roadmap (PLANS.md): 10 Reading comfort, 11 Library view, 12 Export, 13 Search, 14 UI and UX
+  design pass (added 2026-10-20), 15 Voice notes, 16 Listen to a book, 17 Share excerpts.
+
+## Standing instructions from the user (2026-10-20; they apply until the user says otherwise)
+
+The user is away and asked the agent to keep building the roadmap, phase after phase, using the
+original direction (GOALS.md, architecture-decisions.md) and its own best judgment wherever input
+would normally be needed. These override AGENTS.md's "wait for approval" and "do not start the
+next phase" for this run only. Everything else in AGENTS.md still holds.
+- Order: 10 → 17 as in PLANS.md. One phase at a time, each on its own branch `phase-NN-<slug>`,
+  cut from the previous phase's branch (stacked), since main only moves with the user.
+- Plans and contracts: write them as usual, mark "Approved by: agent under the user's standing
+  instruction of 2026-10-20", and record each judgment call in the phase's context file.
+- Pushing: phase branches may be pushed (a preview deploy and quick CI). Never push or merge
+  main: that deploys production. The user reviews the previews and merges.
+- Full CI: before calling a phase done, run `gh workflow run verify.yml --ref <branch>` if gh is
+  available; otherwise record that it couldn't run. `scripts/verify.sh` stays the evidence.
+- Items only the user can check (real devices, Cloudflare dashboard steps): leave them pending,
+  list them in "Waiting on the user" below with exact steps, and move on to the next phase.
+- Never: credentials or Cloudflare dashboard changes, paid services or dependencies, budget
+  changes in e2e/perf/budgets.json, the user's own books. Prefer free, on-device browser features
+  (for example the Web Speech API for reading aloud, MediaRecorder for voice notes).
+- If the cloud machine can't run part of verify (for example WebKit, wrangler or perf timings),
+  first run verify on main there as a baseline, record what the environment can't do, and never
+  loosen a test or budget to get a pass.
+- Run the evaluator subagent on each finished phase when practical; fix blockers it finds.
+
+## Waiting on the user
+
+- Nothing yet.
 
 ## In flight
 
-- Nothing. This handoff commit is local (a push to main would run the full CI again).
+- Moving to the cloud. Next: phase 10 (Reading comfort) plan, contract and build.
 
 ## Next action
 
-1. Phase 10 (reading comfort) planning, when the user asks.
-2. On the next branch push, check that only the `quick` job runs.
+1. Session start (AGENTS.md), including a verify baseline in the cloud environment.
+2. Phase 10 on branch phase-10-reading-comfort, cut from main.
 
 ## Decisions worth remembering
 
@@ -65,18 +91,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 00:48 EDT
+Snapshot 2026-10-20 01:05 EDT
 - Branch: main
-- HEAD: cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
-- Uncommitted files: 2
+- HEAD: 42508fe phase 09b: merged main verified and deployed; handoff
+- Uncommitted files: 5
 - Last verify: PASS at 2026-10-20 00:30 EDT (commit cb6ec8a)
 - Recent commits:
+    42508fe phase 09b: merged main verified and deployed; handoff
     cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
     d97c64c Merge ci-trim: quick checks on branches, full suite on main and before merging
     5117709 Merge phase 09b: sync book files
     138cb22 ci: quick checks on branch pushes, full suite on main/PRs/on demand; 30 min; browser cache
-    b72cdf4 phase 09a, 09b: complete (user-checked on real devices)
 - Changed files:
+     M GOALS.md
+     M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
+     M harness/features.json
 <!-- AUTO:END -->

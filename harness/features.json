@@ -119,6 +119,34 @@
       "description": "Bookmarks, highlights and notes made on one device appear on another device that has the same book, and deletions reach it too",
       "status": "passing",
       "evidence": "2026-10-19 local: e2e/sync/sync.spec.ts (two devices, wrangler pages dev + local D1) passes in chromium+webkit: bookmarks, highlights and notes reach device B; deletions reach B; later edit wins. Mutation checks fail as expected. 2026-10-20 real devices (user): the Mac's highlights and notes appeared on the iPhone (09b preview check); deletions reached the other device (09a preview check, 2026-10-19)."
+    },
+    {
+      "id": "F-017",
+      "phase": "14",
+      "description": "The library, reader and panels share one consistent, touch-friendly visual design on Mac, iPad and iPhone",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-018",
+      "phase": "15",
+      "description": "A spoken note can be recorded on a page or highlight and played back from the notes panel",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-019",
+      "phase": "16",
+      "description": "The open book can be read aloud from the current place, with pause and resume",
+      "status": "failing",
+      "evidence": ""
+    },
+    {
+      "id": "F-020",
+      "phase": "17",
+      "description": "A highlighted passage can be shared to another app with the book title",
+      "status": "failing",
+      "evidence": ""
     }
   ]
 }
