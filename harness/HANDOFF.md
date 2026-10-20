@@ -12,7 +12,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Branches: `phase-10-reading-comfort-k8v7pk`, `phase-11-library-view`,
   `phase-12-export-annotations`, `phase-13-search-in-book`, `phase-14-ui-ux-design`,
   `phase-15-voice-notes`, `phase-16-listen-to-book`, `phase-17-share-excerpts`.
-- Full CI: 10 green (39380276967), 11 green (39384034130); 12–17: see "In flight".
+- Full CI: 10 green (39380276967), 11 green (39384034130), 12 green (39391982795), 17 green
+  (39425682679 on 9475607, which contains 13–16 and every review fix). Features F-011 … F-020
+  passing on automated evidence; every phase's device item waits on the user.
 - Everything the user must check is in harness/USER-CHECKLIST.md.
 
 ## Standing instructions from the user (2026-10-20; they apply until the user says otherwise)
@@ -51,21 +53,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Evaluator reviews: 10 (FAIL → fixed, appendix), 11 (FAIL → fixed, appendix). 12–13 review was
-  running at the time of writing; 14–17 not yet reviewed by a fresh evaluator.
-- Full CI: 12 failed once on WebKit only (download names get underscores in Playwright's WebKit;
-  test fixed in f09e4e5, to be passed down the stack). Plan to save Actions minutes: full CI on
-  12 and on 17 (which contains every phase); 13–16 rely on 17's run plus their quick checks.
+- Nothing running. Evaluator reviews done for 10–17 (each FAIL → fixed; see the appendices in
+  harness/code_review/). Records for 13–17 (features, PLANS, build log) live on the top branch
+  `phase-17-share-excerpts`; lower branches get them when merged in order.
 - Cloud environment notes: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm
-  stands in (build log 05:45 UTC); perf timings here are noisy (first page 350–420 ms on unchanged
-  code against the Mac's 250 ms budget), so only before/after comparisons were made; budget
-  evidence = full CI runs. Worktrees /home/user/book-reader-p11 … -p17 hold the branches.
+  stands in (build log 05:45 UTC); perf timings here are noisy, so only before/after comparisons
+  were made; budget evidence = full CI runs. Worktrees /home/user/book-reader-p11 … -p17.
 
 ## Next action
 
-1. Pass f09e4e5 down the stack (merge 12 → 13 → … → 17), push, run full CI on 12 and 17.
-2. Fix anything the 12–13 evaluator finds; consider a fresh evaluator for 14–17.
-3. Then the roadmap is built: wait for the user's device checks and merges.
+1. The roadmap (phases 10–17) is built. Wait for the user: device checks in
+   harness/USER-CHECKLIST.md, then merges into main in order (10 first; or 17 alone, which holds all).
+2. Fix whatever the device checks find, on the phase's branch, and pass it up the stack.
+3. Do not start new phases: PLANS.md has none beyond 17.
 
 ## Decisions worth remembering
 

@@ -110,8 +110,8 @@
       "id": "F-015",
       "phase": "13",
       "description": "Full-text search in the open book lists matches and jumps to each one",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 src/core/search.test.ts and e2e/search.spec.ts (matches listed with page and snippet, jump to each, marks on the page, truncation notice, no-text book) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit) on 9475607 (phase 17 head, contains phase 13). Real-device check pending (USER-CHECKLIST)."
     },
     {
       "id": "F-016",
@@ -124,29 +124,29 @@
       "id": "F-017",
       "phase": "14",
       "description": "The library, reader and panels share one consistent, touch-friendly visual design on Mac, iPad and iPhone",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 e2e/design.spec.ts (one bar of controls with tooltips, 44 px targets on iPhone 13 and iPad emulation, no sideways scroll at 320/390 px, Display menu, WCAG AA contrast in all themes, Safari pinch, horizontal place kept) passes in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit) on 9475607. Look-and-feel judgement on real devices pending (USER-CHECKLIST)."
     },
     {
       "id": "F-018",
       "phase": "15",
       "description": "A spoken note can be recorded on a page or highlight and played back from the notes panel",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 unit (voice-notes model, recorder, useVoiceNotes lifecycle, v8→v9 upgrade) and e2e/voice-notes.spec.ts (synthetic microphone: page and highlight notes, reload, delete, cancel, refused microphone) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit; WebKit without MediaRecorder shows the readable message) on 9475607. Real microphone check pending (USER-CHECKLIST)."
     },
     {
       "id": "F-019",
       "phase": "16",
       "description": "The open book can be read aloud from the current place, with pause and resume",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 src/core/read-aloud.test.ts and e2e/listen.spec.ts (stand-in speech engine: from the top and from the current page, follows pages, pause/resume/stop, speed, no speech, no text) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit) on 9475607. Real voices check pending (USER-CHECKLIST)."
     },
     {
       "id": "F-020",
       "phase": "17",
       "description": "A highlighted passage can be shared to another app with the book title",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 src/core/share.test.ts (text with title, length cut, emoji-safe) and e2e/share.spec.ts (stand-in share sheet; clipboard fallback) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit) on 9475607. Real share sheet check pending (USER-CHECKLIST)."
     }
   ]
 }

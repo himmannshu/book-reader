@@ -1583,3 +1583,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
 ### 2026-10-20 13:25 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
 - Full CI https://github.com/himmannshu/book-reader/actions/runs/39391982795 on 36073e0 → success (08:14–08:34Z).
 - Contract items 1–6 have evidence; item 7 (devices, layout confirmation) waits on the user. F-014 → passing.
+
+### 2026-10-20 13:40 UTC | Phases 13–17 | Claude Code (Opus 5.5, cloud session) | Full CI green
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39425682679 on 9475607 (phase 17 head; contains phases 13–16 and every review fix) → success (12:52–13:16Z),
+  chromium + webkit, sync and perf included. One run for the stack to save Actions minutes (phases 13–16 are
+  ancestors of this commit with no changes of their own since).
+- F-015, F-017, F-018, F-019, F-020 → passing (automated evidence); each contract's device item waits on the user
+  (harness/USER-CHECKLIST.md). PLANS rows 13–17 updated. Records kept on this top branch; the lower branches
+  receive them when merged in order.
