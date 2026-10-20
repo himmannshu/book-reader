@@ -104,4 +104,18 @@ Settings → Billing → Actions minutes used this month.
 - [ ] Chrome on the Mac: Share copies the passage instead and says so.
 - [ ] Would you like a picture card of the passage (for Instagram-style sharing)? Not built yet.
 
+## Phase 18: Design foundations (branch `phase-18-design-foundations`)
+
+The look changes; the layout does not (the new toolbar, panels and library come in 19–23).
+
+- [ ] Open the branch preview on the Mac, iPad and iPhone. In Light, Sepia and Dark, compare the
+      library, the reader and a panel with your Claude Design system: colours, the two fonts
+      (Literata for titles, Source Sans 3 for the interface), the icons, the round toolbar buttons.
+- [ ] Sepia pages are lighter than before (the design's tint is softer). Is that what you want?
+- [ ] Turn on airplane mode, reopen the installed app: titles are still in Literata.
+- [ ] Messages now show at the bottom ("Saved on this device." and the like) and leave after
+      about 4 s. Errors (try opening a file that isn't a PDF) stay until you tap the close button.
+- [ ] Keyboard on the Mac: press Tab through the toolbar; each control shows a blue ring.
+- [ ] With Reduce motion on (System Settings → Accessibility → Display), nothing slides or pulses.
+
 <!-- Later phases append their sections below. -->
