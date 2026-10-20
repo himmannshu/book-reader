@@ -44,7 +44,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
-import { VoiceNotes } from './VoiceNotes';
+import { Elapsed, VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
 
@@ -853,6 +853,21 @@ export function ReaderView({
               className="icon-only"
               onClick={() => runSearch('')}
             />
+          </div>
+        )}
+        {voice.recording && openPanel !== 'notes' && (
+          // The Notes panel was closed mid-recording: keep it visible (phase 15 review).
+          <div className="player-bar recording-bar" role="toolbar" aria-label="Recording">
+            <span className="recording-dot" aria-hidden="true" />
+            <span className="player-status">
+              Recording voice note · <Elapsed since={voice.recording.startedAt} />
+            </span>
+            <button type="button" className="button" onClick={() => void voice.save()}>
+              Stop and save
+            </button>
+            <button type="button" className="button secondary" onClick={voice.cancel}>
+              Cancel recording
+            </button>
           </div>
         )}
         <SelectionActions

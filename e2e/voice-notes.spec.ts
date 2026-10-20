@@ -119,6 +119,23 @@ test.describe('with a microphone', () => {
     await expect(voiceList(page)).toHaveCount(0);
   });
 
+  test('closing the Notes panel while recording keeps the recording visible, and it can be saved', async ({
+    page,
+  }) => {
+    test.skip(!(await canRecord(page)), 'This test browser has no MediaRecorder');
+    await openNotes(page);
+    await page.getByRole('button', { name: 'Record voice note on this page' }).click();
+    await expect(page.getByText(/^Recording on page/)).toBeVisible();
+    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+    const bar = page.getByRole('toolbar', { name: 'Recording' });
+    await expect(bar).toBeVisible();
+    await page.waitForTimeout(800);
+    await bar.getByRole('button', { name: 'Stop and save' }).click();
+    await expect(bar).toHaveCount(0);
+    await openNotes(page);
+    await expect(voiceList(page)).toHaveCount(1);
+  });
+
   test('cancelling a recording keeps nothing', async ({ page }) => {
     test.skip(!(await canRecord(page)), 'This test browser has no MediaRecorder');
     await openNotes(page);
