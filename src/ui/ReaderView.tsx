@@ -45,8 +45,6 @@ const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
 const DISPLAY_ID = 'display-menu';
-/** Ctrl+wheel distance (px) for one zoom step: one mouse notch, or a short trackpad pinch. */
-const WHEEL_STEP = 50;
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
@@ -267,24 +265,16 @@ export function ReaderView({
     if (level !== null) changeZoom(level);
   }
 
-  // Pinch to zoom (phase 14): a trackpad pinch arrives as ctrl+wheel in Chrome and Firefox, and as
-  // gesture events in Safari (also for two fingers on iPad and iPhone). Each settles on a level.
-  const zooming = useRef({ step: stepZoom, set: changeZoom });
+  // Pinch to zoom (phase 14): Safari's gesture events (trackpad, and two fingers on iPad and
+  // iPhone) settle on the nearest level. Chrome's ctrl+wheel pinch is not handled: it needs a
+  // non-passive wheel listener, which makes every wheel scroll wait for the main thread.
+  const zooming = useRef({ set: changeZoom });
   useEffect(() => {
-    zooming.current = { step: stepZoom, set: changeZoom };
+    zooming.current = { set: changeZoom };
   });
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
-    let wheel = 0;
-    const onWheel = (event: WheelEvent) => {
-      if (!event.ctrlKey) return;
-      event.preventDefault();
-      wheel += event.deltaY;
-      if (Math.abs(wheel) < WHEEL_STEP) return;
-      zooming.current.step(wheel < 0 ? 'in' : 'out');
-      wheel = 0;
-    };
     let startPercent = 100;
     const onGestureStart = (event: Event) => {
       event.preventDefault();
@@ -297,12 +287,10 @@ export function ReaderView({
       if (Math.abs(scale - 1) < 0.05) return;
       zooming.current.set(nearestZoomLevel(startPercent * scale));
     };
-    scroller.addEventListener('wheel', onWheel, { passive: false });
     scroller.addEventListener('gesturestart', onGestureStart);
     scroller.addEventListener('gesturechange', onGestureChange);
     scroller.addEventListener('gestureend', onGestureEnd);
     return () => {
-      scroller.removeEventListener('wheel', onWheel);
       scroller.removeEventListener('gesturestart', onGestureStart);
       scroller.removeEventListener('gesturechange', onGestureChange);
       scroller.removeEventListener('gestureend', onGestureEnd);

@@ -70,4 +70,15 @@ Settings → Billing → Actions minutes used this month.
       pages) takes about 2.7 s in the cloud machine; run `npm run test:perf` on the Mac to see
       yours, then tell the agent a number to put in e2e/perf/budgets.json.
 
+## Phase 14: UI and UX design pass (branch `phase-14-ui-ux-design`)
+
+- [ ] Mac: the reader has one quiet bar with icons (hover for names; at 1400 px and wider the
+      names show). Does it feel calm and clear? Anything you miss from the old two-row layout?
+- [ ] Mac trackpad: pinch in and out on the pages; the zoom steps (125%, 150%…) and the place
+      stays. Try in Safari and in the installed app.
+- [ ] iPad and iPhone: pinch with two fingers on the pages; it should zoom the book (not the whole
+      app). All buttons are easy to tap. The Aa (Display) button holds theme and zoom on iPhone.
+- [ ] iPhone: after a search, choose a result; a small bar at the bottom steps through matches.
+- [ ] Any of the three themes: anything hard to read?
+
 <!-- Later phases append their sections below. -->

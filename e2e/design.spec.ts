@@ -42,23 +42,18 @@ test.describe('desktop', () => {
     expect(await chromeHeight(page)).toBeLessThanOrEqual(64);
   });
 
-  test('ctrl+wheel (trackpad pinch) zooms in and out, keeping the page', async ({ page }) => {
+  test('ctrl+wheel is left to the browser, so wheel scrolling never waits for the app', async ({
+    page,
+  }) => {
     await page.goto('/');
-    await importBook(page, 'long-300-pages.pdf');
-    const zoom = page.getByRole('combobox', { name: 'Zoom' });
-    const reader = page.getByTestId('reader');
-    const box = await reader.boundingBox();
-    if (!box) throw new Error('no reader');
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.keyboard.down('Control');
-    await page.mouse.wheel(0, -120);
-    await page.keyboard.up('Control');
-    await expect(zoom).toHaveValue('125');
-    await page.keyboard.down('Control');
-    await page.mouse.wheel(0, 120);
-    await page.keyboard.up('Control');
-    await expect(zoom).toHaveValue('110');
-    await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+    await importBook(page, 'basic-3-pages.pdf');
+    // No wheel listener that could block scrolling (it would have to be non-passive).
+    const prevented = await page.getByTestId('reader').evaluate((reader) => {
+      const event = new WheelEvent('wheel', { deltaY: -120, ctrlKey: true, cancelable: true });
+      reader.dispatchEvent(event);
+      return event.defaultPrevented;
+    });
+    expect(prevented).toBe(false);
   });
 
   test('Safari gesture events (pinch) zoom to the nearest level', async ({ page }) => {
