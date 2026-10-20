@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
+  ownBook,
   jumpTo,
   maxCanvasMemoryMB,
   median,
@@ -54,21 +55,23 @@ test('canvas memory while scrolling the whole book', async ({ page }, testInfo) 
 
 test('searching the whole book', async ({ page }, testInfo) => {
   // Each sample opens the book afresh, so no page text is cached: a first search, as a reader
-  // would do it. The query matches once, on the last page, so every page is read.
+  // would do it. Every page is read. In the benchmark book every 20th page is an image, so the
+  // last page with text is the one before last: its heading is the only match.
   const samples: number[] = [];
   for (let i = 0; i < 3; i++) {
     await openBook(page);
     const count = await pageCount(page);
     await page.getByRole('button', { name: 'Search', exact: true }).click();
     const box = page.getByRole('searchbox', { name: 'Search in book' });
-    await box.fill(`page ${count}`);
+    await box.fill(`page ${count - 1}`);
     const started = await page.evaluate(() => performance.now());
     // Enter starts at once (instead of after the typing pause).
     await box.press('Enter');
-    await expect(page.getByRole('status').filter({ hasText: /match/ })).toBeVisible({
-      timeout: 120_000,
-    });
+    const status = page.getByRole('status').filter({ hasText: /match/ });
+    await expect(status).toBeVisible({ timeout: 120_000 });
     samples.push((await page.evaluate(() => performance.now())) - started);
+    // A broken search would be fast: check it found the one match (own books may have none).
+    if (!ownBook) await expect(status).toHaveText('1 match on 1 page');
   }
   record(testInfo, 'searchMs', Math.round(median(samples)), samples.map(Math.round));
 });
