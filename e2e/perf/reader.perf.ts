@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   jumpTo,
   maxCanvasMemoryMB,
@@ -50,4 +50,25 @@ test('canvas memory while scrolling the whole book', async ({ page }, testInfo) 
   await openBook(page);
   const mb = await maxCanvasMemoryMB(page, 30);
   record(testInfo, 'maxCanvasMB', Math.round(mb * 10) / 10);
+});
+
+test('searching the whole book', async ({ page }, testInfo) => {
+  // Each sample opens the book afresh, so no page text is cached: a first search, as a reader
+  // would do it. The query matches once, on the last page, so every page is read.
+  const samples: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    await openBook(page);
+    const count = await pageCount(page);
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    const box = page.getByRole('searchbox', { name: 'Search in book' });
+    await box.fill(`page ${count}`);
+    const started = await page.evaluate(() => performance.now());
+    // Enter starts at once (instead of after the typing pause).
+    await box.press('Enter');
+    await expect(page.getByRole('status').filter({ hasText: /match/ })).toBeVisible({
+      timeout: 120_000,
+    });
+    samples.push((await page.evaluate(() => performance.now())) - started);
+  }
+  record(testInfo, 'searchMs', Math.round(median(samples)), samples.map(Math.round));
 });

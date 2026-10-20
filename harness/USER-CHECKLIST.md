@@ -60,4 +60,14 @@ Settings → Billing → Actions minutes used this month.
 - [ ] iPhone (installed app): the same button; Safari should show the file with Save to Files /
       Share. Tell the agent if nothing happens (standalone apps on iOS can be picky here).
 
+## Phase 13: Search inside a book (branch `phase-13-search-in-book`)
+
+- [ ] Mac: open a real book, press Cmd+F (or the Search button), type a word you know is in it.
+      Results list pages with the words around each match; clicking one jumps there with the
+      word marked in orange. Next/Previous step through them.
+- [ ] iPhone: the same with the Search button (the panel closes after choosing a result).
+- [ ] Decide a speed budget for searching a whole book (`searchMs`). The benchmark book (600
+      pages) takes about 2.7 s in the cloud machine; run `npm run test:perf` on the Mac to see
+      yours, then tell the agent a number to put in e2e/perf/budgets.json.
+
 <!-- Later phases append their sections below. -->

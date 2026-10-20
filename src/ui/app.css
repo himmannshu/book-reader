@@ -738,3 +738,55 @@ body {
     gap: 10px;
   }
 }
+
+/* Search matches (phase 13), over the page like highlights. */
+.search-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.search-hit {
+  position: absolute;
+  background: rgb(255 140 0 / 30%);
+  border-radius: 2px;
+}
+
+.search-hit.current {
+  background: rgb(255 120 0 / 55%);
+  outline: 2px solid #d35400;
+}
+
+.search-form input {
+  width: 100%;
+  margin: 0 0 4px;
+}
+
+.search-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 4px 8px 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.search-steps .button {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+}
+
+.search-result .note-quote {
+  display: block;
+}
+
+.search-result mark {
+  background: rgb(255 140 0 / 35%);
+  color: inherit;
+}
+
+.search-result[aria-current='true'] {
+  background: var(--reader-bg);
+  outline: 2px solid var(--accent);
+}

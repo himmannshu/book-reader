@@ -38,6 +38,7 @@ function fakeDoc(pageCount: number, size: PageSize = { width: 500, height: 700 }
       };
     },
     outline: () => Promise.resolve([]),
+    pageText: () => Promise.resolve(''),
     destroy: () => Promise.resolve(),
   };
   const started = () => renders.map((r) => r.index);

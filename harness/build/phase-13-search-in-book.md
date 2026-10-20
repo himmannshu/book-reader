@@ -1,6 +1,6 @@
 # Phase 13: Search inside a book
 
-- Status: Not started
+- Status: In progress
 - Branch: phase-13-search-in-book
 - Depends on: 02
 
@@ -53,3 +53,14 @@ Indexing a long book can be slow or memory-hungry; index lazily in a worker.
 
 Stop when every contract item has observed evidence in harness/build-log.md.
 Do not start the next phase.
+
+## Plan (2026-10-20)
+
+Approved by: agent under the user's standing instruction of 2026-10-20. Stacked on phase 12's
+branch. Judgment calls: harness/context/phase-13-search-in-book-context.md.
+
+1. src/core/search.ts (unit tests first): folding, matches with original offsets, snippets.
+2. Engine `pageText`; viewer `setSearch` marks matches in text layers and reveals the current one.
+3. useSearch + SearchPanel, Search button and Cmd/Ctrl+F in the reader.
+4. e2e/search.spec.ts; `searchMs` in the benchmarks (report-only).
+5. Verify, perf, full CI, evaluator.

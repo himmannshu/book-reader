@@ -1482,3 +1482,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Perf (chromium), alternating phase 10 and phase 11 runs under the same load: firstPage p10 388/372/389,
   p11 371/399/405; scroll p95 33 ms in 4 of 7 p11 runs and 3 of 7 p10 runs, otherwise 16.8; canvas 67.1 MB both.
   Same distribution: no regression seen.
+
+### 2026-10-20 07:05 UTC | Phases 12–13 | Claude Code (Opus 5.5, cloud session) | Built in worktrees, stacked on phase 11
+- Phase 12 (branch phase-12-export-annotations): src/core/export.ts unit tests written first and red (module
+  missing), then green (one test bug: '### Page' contains '## '). e2e/export.spec.ts (download event, file name,
+  contents in book order; disabled reason while unsaved) 2/2. The first full run showed notes.spec "keyboard
+  newline…" failing: the export button sat between "Add note" and the notes in the arrow-key order; moved to
+  the end of the panel; notes + export 20/20. Full chromium (alternate port) 108 passed + 1 environment failure.
+- Phase 13 (branch phase-13-search-in-book): core search unit tests with the module (8); engine pageText; viewer
+  marks matches in text layers; search panel with Cmd/Ctrl+F. e2e/search.spec.ts 4/4 (not run red first; on
+  phase 12 they cannot pass: no Search button). New report-only benchmark searchMs (no budget until the user
+  agrees one; budgets.json untouched): 3657 ms, then 2661 ms after asking 4 pages ahead. Unit 329 passed;
+  chromium e2e 113 passed + 1 environment failure (installability).

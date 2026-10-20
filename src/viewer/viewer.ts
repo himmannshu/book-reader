@@ -14,6 +14,7 @@ import {
 } from '../core/highlights';
 import { markPageRendered } from '../core/perf-marks';
 import { zoomPercent, type ZoomSetting } from '../core/reading-state';
+import { findMatches, searchable } from '../core/search';
 import { RenderCancelledError, type PageSize, type PdfDoc, type RenderTask } from '../engine/types';
 import {
   anchorAt,
@@ -76,6 +77,16 @@ interface Slot {
   /** Selectable text, built for visible pages once their canvas is drawn. */
   text?: HTMLDivElement;
   textTask?: RenderTask;
+  /** True once the text layer has finished laying out (search matches are found in it). */
+  textReady?: boolean;
+  /** Search match boxes (phase 13), made on first use. */
+  searchHits?: HTMLDivElement;
+}
+
+/** A search match to show as the current one: the n-th match on a page (both 0-based). */
+export interface SearchSpot {
+  pageIndex: number;
+  occurrence: number;
 }
 
 export class Viewer {
@@ -100,6 +111,7 @@ export class Viewer {
   #visibleFirst = -1;
   #visibleLast = -1;
   #highlightList: readonly Highlight[] = [];
+  #search: { query: string; current: SearchSpot | null; reveal: boolean } | null = null;
   #textTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** `scroller` must be a scrollable element (overflow: auto) that the viewer may fill. */
@@ -214,6 +226,21 @@ export class Viewer {
   setHighlights(highlights: readonly Highlight[]): void {
     this.#highlightList = highlights;
     this.#drawHighlights();
+  }
+
+  /**
+   * Marks the matches of `query` on the pages that have selectable text (null clears them). With
+   * `current`, that match is marked as the current one and scrolled into view once its page's
+   * text is ready.
+   */
+  setSearch(query: string | null, current: SearchSpot | null = null): void {
+    if (this.#destroyed) return;
+    this.#search =
+      query !== null && searchable(query) ? { query, current, reveal: current !== null } : null;
+    if (this.#search && current && !this.#slots[current.pageIndex]?.textReady) {
+      this.scrollToPage(current.pageIndex);
+    }
+    this.#slots.forEach((slot, index) => this.#drawSearch(slot, index));
   }
 
   /** Brings a passage's first PDF-coordinate box into view, leaving a small reading margin. */
@@ -420,6 +447,14 @@ export class Viewer {
     const task = this.#doc.renderTextLayer(index, text, pageAt(this.#layout, index).scale);
     slot.text = text;
     slot.textTask = task;
+    task.promise.then(
+      () => {
+        if (slot.textTask !== task) return;
+        slot.textReady = true;
+        if (this.#search) this.#drawSearch(slot, index);
+      },
+      () => undefined,
+    );
     task.promise.catch((error: unknown) => {
       if (slot.textTask !== task || error instanceof RenderCancelledError) return;
       if (this.#destroyed || this.#doc.destroyed) return;
@@ -431,6 +466,8 @@ export class Viewer {
   #releaseText(slot: Slot): void {
     slot.textTask?.cancel();
     slot.textTask = undefined;
+    slot.textReady = false;
+    slot.searchHits?.replaceChildren();
     slot.text?.remove();
     slot.text = undefined;
   }
@@ -507,6 +544,86 @@ export class Viewer {
         }),
       );
     });
+  }
+
+  /** Boxes over this page's search matches, found in its text layer (only visible pages). */
+  #drawSearch(slot: Slot, pageIndex: number): void {
+    const search = this.#search;
+    if (!search || !slot.text || !slot.textReady) {
+      slot.searchHits?.replaceChildren();
+      return;
+    }
+    // The page's text as the text layer shows it: its text nodes, and a line break per <br>.
+    const nodes: Text[] = [];
+    const starts: number[] = [];
+    let full = '';
+    const walker = document.createTreeWalker(
+      slot.text,
+      NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+    );
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node instanceof Text) {
+        starts.push(full.length);
+        nodes.push(node);
+        full += node.data;
+      } else if (node instanceof HTMLBRElement) {
+        full += '\n';
+      }
+    }
+    const at = (offset: number, isEnd: boolean): [Text, number] | null => {
+      let index = -1;
+      for (let i = 0; i < nodes.length && (starts[i] ?? 0) <= offset; i++) index = i;
+      const node = nodes[index];
+      if (!node) return null;
+      const within = offset - (starts[index] ?? 0);
+      // An offset in a line break between nodes: end at the node before, start at the next.
+      if (within > node.data.length) {
+        const next = nodes[index + 1];
+        return isEnd || !next ? [node, node.data.length] : [next, 0];
+      }
+      return [node, within];
+    };
+
+    if (!slot.searchHits) {
+      slot.searchHits = document.createElement('div');
+      slot.searchHits.className = 'search-layer';
+      slot.highlights.after(slot.searchHits);
+    }
+    const page = slot.element.getBoundingClientRect();
+    const current = search.current?.pageIndex === pageIndex ? search.current.occurrence : -1;
+    const percent = (value: number, of: number) => `${(value / of) * 100}%`;
+    const boxes: HTMLDivElement[] = [];
+    let currentBox: DOMRect | undefined;
+    findMatches(full, search.query).forEach((match, occurrence) => {
+      const start = at(match.start, false);
+      const end = at(match.end, true);
+      if (!start || !end || page.width === 0) return;
+      const range = document.createRange();
+      range.setStart(...start);
+      range.setEnd(...end);
+      for (const rect of range.getClientRects()) {
+        if (rect.width < 1 || rect.height < 1) continue;
+        const box = document.createElement('div');
+        box.className = occurrence === current ? 'search-hit current' : 'search-hit';
+        box.style.left = percent(rect.left - page.left, page.width);
+        box.style.top = percent(rect.top - page.top, page.height);
+        box.style.width = percent(rect.width, page.width);
+        box.style.height = percent(rect.height, page.height);
+        boxes.push(box);
+        if (occurrence === current) currentBox ??= rect;
+      }
+    });
+    slot.searchHits.replaceChildren(...boxes);
+
+    if (search.reveal && currentBox) {
+      // Put the match about a third of the way down the window.
+      search.reveal = false;
+      const view = this.#scroller.getBoundingClientRect();
+      this.#scroller.scrollTop += currentBox.top - view.top - this.#scroller.clientHeight / 3;
+      if (currentBox.left < view.left || currentBox.right > view.right) {
+        this.#scroller.scrollLeft += currentBox.left - view.left - this.#options.layout.padding;
+      }
+    }
   }
 
   /** Cancels any drawing and frees the canvas memory. Safe to call on any slot. */

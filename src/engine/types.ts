@@ -40,6 +40,11 @@ export interface PdfDoc {
    * Rejects with RenderCancelledError if cancelled. Pages without text leave it empty.
    */
   renderTextLayer(index: number, container: HTMLElement, scale: number): RenderTask;
+  /**
+   * Page `index`'s text in reading order, with a line break at each line end (phase 13). PDF.js
+   * extracts it in its worker. A page without text gives ''.
+   */
+  pageText(index: number): Promise<string>;
   /** The book's table of contents; empty if it has none. Never rejects for a broken entry. */
   outline(): Promise<OutlineItem[]>;
   destroy(): Promise<void>;

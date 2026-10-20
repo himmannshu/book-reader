@@ -122,6 +122,16 @@ class PdfjsDoc implements PdfDoc {
     };
   }
 
+  async pageText(index: number): Promise<string> {
+    const page = await this.#doc.getPage(index + 1);
+    const content = await page.getTextContent();
+    let text = '';
+    for (const item of content.items) {
+      if ('str' in item) text += item.str + (item.hasEOL ? '\n' : '');
+    }
+    return text;
+  }
+
   async outline(): Promise<OutlineItem[]> {
     const raw = (await this.#doc.getOutline()) as RawOutlineItem[] | null;
     return resolveOutline(

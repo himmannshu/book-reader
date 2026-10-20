@@ -17,6 +17,7 @@ const fakeDoc: PdfDoc = {
   renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
   renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
   outline: () => Promise.resolve([]),
+  pageText: () => Promise.resolve(''),
   destroy: () => Promise.resolve(),
 };
 const workingEngine: PdfEngine = { open: () => Promise.resolve(fakeDoc) };

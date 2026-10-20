@@ -32,6 +32,8 @@ import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
+import { SearchPanel } from './SearchPanel';
+import { useSearch } from './useSearch';
 import { downloadText } from './download';
 
 /** Below this width a side panel covers the pages instead of sitting beside them. */
@@ -39,12 +41,13 @@ const NARROW_QUERY = '(max-width: 699px)';
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
+const SEARCH_ID = 'search-panel';
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
 const ZOOM_CHOICES: readonly ZoomSetting[] = ['fit-width', 'fit-page', ...ZOOM_LEVELS];
 
-type Panel = 'contents' | 'bookmarks' | 'notes';
+type Panel = 'contents' | 'bookmarks' | 'notes' | 'search';
 
 export interface ReaderHandle {
   requestNavigation(proceed: () => void): void;
@@ -97,6 +100,7 @@ export function ReaderView({
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
   const bookmarksButtonRef = useRef<HTMLButtonElement>(null);
   const notesButtonRef = useRef<HTMLButtonElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
@@ -295,7 +299,9 @@ export function ReaderView({
       ? contentsButtonRef
       : panel === 'bookmarks'
         ? bookmarksButtonRef
-        : notesButtonRef;
+        : panel === 'notes'
+          ? notesButtonRef
+          : searchButtonRef;
   }
 
   function togglePanel(panel: Panel) {
@@ -389,6 +395,54 @@ export function ReaderView({
   const highlightList = marked.items ?? NO_HIGHLIGHTS;
   const written = useNotes({ bookId, syncVersion, store: notes, highlights: highlightList, now });
   useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
+
+  // Search (phase 13). Matches stay marked while there is a query, even with the panel closed.
+  const { state: searchState, search } = useSearch(doc);
+  const [searchCurrent, setSearchCurrent] = useState<number | null>(null);
+  const searchQuery = searchState.query;
+  useEffect(() => {
+    viewerRef.current?.setSearch(searchQuery.trim() ? searchQuery : null);
+  }, [searchQuery]);
+
+  function runSearch(query: string) {
+    setSearchCurrent(null);
+    void search(query);
+  }
+
+  function chooseSearchResult(index: number) {
+    const results =
+      searchState.status === 'searching' || searchState.status === 'done'
+        ? searchState.results
+        : [];
+    const result = results[index];
+    if (!result) return;
+    setSearchCurrent(index);
+    viewerRef.current?.setSearch(searchState.query, {
+      pageIndex: result.pageIndex,
+      occurrence: result.occurrence,
+    });
+    if (window.matchMedia(NARROW_QUERY).matches) {
+      setOpenPanel(null);
+      scrollerRef.current?.focus({ preventScroll: true });
+    }
+  }
+
+  // Cmd/Ctrl+F opens the book's search instead of the browser's (which can't see the pages).
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== 'f')
+        return;
+      event.preventDefault();
+      written.request(() => {
+        marked.dismiss();
+        setOpenPanel('search');
+        // Already open: put the cursor back in the box.
+        document.querySelector<HTMLInputElement>(`#${SEARCH_ID} input`)?.focus();
+      });
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  });
 
   const exportUnavailableReason =
     bookId === null
@@ -519,6 +573,16 @@ export function ReaderView({
         >
           Notes
         </button>
+        <button
+          ref={searchButtonRef}
+          type="button"
+          className="button secondary"
+          aria-expanded={openPanel === 'search'}
+          aria-controls={openPanel === 'search' ? SEARCH_ID : undefined}
+          onClick={() => togglePanel('search')}
+        >
+          Search
+        </button>
         <div className="zoom-controls">
           <button
             type="button"
@@ -584,6 +648,16 @@ export function ReaderView({
             onChoose={chooseNote}
             onExport={() => void exportAnnotations()}
             exportUnavailableReason={exportUnavailableReason}
+          />
+        )}
+        {openPanel === 'search' && (
+          <SearchPanel
+            id={SEARCH_ID}
+            state={searchState}
+            pageCount={doc.pageCount}
+            current={searchCurrent}
+            onSearch={runSearch}
+            onChoose={chooseSearchResult}
           />
         )}
         <div

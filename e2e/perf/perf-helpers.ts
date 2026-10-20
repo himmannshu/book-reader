@@ -13,8 +13,19 @@ export const bookPath = ownBook ?? heavyFixturePath;
 /** Report-only runs measure without enforcing budgets: own books and baseline measurement. */
 export const reportOnly = !!ownBook || process.env.PERF_REPORT_ONLY === '1';
 
-export type Metric = 'firstPageMs' | 'jumpMs' | 'p95FrameMs' | 'blankFramePct' | 'maxCanvasMB';
-const timeMetrics: ReadonlySet<Metric> = new Set(['firstPageMs', 'jumpMs', 'p95FrameMs']);
+export type Metric =
+  'firstPageMs' | 'jumpMs' | 'p95FrameMs' | 'blankFramePct' | 'maxCanvasMB' | 'searchMs';
+const timeMetrics: ReadonlySet<Metric> = new Set([
+  'firstPageMs',
+  'jumpMs',
+  'p95FrameMs',
+  'searchMs',
+]);
+/**
+ * Measured and reported, but with no budget until the user agrees one (budgets.json changes need
+ * the user; see AGENTS.md). Phase 13 added searchMs this way.
+ */
+const awaitingBudget: ReadonlySet<Metric> = new Set(['searchMs']);
 
 interface Budgets {
   ciTimeMultiplier: number;
@@ -66,6 +77,10 @@ export function record(
 
   const projectBudgets = budgets[project] as Partial<Record<Metric, number>> | undefined;
   const base = projectBudgets?.[metric];
+  if (base === undefined && awaitingBudget.has(metric)) {
+    testInfo.annotations.push({ type: 'no budget yet', description: metric });
+    return;
+  }
   if (base === undefined) throw new Error(`No budget for ${metric} in project ${project}`);
   const limit = process.env.CI && timeMetrics.has(metric) ? base * budgets.ciTimeMultiplier : base;
   // Soft, so every metric in a test is still recorded when an earlier one is over budget.
