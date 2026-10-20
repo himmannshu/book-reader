@@ -1267,7 +1267,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   ACCESS_AUD must equal it (not checked from here: agents don't read dashboard settings).
 - Not yet observed: a signed-in sync against the real D1 (needs the user's browser) and item 13 (two real devices).
 
-### 2026-10-19 23:05 EDT | Phase 09a | Claude Code (Opus 5.5) | Merged into main; production deployed
+### 2026-10-19 23:03 EDT | Phase 09a | Claude Code (Opus 5.5) | Merged into main; production deployed
 - User report (item 13, partial): on the preview, a book added on the Mac appeared on the iPhone as "On your other
   devices" (its PDF did not open there: expected, the file arrives in 09b), and deletions reached the other device.
   Not yet reported: annotations appearing on the second device after importing the same PDF there.
@@ -1281,7 +1281,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Phase 09a stays In progress until the user reports the annotation part of item 13 (can be checked on
   production now).
 
-### 2026-10-19 23:25 EDT | Phase 09b | Claude Code (Opus 5.5) | Planned and approved
+### 2026-10-19 23:16 EDT | Phase 09b | Claude Code (Opus 5.5) | Planned and approved
 - User decisions: download on open; cap cloud storage at 9 GB. Plan approved by the user (plan mode).
 - Wrote harness/build/phase-09b-sync-book-files.md (detail) and harness/contracts/phase-09b-contract.md
   (13 items, approved). PLANS.md: 09a and 09b In progress (09a's row was stale at "Not started").
@@ -1290,7 +1290,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Facts used (Cloudflare docs): R2 multipart parts ≥ 5 MiB, equal size except the last, ≤ 10,000 parts;
   request bodies ≤ 100 MB → fixed 8 MiB parts. Free Workers CPU is tight → no hashing on the server.
 
-### 2026-10-19 23:40 EDT | Phase 09b | Claude Code (Opus 5.5) | Probe; server file API green
+### 2026-10-19 23:21 EDT | Phase 09b | Claude Code (Opus 5.5) | Probe; server file API green
 - Probe (scratch project, `wrangler pages dev --r2`): multipart with an 8 MiB streamed part (Content-Length set) +
   a 3 MB last part → complete size 11388608; ranged GET 206 and full GET byte-identical (cmp). A 4 MB non-last
   part → complete fails "smaller than the minimum allowed object size (10011)"; a single small part (4 B, 4 MB)
@@ -1303,7 +1303,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   deep equality on 16 MB arrays ran Node out of memory; tests compare bytes with Buffer.compare instead.
   `npx vitest run functions` → 31 passed; typecheck and eslint clean.
 
-### 2026-10-20 00:05 EDT | Phase 09b | Claude Code (Opus 5.5) | Local storage v6 and the HTTP file client
+### 2026-10-19 23:24 EDT | Phase 09b | Claude Code (Opus 5.5) | Local storage v6 and the HTTP file client
 - Tests first: src/storage/file-transfer-store.test.ts (8) failed (`s.files` undefined), then pass. IndexedDB v6
   adds `uploads` (keyPath bookId); `files.pendingUploads()` / `saveUpload()`; `books.putFile()` saves a downloaded
   file for a known book and marks it done; delete everywhere (local or remote) clears the upload row. v5 → v6
@@ -1314,7 +1314,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Content-Range, AbortError passes through.
 - Full unit run green; lint and typecheck clean.
 
-### 2026-10-20 00:55 EDT | Phase 09b | Claude Code (Opus 5.5) | Uploader, downloader, UI, e2e; verify PASS
+### 2026-10-19 23:38 EDT | Phase 09b | Claude Code (Opus 5.5) | Uploader, downloader, UI, e2e; verify PASS
 - Uploader (src/sync/uploader.ts) and downloader (src/sync/downloader.ts), with unit tests (8 + 5; the test files
   were written before the code, though I ran them only after both existed). Unit mutation checks, each reverted:
   uploader ignoring saved parts → resume test failed; no SHA-256 check → damaged test failed; storage-full not
@@ -1354,7 +1354,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   12 local PASS — CI pending (needs a push); 13 pending (user, after R2 setup and deploy).
 - F-010 → passing (local evidence; real devices pending).
 
-### 2026-10-20 00:22 EDT | Phase 09b | Claude Code (Opus 5.5) | Pushed; CI green; preview file API behind Access
+### 2026-10-20 00:20 EDT | Phase 09b | Claude Code (Opus 5.5) | Pushed; CI green; preview file API behind Access
 - The user reported R2 set up (buckets book-reader-files / book-reader-files-preview, FILES binding for Production
   and Preview) and asked to push. Pushed phase-09b-sync-book-files at 98f0915.
 - CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39367480019 → success
@@ -1363,7 +1363,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   GET and HEAD /api/files/<id> and POST /api/files/<id>/uploads → 302 to the Access login.
 - Not yet observed: a signed-in upload/download against real R2 (item 13, the user's two-device check).
 
-### 2026-10-20 00:45 EDT | Phases 09a, 09b | Claude Code (Opus 5.5) | Complete (user-checked on real devices)
+### 2026-10-20 00:25 EDT | Phases 09a, 09b | Claude Code (Opus 5.5) | Complete (user-checked on real devices)
 - User report (09b item 13): on the 09b preview, a book imported on the Mac (page left open while it uploaded)
   opened on the iPhone without importing; it downloaded and showed the Mac's highlights and notes.
 - That also observes 09a item 13's remaining part: annotations made on the Mac appeared on the iPhone. (Item 13
@@ -1373,7 +1373,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   F-010 and F-016 evidence updated with the real-device checks.
 - 09b is not merged into main yet (a push to main deploys production; waiting for the user's OK).
 
-### 2026-10-20 01:00 EDT | Infrastructure | Claude Code (Opus 5.5) | CI trimmed (user decision)
+### 2026-10-20 00:27 EDT | Infrastructure | Claude Code (Opus 5.5) | CI trimmed (user decision)
 - Measured (run 39367480019): setup ~1.3 min (browser install 63 s), verify.sh 913 s: lint+format+types 17 s,
   unit 24 s, browser e2e 9.8 min (1 worker on the 2-core private-repo runner), sync 3.0 min, perf 1.7 min. Total
   16.7 min against a 20-minute timeout; durations grew 8.7 → 16.7 min across phases. 33 runs in 2 days ≈ 276 wall
@@ -1385,3 +1385,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
   `gh workflow run verify.yml --ref <branch>` as the pre-merge CI check. YAML parsed and Prettier-clean locally;
   actionlint is not installed, so the first GitHub run is the real check. The quick job is unobserved until the
   next branch push.
+
+### 2026-10-20 00:30 EDT | Phase 09b | Claude Code (Opus 5.5) | Merged into main (with the CI change); log times corrected
+- Merged phase-09b-sync-book-files into main (--no-ff), then ci-trim (--no-ff; build-log conflict, both entries
+  kept).
+- Correction: eight entry headings from 2026-10-19 23:05 to 2026-10-20 01:00 had estimated times, some up to 80
+  minutes off and out of order. Each now carries the time of the commit it belongs to (git log).
