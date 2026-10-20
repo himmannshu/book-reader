@@ -15,6 +15,8 @@ interface SelectionActionsProps {
   noteLabel?: string;
   /** Records a voice note on the chosen highlight (phase 15). */
   onVoiceNote?(id: string): void;
+  /** Shares the chosen highlight's passage with another app (phase 17). */
+  onShare?(id: string): void;
   noteUnavailableReason?: string | null;
   removeUnavailableReason?: string | null;
 }
@@ -32,6 +34,7 @@ export function SelectionActions({
   onNote,
   noteLabel = 'Add note',
   onVoiceNote,
+  onShare,
   noteUnavailableReason = null,
   removeUnavailableReason = null,
 }: SelectionActionsProps) {
@@ -94,6 +97,11 @@ export function SelectionActions({
               onClick={() => onVoiceNote(action.id)}
             >
               Voice note
+            </button>
+          )}
+          {onShare && (
+            <button type="button" className="button" onClick={() => onShare(action.id)}>
+              Share
             </button>
           )}
           <button

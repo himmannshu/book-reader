@@ -11,6 +11,7 @@ import {
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
+import { excerptText } from '../core/share';
 import type { Note, NoteTarget } from '../core/notes';
 import {
   MAX_ZOOM,
@@ -49,6 +50,7 @@ import { SPEEDS, useReadAloud } from './useReadAloud';
 import { VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
+import { shareText } from './share';
 
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
@@ -574,6 +576,25 @@ export function ReaderView({
     downloadText(exportFileName(title), markdown, 'text/markdown');
   }
 
+  /** A short confirmation over the pages (phase 17), like the app's own notice. */
+  const [readerNotice, setReaderNotice] = useState<{ text: string; key: number } | null>(null);
+
+  async function shareHighlight(id: string) {
+    const passage = highlightList.find((highlight) => highlight.id === id);
+    if (!passage) return;
+    marked.dismiss();
+    setAnnotationError(null);
+    try {
+      const result = await shareText(title, excerptText({ ...passage, title }));
+      if (result === 'copied') {
+        setReaderNotice({ text: 'Copied the passage to the clipboard.', key: now() });
+      }
+    } catch (error) {
+      console.error('Could not share the passage', error);
+      setAnnotationError("This passage couldn't be shared or copied here.");
+    }
+  }
+
   function openNote(target: NoteTarget) {
     written.open(target, () => {
       marked.dismiss();
@@ -901,6 +922,7 @@ export function ReaderView({
             if (highlight)
               openNote({ kind: 'highlight', pageIndex: highlight.pageIndex, highlightId: id });
           }}
+          onShare={(id) => void shareHighlight(id)}
           onVoiceNote={(id) => {
             const highlight = highlightList.find((item) => item.id === id);
             if (highlight)
@@ -925,6 +947,11 @@ export function ReaderView({
           removeUnavailableReason={written.unavailableReason}
         />
       </div>
+      {readerNotice && (
+        <p key={readerNotice.key} className="notice" role="status">
+          {readerNotice.text}
+        </p>
+      )}
       {written.confirmation && (
         <ConfirmDialog
           question={written.confirmation}

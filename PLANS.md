@@ -39,7 +39,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 14 | UI and UX design pass | The app looks and feels like a calm, polished reader on Mac, iPad and iPhone: a consistent visual design (type, spacing, color, icons) across library, reader and panels, touch-friendly controls, and the rough edges found in reviews fixed | 10, 11 | In progress |
 | 15 | Voice notes | Record a spoken note on a page or highlight, play it back from the notes panel; it survives a reload | 07 | In progress |
 | 16 | Listen to a book | The book is read aloud from where I am, the spoken text is followed on the page, and I can pause and resume | 01 | In progress |
-| 17 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | Not started |
+| 17 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | In progress |
 
 Status values: Not started, In progress, Blocked, Complete. Only harness/build-log.md can
 justify a change to Complete.

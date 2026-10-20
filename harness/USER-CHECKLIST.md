@@ -97,4 +97,11 @@ Settings → Billing → Actions minutes used this month.
 - [ ] iPhone: does it keep reading with the screen locked? (Safari may stop; tell the agent.)
 - [ ] Is the default voice fine, or would you like to choose one?
 
+## Phase 17: Share excerpts (branch `phase-17-share-excerpts`)
+
+- [ ] iPhone and Mac Safari: tap a highlight → Share. The share sheet opens with “the passage”
+      and "— Title, page N". Send it to Messages or Notes.
+- [ ] Chrome on the Mac: Share copies the passage instead and says so.
+- [ ] Would you like a picture card of the passage (for Instagram-style sharing)? Not built yet.
+
 <!-- Later phases append their sections below. -->
