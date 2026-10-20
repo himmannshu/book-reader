@@ -1,6 +1,6 @@
 # Phase 12: Export highlights and notes
 
-- Status: Not started
+- Status: In progress
 - Branch: phase-12-export-annotations
 - Depends on: 07
 
@@ -50,3 +50,13 @@ none
 
 Stop when every contract item has observed evidence in harness/build-log.md.
 Do not start the next phase.
+
+## Plan (2026-10-20)
+
+Approved by: agent under the user's standing instruction of 2026-10-20. Stacked on phase 11's
+branch. Layout sample and judgment calls: harness/context/phase-12-export-annotations-context.md.
+
+1. src/core/export.ts: `exportMarkdown` and `exportFileName` (unit tests first, red recorded).
+2. src/ui/download.ts and an "Export highlights and notes" button in the Notes panel.
+3. e2e/export.spec.ts: download event and file contents; the disabled state.
+4. Verify, perf, full CI, evaluator.

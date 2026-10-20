@@ -52,4 +52,12 @@ Settings → Billing → Actions minutes used this month.
 - [ ] A book that is only on another device shows a grey card with its title instead of a cover.
 - [ ] With all your real books, the shelf feels quick to open and to filter.
 
+## Phase 12: Export highlights and notes (branch `phase-12-export-annotations`)
+
+- [ ] Mac: open a real book with highlights and notes → Notes → "Export highlights and notes".
+      A file "<title> - highlights and notes.md" downloads. Open it: is this the layout you want?
+      (Sample and choices: harness/context/phase-12-export-annotations-context.md.)
+- [ ] iPhone (installed app): the same button; Safari should show the file with Save to Files /
+      Share. Tell the agent if nothing happens (standalone apps on iOS can be picky here).
+
 <!-- Later phases append their sections below. -->

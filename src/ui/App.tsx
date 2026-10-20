@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from 'react';
+import { titleFromFileName } from '../core/library';
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import { THEMES, validTheme, type ReadingState, type Theme } from '../core/reading-state';
 import type { ShelfSort } from '../core/shelf';
@@ -552,6 +553,7 @@ export function App({
           ref={reader}
           key={book.id}
           doc={book.doc}
+          title={titleFromFileName(book.fileName)}
           bookId={book.bookId}
           bookmarks={user.bookmarks}
           highlights={user.highlights}

@@ -91,6 +91,8 @@ export function NotesPanel({
   currentPage,
   onOpen,
   onChoose,
+  onExport,
+  exportUnavailableReason = null,
 }: {
   id: string;
   notes: ReturnType<typeof useNotes>;
@@ -98,6 +100,10 @@ export function NotesPanel({
   currentPage: number;
   onOpen(target: NoteTarget): void;
   onChoose(note: Note): void;
+  /** Downloads the book's highlights and notes as Markdown (phase 12). */
+  onExport?(): void;
+  /** Why export can't run yet, shown under the button; null when it can. */
+  exportUnavailableReason?: string | null;
 }) {
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
@@ -148,6 +154,19 @@ export function NotesPanel({
           notes={notes}
           quote={quoteFor(notes.editor.target)}
         />
+      )}
+      {onExport && (
+        <>
+          <button
+            type="button"
+            className="panel-entry"
+            disabled={exportUnavailableReason !== null}
+            onClick={onExport}
+          >
+            Export highlights and notes
+          </button>
+          {exportUnavailableReason && <p className="panel-note">{exportUnavailableReason}</p>}
+        </>
       )}
       {notes.items?.length === 0 && <p className="panel-note">No notes yet.</p>}
       {notes.items && notes.items.length > 0 && (

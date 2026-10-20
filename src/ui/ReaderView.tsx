@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
+import { exportFileName, exportMarkdown } from '../core/export';
 import type { Note, NoteTarget } from '../core/notes';
 import {
   MAX_ZOOM,
@@ -31,6 +32,7 @@ import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
+import { downloadText } from './download';
 
 /** Below this width a side panel covers the pages instead of sitting beside them. */
 const NARROW_QUERY = '(max-width: 699px)';
@@ -54,6 +56,8 @@ type LoadedBookmarks =
 
 interface ReaderViewProps {
   doc: PdfDoc;
+  /** The book's title, for exports. */
+  title?: string;
   /** The stored book's id, or null while the book isn't saved on this device. */
   bookId: string | null;
   bookmarks: BookmarkStore;
@@ -75,6 +79,7 @@ const randomId = () => crypto.randomUUID();
 /** Hosts the plain-TS Viewer. React owns only this element; the viewer owns everything inside. */
 export function ReaderView({
   doc,
+  title = 'Untitled book',
   bookId,
   bookmarks,
   highlights,
@@ -385,6 +390,27 @@ export function ReaderView({
   const written = useNotes({ bookId, syncVersion, store: notes, highlights: highlightList, now });
   useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
 
+  const exportUnavailableReason =
+    bookId === null
+      ? 'Export works once the book is saved on this device.'
+      : marked.items === null || written.items === null
+        ? 'Loading highlights and notes…'
+        : null;
+
+  async function exportAnnotations() {
+    if (exportUnavailableReason !== null) return;
+    // Without a readable table of contents the export is grouped by page only (and logged).
+    const entries = await loadOutline().catch((): OutlineItem[] => []);
+    const markdown = exportMarkdown({
+      title,
+      highlights: highlightList,
+      notes: written.items ?? [],
+      outline: entries,
+      exportedAt: new Date(now()),
+    });
+    downloadText(exportFileName(title), markdown, 'text/markdown');
+  }
+
   function openNote(target: NoteTarget) {
     written.open(target, () => {
       marked.dismiss();
@@ -556,6 +582,8 @@ export function ReaderView({
             currentPage={currentPage}
             onOpen={openNote}
             onChoose={chooseNote}
+            onExport={() => void exportAnnotations()}
+            exportUnavailableReason={exportUnavailableReason}
           />
         )}
         <div

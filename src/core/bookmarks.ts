@@ -26,10 +26,13 @@ export function bookmarkId(bookId: string, pageIndex: number): string {
 }
 
 /**
- * "Page N", plus the title of the entry with the highest page at or before this one. On a tie the
- * later entry in reading order wins, so a chapter beats the part it opens.
+ * The entry a page belongs to: the one with the highest page at or before it. On a tie the later
+ * entry in reading order wins, so a chapter beats the part it opens.
  */
-export function bookmarkLabel(pageIndex: number, outline: readonly OutlineEntry[]): string {
+export function chapterAt(
+  pageIndex: number,
+  outline: readonly OutlineEntry[],
+): OutlineEntry | undefined {
   let best: OutlineEntry | undefined;
   const visit = (entries: readonly OutlineEntry[]) => {
     for (const entry of entries) {
@@ -39,8 +42,13 @@ export function bookmarkLabel(pageIndex: number, outline: readonly OutlineEntry[
     }
   };
   visit(outline);
+  return best;
+}
+
+/** "Page N", plus the title of the chapter the page belongs to (see chapterAt). */
+export function bookmarkLabel(pageIndex: number, outline: readonly OutlineEntry[]): string {
   const page = `Page ${pageIndex + 1}`;
-  const title = best?.title.trim();
+  const title = chapterAt(pageIndex, outline)?.title.trim();
   return title ? `${page} · ${title}` : page;
 }
 
