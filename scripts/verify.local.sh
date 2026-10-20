@@ -21,4 +21,5 @@ step "format check" npm run --silent format:check
 step "typecheck" npm run --silent typecheck
 step "unit tests" npm run --silent test:unit
 step "browser tests (chromium, webkit)" npm run --silent test:e2e
+step "sync tests, two devices (chromium, webkit)" npm run --silent test:sync
 step "performance budgets (chromium, webkit)" npm run --silent test:perf

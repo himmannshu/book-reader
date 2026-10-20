@@ -65,6 +65,39 @@ code from your inbox, and the reader opens.
 If the login page only says "Sign in with: Cloudflare", the application still uses Cloudflare
 account sign-in. Recheck its login methods in step 4.
 
+## 2b. Turn on sync between devices (phase 09a)
+
+Sync keeps your bookmarks, highlights and notes the same on every device. It also lists every
+device's books, though the PDF files themselves come in a later phase. It needs a small database
+(Cloudflare D1) and two settings. Production and previews get **separate** databases, so a
+preview can never change your real data.
+
+1. **Create two databases:** **Workers & Pages** → **D1 SQL Database** → **Create**. Name one
+   `book-reader` and the other `book-reader-preview`. They start empty; the app creates its tables
+   on first use.
+2. **Bind them to the Pages project:** your Pages project → **Settings** → **Bindings** → **Add** →
+   **D1 database**:
+   - Variable name: `DB`
+   - Production: `book-reader`
+   - Preview: `book-reader-preview`
+3. **Add two variables** (Pages project → **Settings** → **Variables and Secrets**, type *Text*),
+   for **Production** and for **Preview**:
+   - `ACCESS_TEAM_DOMAIN` = your team domain, e.g. `gentle-pond-af51.cloudflareaccess.com`
+   - `ACCESS_AUD` = the **Application Audience (AUD) tag** of the Access application that
+     protects that environment. Find it in Zero Trust → Access → Applications → the application
+     → Overview (or Basic information). Production and previews usually have **different**
+     applications, so they get different AUD values.
+4. Bindings and variables apply to the **next** deployment. Ask the agent to push, or redeploy
+   from the dashboard.
+
+**Check it:** open the app, log in, and look at the top bar. It should say **Synced**, with a
+**Sync now** button. On a second device, log in with the same email. Your books appear (as "On
+your other devices" until you open their PDF there), and so do the bookmarks, highlights and
+notes for books you've opened on both.
+
+If the bar says **Sync failed**, the binding or a variable is missing or wrong. If it says
+**Sign in again to sync**, your Access session has expired: reload the page and log in.
+
 ## 3. Install the app
 
 The installed app keeps its **own** storage, separate from the browser tab. Import your books

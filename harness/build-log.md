@@ -1215,3 +1215,29 @@ Contract evidence from this final canonical run (contract unchanged after approv
   clean → 0; indexedDB still banned in src/ui (1); fetch banned in src/storage (1). Rule restructured because ESLint
   replaces rule options per file instead of merging them.
 - Unit total: 195 passed.
+
+### 2026-10-19 21:35 EDT | Phase 09a | Claude Code (Opus 5.5) | UI wiring, two-device e2e, verify; docs
+- UI: trigger wrapper (src/sync/triggering.ts; red → 3 green); SyncStatusLine (red → green); Library with cloud-only
+  rows and "Remove from this device" / "Delete everywhere" (red → green, 4 tests); useSync; App and ReaderView wiring
+  (syncVersion reloads annotations). Existing e2e updated where the confirm button changed ("Yes, remove" →
+  "Delete everywhere": 8 failures in 4 tests, then green). Lint caught indexedDB use in App (moved the check into
+  src/storage) and a ref read during render (useSync now takes a stable callback).
+- E2E (e2e/sync/sync.spec.ts, playwright.sync.config.ts; wrangler pages dev, local D1, per-test x-dev-user):
+  7 tests × chromium/webkit. Investigation of a WebKit failure: network logging showed device B DID receive the
+  bookmark; a database dump showed it stored; a timing probe showed UI lag of 49–72 ms normally but 8.3 s
+  sometimes; serial runs still took 33–53 s per test. Cause: my tests never closed their browser contexts, so
+  earlier tests' pages kept running in the same WebKit process. Fixed with a device fixture that closes them:
+  14/14 passed twice (~15 s total).
+- Mutation checks (chromium, each reverted): no UI refresh on remote changes → failed; ignore remote deletions →
+  failed; remove-from-device deleting everywhere → failed; wrong offline text → failed. Two survived at first
+  (shouldApply always true; no 'online' listener) because the tests didn't exercise them; reordered the conflict
+  test and let the 2 s scheduled sync fire while offline; both breaks then failed.
+- Lint boundary for fetch (item 10): see the earlier entry. ESLint now ignores .wrangler/ (wrangler's generated
+  bundles).
+- Verification: scripts/verify.local.sh gains the sync step. `scripts/verify.sh` → PASS: unit 212, browser 175 + 1
+  skipped, sync 14, perf 8 (chromium first 199, jump 19, p95 16.8; webkit first 156, jump 59, p95 39 with samples
+  [39, 2444, 29], canvas 67.1). Budgets unchanged.
+- Docs: docs/deploy.md section 2b (two D1 databases, DB binding, ACCESS_TEAM_DOMAIN / ACCESS_AUD per environment);
+  AGENTS.md (test:sync, functions/, src/sync/, fetch rule, no wrangler.toml); phase 09a context file.
+- Remaining: CI on the branch (needs the user's OK to push; a push also deploys a preview), the user's D1 setup,
+  then deploy and item 13 (real devices).
