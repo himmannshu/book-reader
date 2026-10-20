@@ -1552,3 +1552,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Evaluator: harness/code_review/phase-14-review.md, FAIL (search-result mark 2.91:1 in Dark; no tooltips below
   1400 px; no green full CI). Fixes: `--mark-bg` tokens + contrast test pair, tooltips on all toolbar controls
   (test), Display menu closes on an outside tap (test). Unit 336; chromium e2e 126 passed + 1 environment failure.
+
+### 2026-10-20 13:25 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39391982795 on 36073e0 → success (08:14–08:34Z).
+- Contract items 1–6 have evidence; item 7 (devices, layout confirmation) waits on the user. F-014 → passing.
