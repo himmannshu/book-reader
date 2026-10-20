@@ -7,6 +7,9 @@ import type { VoiceNoteStore } from '../storage/types';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { RecorderError, recorderMessage, startRecording, type Recording } from './recorder';
 
+/** Shorter than this, a recording is treated as empty. */
+const MIN_RECORDING_MS = 500;
+
 export interface ShownVoiceNote extends VoiceNote {
   /** An object URL for the audio element; revoked when the list changes. */
   url: string;
@@ -32,15 +35,18 @@ export function useVoiceNotes({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const active = useRef<Recording | null>(null);
+  /** The object URLs now in use, so closing the reader frees them (phase 15 review). */
+  const urls = useRef<string[]>([]);
+  const mounted = useRef(true);
 
   const show = useCallback((notes: VoiceNote[]) => {
-    setItems((previous) => {
-      for (const note of previous ?? []) URL.revokeObjectURL(note.url);
-      return notes.map((note) => ({
-        ...note,
-        url: URL.createObjectURL(new Blob([note.audio], { type: note.type })),
-      }));
-    });
+    for (const url of urls.current) URL.revokeObjectURL(url);
+    const shown = notes.map((note) => ({
+      ...note,
+      url: URL.createObjectURL(new Blob([note.audio], { type: note.type })),
+    }));
+    urls.current = shown.map((note) => note.url);
+    setItems(shown);
   }, []);
 
   useEffect(() => {
@@ -62,16 +68,17 @@ export function useVoiceNotes({
   }, [bookId, store, show]);
 
   // Free the audio URLs and the microphone when the reader closes.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mounted.current = true;
+    const live = urls;
+    return () => {
+      mounted.current = false;
       active.current?.cancel();
-      setItems((previous) => {
-        for (const note of previous ?? []) URL.revokeObjectURL(note.url);
-        return previous;
-      });
-    },
-    [],
-  );
+      active.current = null;
+      for (const url of live.current) URL.revokeObjectURL(url);
+      live.current = [];
+    };
+  }, []);
 
   const save = useCallback(async () => {
     const current = active.current;
@@ -82,6 +89,11 @@ export function useVoiceNotes({
     setBusy(true);
     try {
       const recorded = await current.stop();
+      // A microphone that dropped out gives an empty recording; don't keep a silent 0:00.
+      if (recorded.durationMs < MIN_RECORDING_MS) {
+        setError('The recording was empty. Check the microphone and try again.');
+        return;
+      }
       const note: VoiceNote = {
         id: newId(),
         bookId,
@@ -117,6 +129,11 @@ export function useVoiceNotes({
       setBusy(true);
       try {
         const started = await startRecording();
+        // The reader closed while the browser asked for the microphone: let it go at once.
+        if (!mounted.current) {
+          started.cancel();
+          return;
+        }
         active.current = started;
         setRecording({ target, startedAt: started.startedAt });
         void started.limitReached.then(() => {

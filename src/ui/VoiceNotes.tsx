@@ -4,7 +4,7 @@ import { formatDuration, MAX_VOICE_NOTE_MS } from '../core/voice-notes';
 import type { useVoiceNotes } from './useVoiceNotes';
 
 /** The running time of a recording, updated a few times a second. */
-function Elapsed({ since }: { since: number }) {
+export function Elapsed({ since }: { since: number }) {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(performance.now()), 250);

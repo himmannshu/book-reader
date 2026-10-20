@@ -1547,3 +1547,26 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Evaluator: harness/code_review/phase-13-review.md, FAIL on CI only; search behaviour all checked and passing.
 - Fixes: benchmark query and result check (searchMs 2672 ms, "1 match on 1 page"), capped page count, Cmd/Ctrl+F
   per platform. Unit 333; chromium search + export 6/6.
+
+### 2026-10-20 09:40 UTC | Phase 14 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL → fixes
+- Evaluator: harness/code_review/phase-14-review.md, FAIL (search-result mark 2.91:1 in Dark; no tooltips below
+  1400 px; no green full CI). Fixes: `--mark-bg` tokens + contrast test pair, tooltips on all toolbar controls
+  (test), Display menu closes on an outside tap (test). Unit 336; chromium e2e 126 passed + 1 environment failure.
+
+### 2026-10-20 12:55 UTC | Phase 15 | Claude Code (Opus 5.5, cloud session) | Built; evaluator FAIL → fixes
+- Built (earlier today, in worktree /home/user/book-reader-p15): core model and storage v9 with unit tests
+  first; recorder, hook, Notes panel section, highlight action; e2e/voice-notes.spec.ts with a synthetic
+  microphone (4/4, then 5/5 with the recording bar).
+- Evaluator: harness/code_review/phase-15-review.md, FAIL (audio URL leak on close; microphone left on when the
+  reader closed during the permission prompt; missing unit tests for the time limit and the upgrade; CI).
+- Fixes: see the review appendix. New unit tests: recorder (3), useVoiceNotes lifecycle (3, red on the old hook),
+  v8 → v9 upgrade. Unit 352 passed; chromium voice-notes 5/5.
+
+### 2026-10-20 13:10 UTC | Phase 16 | Claude Code (Opus 5.5, cloud session) | Built; evaluator FAIL → fixes
+- Built (earlier today, worktree /home/user/book-reader-p16): sentence splitting with unit tests (6); viewer
+  marks shared with search; speech wrapper and hook; Listen button and player bar; e2e/listen.spec.ts with a
+  stand-in speechSynthesis (5/5). Toolbar padding trimmed under 360 px so seven 44 px buttons fit (design 12/12).
+- Full CI on phase 17 (run 39392502232, contains this branch) → failure: WebKit listen.spec pause/resume (race
+  with the end of the book), 274 passed, 3 skipped.
+- Evaluator: harness/code_review/phase-16-review.md, FAIL (that test; unstable player buttons; toast over the
+  player). Fixes: see the review appendix. Unit 358; chromium e2e 137 passed + 1 environment failure.

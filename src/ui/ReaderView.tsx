@@ -47,7 +47,7 @@ import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
 import { browserSpeaker, type Speaker } from './speech';
 import { SPEEDS, useReadAloud } from './useReadAloud';
-import { VoiceNotes } from './VoiceNotes';
+import { Elapsed, VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
 import { shareText } from './share';
@@ -140,6 +140,18 @@ export function ReaderView({
   const narrow = useMediaQuery(NARROW_QUERY);
   const [displayOpen, setDisplayOpen] = useState(false);
   const displayButtonRef = useRef<HTMLButtonElement>(null);
+  // The Display menu closes on a tap or click outside it (and on Escape, below).
+  useEffect(() => {
+    if (!displayOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const menu = displayButtonRef.current?.closest('.display-menu');
+      if (menu && event.target instanceof Node && !menu.contains(event.target)) {
+        setDisplayOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [displayOpen]);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
   /** Fixed at mount: the reader is keyed by book, so a new book gets a new ReaderView. */
@@ -919,6 +931,21 @@ export function ReaderView({
               className="icon-only"
               onClick={() => runSearch('')}
             />
+          </div>
+        )}
+        {voice.recording && openPanel !== 'notes' && (
+          // The Notes panel was closed mid-recording: keep it visible (phase 15 review).
+          <div className="player-bar recording-bar" role="toolbar" aria-label="Recording">
+            <span className="recording-dot" aria-hidden="true" />
+            <span className="player-status">
+              Recording voice note · <Elapsed since={voice.recording.startedAt} />
+            </span>
+            <button type="button" className="button" onClick={() => void voice.save()}>
+              Stop and save
+            </button>
+            <button type="button" className="button secondary" onClick={voice.cancel}>
+              Cancel recording
+            </button>
           </div>
         )}
         <SelectionActions

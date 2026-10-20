@@ -6,6 +6,8 @@ import { importBook, pageSlot } from './helpers';
 declare global {
   interface Window {
     spoken: { text: string; rate: number }[];
+    /** How long the stand-in engine "speaks" each piece (default 150 ms). */
+    speechMs?: number;
   }
 }
 
@@ -28,7 +30,7 @@ function fakeSpeech() {
       const timer = setTimeout(() => {
         current = null;
         utterance.onend?.({});
-      }, 150);
+      }, window.speechMs ?? 150);
       current = { utterance, timer };
     },
     cancel() {
@@ -96,6 +98,8 @@ test.describe('with speech', () => {
   test('pause keeps the place, resume repeats that sentence and goes on, stop ends it', async ({
     page,
   }) => {
+    // Slow pieces, so the short book can't end while the test is still pressing buttons.
+    await page.evaluate(() => (window.speechMs = 600));
     await page.getByRole('button', { name: 'Listen', exact: true }).click();
     await expect.poll(async () => (await spoken(page)).length).toBeGreaterThanOrEqual(2);
     await bar(page).getByRole('button', { name: 'Pause' }).click();
@@ -130,4 +134,13 @@ test('without speech in the browser, Listen says so', async ({ page }) => {
   await importBook(page, 'text-4-pages.pdf');
   await page.getByRole('button', { name: 'Listen', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveText("Listening isn't available in this browser.");
+});
+
+test('a book without text says there is nothing to read aloud', async ({ page }) => {
+  await page.addInitScript(fakeSpeech);
+  await page.goto('/');
+  await importBook(page, 'no-text-1-page.pdf');
+  await page.getByRole('button', { name: 'Listen', exact: true }).click();
+  await expect(page.getByRole('alert')).toHaveText('There is no text to read aloud from here.');
+  await expect(bar(page)).toHaveCount(0);
 });

@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest';
 import type { Highlight } from '../core/highlights';
 import type { SyncItem } from '../core/sync';
 import type { VoiceNote } from '../core/voice-notes';
-import { createIndexedDBStores } from './indexeddb-book-store';
+import { DB_NAME, createIndexedDBStores } from './indexeddb-book-store';
 
-function setup() {
+function setup(factory = new IDBFactory()) {
   let clock = 1_000;
   return createIndexedDBStores({
-    factory: new IDBFactory(),
+    factory,
     now: () => ++clock,
     requestPersistence: async () => true,
   });
@@ -93,5 +93,70 @@ describe('voice notes', () => {
     };
     await s.sync.applyRemote([deletion]);
     expect(await s.voiceNotes.list(b.id)).toEqual([]);
+  });
+});
+
+describe('upgrading an existing v8 database', () => {
+  it('keeps books, covers and reading states, and adds voice notes', async () => {
+    const factory = new IDBFactory();
+    await new Promise<void>((resolve, reject) => {
+      const req = factory.open(DB_NAME, 8);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        db.createObjectStore('books', { keyPath: 'id' });
+        db.createObjectStore('bookFiles');
+        db.createObjectStore('bookmarks', { keyPath: 'id' }).createIndex('bookId', 'bookId');
+        db.createObjectStore('highlights', { keyPath: 'id' }).createIndex('bookId', 'bookId');
+        const notes = db.createObjectStore('notes', { keyPath: 'id' });
+        notes.createIndex('bookId', 'bookId');
+        notes.createIndex('highlightId', 'target.highlightId');
+        const meta = db.createObjectStore('syncMeta', { keyPath: 'key' });
+        meta.createIndex('pending', 'pending');
+        meta.createIndex('bookId', 'bookId');
+        db.createObjectStore('syncState');
+        db.createObjectStore('uploads', { keyPath: 'bookId' });
+        db.createObjectStore('readingState', { keyPath: 'bookId' });
+        db.createObjectStore('covers', { keyPath: 'bookId' });
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction(['books', 'bookFiles', 'readingState', 'covers'], 'readwrite');
+        tx.objectStore('books').put({
+          id: 'old',
+          fileName: 'old.pdf',
+          title: 'Old',
+          byteSize: 4,
+          addedAt: 10,
+          lastOpenedAt: 20,
+        });
+        tx.objectStore('bookFiles').put(new TextEncoder().encode('%PDF').buffer, 'old');
+        tx.objectStore('readingState').put({
+          bookId: 'old',
+          position: { pageIndex: 3, fraction: 0, pixelsAbove: 0 },
+          zoom: 'fit-width',
+          savedAt: 9,
+          pageCount: 10,
+        });
+        tx.objectStore('covers').put({
+          bookId: 'old',
+          bytes: new ArrayBuffer(3),
+          type: 'image/jpeg',
+        });
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+      req.onerror = () => reject(req.error);
+    });
+
+    const s = setup(factory);
+    expect((await s.books.list()).map((b) => [b.id, b.hasFile])).toEqual([['old', true]]);
+    expect(await s.readingStates.get('old')).toMatchObject({ pageCount: 10 });
+    expect((await s.covers.list()).map((c) => c.bookId)).toEqual(['old']);
+    expect(await s.voiceNotes.list('old')).toEqual([]);
+    await s.voiceNotes.put(voice('v', 'old'));
+    expect((await s.voiceNotes.list('old')).map((v) => v.id)).toEqual(['v']);
   });
 });
