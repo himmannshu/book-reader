@@ -49,18 +49,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 10 (Reading comfort) on cloud branch `phase-10-reading-comfort-k8v7pk` (the session's
-  assigned name for phase-10-reading-comfort). Plan, contract and context written and
-  self-approved. Core, layout, viewer, storage, UI and e2e/comfort.spec.ts are written; comfort
-  tests pass in Chromium (12/12). Next: full stand-in verify, perf before/after, CI full run, evaluator.
+- Phase 10 on `phase-10-reading-comfort-k8v7pk`: built; evaluator FAIL (CI red, WebKit 400% stall).
+  Fixes pushed (9b5e7ba); a full CI run was started on it. If green and the 400% frame gaps look
+  like slow painting (not a freeze), phase 10 is done apart from the user's device check.
+- Phase 11 on `phase-11-library-view` (worktree /home/user/book-reader-p11, cut from phase 10 and
+  merged with its fixes): built, Chromium checks pass. Next: push, full CI, evaluator.
 - Cloud environment: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm stands
-  in (build log 05:45 UTC). First-page timing here is ~350–368 ms on unchanged code, so the budget
-  evidence must come from the full CI run.
+  in (build log 05:45 UTC). Perf timings here are noisy (first page 340–410 ms on unchanged
+  code against a 250 ms budget); compare before/after only. Budget evidence = full CI runs.
 
 ## Next action
 
-1. Finish phase 10 items, verify (cloud stand-in), full CI run, evaluator.
-2. Then phase 11 on a branch cut from phase 10's.
+1. Phase 10 CI result → close phase 10 (features.json, PLANS.md) or fix.
+2. Phase 11: push, full CI, evaluator; then phase 12 (export) stacked on phase 11.
 
 ## Decisions worth remembering
 

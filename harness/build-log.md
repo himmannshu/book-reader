@@ -1467,3 +1467,18 @@ Contract evidence from this final canonical run (contract unchanged after approv
   max 33 ms. A failed read of the saved place is always logged. The zoom menu lists a saved custom zoom (unit test).
   Deferred to phase 14 (recorded in the context file): saving the horizontal position, phone toolbar height, photo
   inversion in Dark, fit-page redraws on iOS bar changes.
+
+### 2026-10-20 06:55 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Built in a worktree on branch phase-11-library-view
+- Plan, contract and context written, approved by the agent under the user's standing instruction.
+- Unit tests first for storage (covers v8, reading-state list, v7 → v8 upgrade; 4 red until the store existed, then
+  a realm-safe ArrayBuffer check) and the cover queue. Core shelf tests were written together with the module (not
+  run red first). e2e/library-view.spec.ts was written before the shelf UI but not run red first.
+- Found while building: the shelf reloaded in the Library button's handler, before the reader unmounted and saved
+  its place; it now reloads in an effect once the Library shows. A book still on page 1 reads "Not started".
+- Merged phase-10-reading-comfort-k8v7pk (9b5e7ba) into this branch: clean.
+- Stand-in checks on the merge: lint, format, typecheck PASS; unit 315 passed; browser (chromium, alternate port
+  4183 via an uncommitted scratch config so the evaluator's runs on 4173 were not disturbed) 107 passed, 1 failed =
+  the installability check (environment); library-view 6/6 including 100 books (shown < 1 s, filter < 100 ms).
+- Perf (chromium), alternating phase 10 and phase 11 runs under the same load: firstPage p10 388/372/389,
+  p11 371/399/405; scroll p95 33 ms in 4 of 7 p11 runs and 3 of 7 p10 runs, otherwise 16.8; canvas 67.1 MB both.
+  Same distribution: no regression seen.

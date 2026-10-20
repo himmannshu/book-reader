@@ -42,4 +42,14 @@ Settings → Billing → Actions minutes used this month.
 - [ ] Decide: is the default "Fit width" (a 900 px reading column on a wide Mac) right, or should
       it fill the window? Pinch-to-zoom is left for phase 14.
 
+## Phase 11: Library view (branch `phase-11-library-view`)
+
+- [ ] Mac, iPad, iPhone: the Library shows a shelf of covers (page 1 of each book) with the title
+      and "Page N of M · P%" under it. Books you haven't opened since this update get their cover
+      a moment after the Library appears (one at a time).
+- [ ] Sort by Recent, Title and Progress; the choice is kept after a reload. Type in Filter to
+      find a book by part of its title.
+- [ ] A book that is only on another device shows a grey card with its title instead of a cover.
+- [ ] With all your real books, the shelf feels quick to open and to filter.
+
 <!-- Later phases append their sections below. -->
