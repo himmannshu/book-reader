@@ -216,6 +216,13 @@ test('"Delete everywhere" removes the file from the cloud too', async ({ device 
   expect((await b.request.get(`/api/files/${id}`)).status()).toBe(404);
   await syncNow(b);
   await expect(b.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+
+  // The file itself is gone, not just hidden: import the book again with uploads held back, and
+  // the cloud still has no file for it.
+  await a.route('**/api/files/**/uploads**', (route) => route.abort('connectionreset'));
+  await importBook(a, BOOK);
+  await syncNow(a);
+  expect((await a.request.head(`/api/files/${id}`)).status()).toBe(404);
 });
 
 test('"Remove from this device" frees the file; the book downloads again with its annotations', async ({
