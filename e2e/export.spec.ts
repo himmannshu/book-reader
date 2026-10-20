@@ -60,7 +60,10 @@ test('a book’s highlights and notes download as a Markdown file in book order'
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Export highlights and notes' }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe('text-4-pages - highlights and notes.md');
+  // Playwright's WebKit build turns spaces in download names into underscores; Safari keeps them.
+  expect(download.suggestedFilename().replace(/_/g, ' ')).toBe(
+    'text-4-pages - highlights and notes.md',
+  );
   const path = await download.path();
   const markdown = await readFile(path, 'utf8');
   expect(markdown).toMatch(/^# text-4-pages\n/);
