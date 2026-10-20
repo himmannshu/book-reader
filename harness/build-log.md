@@ -1641,3 +1641,10 @@ Contract evidence from this final canonical run (contract unchanged after approv
   firstPageMs chromium 514 vs 503, webkit 1468 vs 1799; jumpMs 69 vs 41 (chromium), 687 vs 1051 (webkit);
   p95 33.3 vs 33.4 (chromium), 411 vs 543 (webkit); within CI noise, no regression (review N8).
 - Contract items 1–13 have evidence; item 14 (devices) waits on the user (USER-CHECKLIST, phase 18).
+
+### 2026-10-20 19:35 UTC | Test-suite trim | Claude Code (Opus 5.5, cloud session) | Built on `test-suite-trim`
+- See harness/context/test-suite-trim-context.md for the list. Before: CI full run 23 min (browser 16.2, sync
+  3.4, perf 2.6, unit 0.6). Unit locally 14 s → 7.5 s (two runs each). Browser runs per pass 304 → 252.
+- New useNotes unit tests 2 (failed delete retried; failed load + Retry); a mutation removing Retry's reload
+  fails the second. Unit 379 passed. Chromium e2e 129 passed + the known pwa "installable" failure; sync
+  (chromium) 15 passed; `VERIFY_BROWSER=safari` is refused.

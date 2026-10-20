@@ -75,7 +75,8 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Snapshot state: `scripts/handoff.sh`
 - Install: `npm ci && npx playwright install chromium webkit` (Node 24, see `.nvmrc`)
 - Run dev server: `npm run dev` (http://localhost:5173)
-- Unit tests only: `npm run test:unit` (Vitest, jsdom)
+- Unit tests only: `npm run test:unit` (Vitest; Node by default, jsdom for `src/ui/**/*.test.tsx`,
+  the viewer and the recorder: see `DOM_TESTS` in vite.config.ts)
 - Browser tests: `npm run test:e2e` (Playwright on the production build, Chromium + WebKit)
 - Lint, format and types: `npm run lint`, `npm run format:check` (`npm run format` to fix),
   `npm run typecheck`
@@ -87,11 +88,14 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Deploy: there is no deploy command. Cloudflare Pages builds from GitHub (see docs/deploy.md).
 - Sync tests (two devices, local D1 and R2): `npm run test:sync` (playwright.sync.config.ts runs
   `wrangler pages dev` on port 8788 with local D1 and R2; no Cloudflare account needed)
-- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → sync → perf)
+- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → sync → perf).
+  `VERIFY_BROWSER=chromium` or `webkit` runs one engine's browser checks (CI uses this). Test tags:
+  `@any-engine` runs in Chromium only, `@touch-device` (iPhone/iPad emulation) in WebKit only.
 - CI (.github/workflows/verify.yml; private repo, so Actions minutes are limited): a branch push
   runs quick checks only (lint, format, types, unit). The full suite runs on pushes to `main`, on
   pull requests, and on demand. Before merging a phase, run it on the branch and record the run:
-  `gh workflow run verify.yml --ref <branch>` (a phase's "CI is green" means this run).
+  `gh workflow run verify.yml --ref <branch>` (a phase's "CI is green" means this run); it runs as two
+  parallel jobs, chromium and webkit, and both must pass).
 
 ## Conventions
 
