@@ -103,8 +103,8 @@
       "id": "F-014",
       "phase": "12",
       "description": "A book's highlights and notes export to a Markdown file",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 src/core/export.test.ts (exact Markdown in book order, chapters, escaping incl. list numbers and entities) and e2e/export.spec.ts (download file name and contents; disabled reasons) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39391982795 (chromium+webkit) on 36073e0 after the review fixes. Layout confirmation and device check pending (USER-CHECKLIST)."
     },
     {
       "id": "F-015",
