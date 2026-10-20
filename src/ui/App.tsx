@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
-import { createIndexedDBStores } from '../storage/indexeddb-book-store';
+import { createIndexedDBStores, indexedDBAvailable } from '../storage/indexeddb-book-store';
 import {
   StorageError,
   type BookRecord,
@@ -11,9 +11,13 @@ import {
   type HighlightStore,
   type NoteStore,
 } from '../storage/types';
+import { httpSyncClient } from '../sync/http-client';
+import { withSyncTrigger } from '../sync/triggering';
 import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
+import { SyncStatusLine } from './SyncStatusLine';
 import { UpdateNotice } from './UpdateNotice';
+import { useSync, type SyncSetup } from './useSync';
 
 interface OpenBook {
   /** New for every opened book, so the reader (and its panels) start fresh. */
@@ -25,6 +29,10 @@ interface OpenBook {
 }
 
 const defaultStores = createIndexedDBStores();
+/** Sync needs IndexedDB; unit tests (jsdom) have none, so sync is off there unless passed in. */
+const defaultSync: SyncSetup | null = indexedDBAvailable
+  ? { store: defaultStores.sync, client: httpSyncClient() }
+  : null;
 
 function openMessage(error: unknown): string {
   if (error instanceof StorageError) return storageMessage(error);
@@ -68,12 +76,14 @@ export function App({
   bookmarks = defaultStores.bookmarks,
   highlights = defaultStores.highlights,
   notes = defaultStores.notes,
+  sync = defaultSync,
 }: {
   engine?: PdfEngine;
   store?: BookStore;
   bookmarks?: BookmarkStore;
   highlights?: HighlightStore;
   notes?: NoteStore;
+  sync?: SyncSetup | null;
 }) {
   const reader = useRef<ReaderHandle>(null);
   const [book, setBook] = useState<OpenBook | null>(null);
@@ -82,6 +92,8 @@ export function App({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Bumped when another device changed data, so the open reader reloads its annotations. */
+  const [syncVersion, setSyncVersion] = useState(0);
 
   // Free the previous document's memory and worker when another book replaces it. Keyed on the
   // document, not the book: the book changes when a newly opened file gets its stored id.
@@ -91,6 +103,18 @@ export function App({
       void doc?.destroy();
     };
   }, [doc]);
+
+  const onRemoteChanges = useCallback(() => {
+    setSyncVersion((version) => version + 1);
+    store.list().then(setBooks, (err: unknown) => logUnexpected(err, 'Listing books failed'));
+  }, [store]);
+  const { status: syncStatus, engine: syncEngine } = useSync(sync, onRemoteChanges);
+  // Every local write schedules a sync; the UI below only ever uses these wrapped stores.
+  const user = useMemo(
+    () =>
+      withSyncTrigger({ books: store, bookmarks, highlights, notes }, () => syncEngine?.schedule()),
+    [store, bookmarks, highlights, notes, syncEngine],
+  );
 
   const refreshBooks = useCallback(async () => {
     try {
@@ -170,7 +194,7 @@ export function App({
 
     // Save in the background; reading never waits for it.
     try {
-      const record = await store.add(file, file.name);
+      const record = await user.books.add(file, file.name);
       // Bookmarks need the stored id. Skip it if another book was opened meanwhile.
       setBook((current) => (current?.id === opened ? { ...current, bookId: record.id } : current));
       setNotice('Saved on this device.');
@@ -182,24 +206,39 @@ export function App({
   }
 
   async function onOpenFromLibrary(record: BookRecord) {
-    const opened = await show(() => store.getBytes(record.id), record.fileName, record.id);
+    const opened = await show(() => user.books.getBytes(record.id), record.fileName, record.id);
     if (opened === null) return;
     try {
-      await store.markOpened(record.id);
+      await user.books.markOpened(record.id);
       await refreshBooks();
     } catch (err) {
       logUnexpected(err, 'Updating the library failed');
     }
   }
 
-  async function onRemove(record: BookRecord) {
+  async function onRemoveFromDevice(record: BookRecord) {
     setError(null);
     setNotice(null);
     try {
-      await store.remove(record.id);
-      setNotice(`Removed "${record.title}" from this device.`);
+      await user.books.removeFromDevice(record.id);
+      setNotice(
+        `Removed the PDF of "${record.title}" from this device. Its notes and highlights are kept.`,
+      );
     } catch (err) {
       logUnexpected(err, 'Removing the book failed');
+      setError(storageMessage(err));
+    }
+    await refreshBooks();
+  }
+
+  async function onDeleteEverywhere(record: BookRecord) {
+    setError(null);
+    setNotice(null);
+    try {
+      await user.books.remove(record.id);
+      setNotice(`Deleted "${record.title}" from all your devices.`);
+    } catch (err) {
+      logUnexpected(err, 'Deleting the book failed');
       setError(storageMessage(err));
     }
     await refreshBooks();
@@ -242,6 +281,7 @@ export function App({
             {notice}
           </p>
         )}
+        <SyncStatusLine status={syncStatus} onSyncNow={() => void syncEngine?.syncNow()} />
       </header>
       <UpdateNotice />
       {error && (
@@ -255,16 +295,18 @@ export function App({
           key={book.id}
           doc={book.doc}
           bookId={book.bookId}
-          bookmarks={bookmarks}
-          highlights={highlights}
-          notes={notes}
+          bookmarks={user.bookmarks}
+          highlights={user.highlights}
+          notes={user.notes}
+          syncVersion={syncVersion}
         />
       ) : (
         <Library
           books={books}
           busy={busy}
           onOpen={(record) => void onOpenFromLibrary(record)}
-          onRemove={(record) => void onRemove(record)}
+          onRemoveFromDevice={(record) => void onRemoveFromDevice(record)}
+          onDeleteEverywhere={(record) => void onDeleteEverywhere(record)}
         />
       )}
     </div>

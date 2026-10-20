@@ -35,6 +35,8 @@ Things I could check by actually using it.
 - My books and annotations reach my other devices through a cloud copy.
 - After the core, in priority order: reading comfort (themes, zoom, resume where I left off),
   a library view, export of highlights and notes, then search inside a book.
+- Later, in priority order (added 2026-10-19): voice notes, listening to a book read aloud,
+  and, lowest of all, sharing excerpts to social media.
 - Built incrementally, one small working piece at a time.
 
 ## Non-goals

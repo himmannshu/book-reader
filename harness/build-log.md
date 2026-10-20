@@ -1177,3 +1177,92 @@ Contract evidence from this final canonical run (contract unchanged after approv
   redirect inside the installed app may interrupt the first load. Not investigated (deprioritized).
 - Phase 08 → Complete with the exceptions above (user direction). F-009 kept failing: automated tests pass, but
   the real iPhone fails offline (evidence in features.json).
+
+### 2026-10-19 20:56 EDT | Phase 09a | Claude Code (Opus 5.5) | Started (phase 08 closed); server side done
+- User: phase 08 offline check failed on iPhone; offline deprioritized; "move to phase 9 now (a and b)". Started 09a
+  on branch phase-09a-sync-library-and-annotations (from main bbdd999). Contract approved at planning.
+- Tooling (exact pins, free): wrangler 4.151.2, @cloudflare/workers-types 5.20261019.1 (dev), jose 6.2.12.
+- Probe: `wrangler pages dev dist --d1 DB=… --binding AUTH_MODE=dev` runs a TypeScript Pages Function with local D1
+  and persisted state, no account. Bindings are passed as flags; no wrangler.toml (a wrangler.toml would make
+  Pages take its configuration from the file instead of the dashboard).
+- src/core/sync.ts (shared rules: shouldApply last-write-wins with device tie-break, nextStamp): red (module
+  missing) → 10 tests green.
+- functions/: _lib/store.ts (schema v1, idempotent migrate, per-user atomic seq via INSERT … RETURNING,
+  applyChanges with book-deletion cascade, changesSince with paging and no echo), _lib/auth.ts (jose verify:
+  issuer https://<team>, audience ACCESS_AUD, email claim; dev mode only on localhost), _lib/handler.ts
+  (validation: kinds, ids, stamps, device match, ≤500 changes, ≤64 KB per item → 400), _lib/d1.ts, api/sync.ts.
+  Unit tests run on node:sqlite (functions/_lib/sqlite-test-db.ts). Red (modules missing) → 16 green.
+  tsconfig.functions.json (workers types + node) added to typecheck; Vitest includes functions/**.
+- Smoke in wrangler with local D1: push from A → {"items":[],"cursor":1}; pull from B → A's bookmark; "nope" → 400.
+
+### 2026-10-19 21:03 EDT | Phase 09a | Claude Code (Opus 5.5) | Local schema v5, sync engine, HTTP client, fetch boundary
+- Local store (src/storage/indexeddb-book-store.ts), schema v5: syncMeta (per item: stamp, deleted, device, pending)
+  written in the same transaction as every local write; syncState (deviceId, cursor); v4→v5 seeds syncMeta from
+  existing rows (stamps from lastOpenedAt/createdAt/updatedAt, all pending); books list with computed hasFile;
+  removeFromDevice (file only); add restores a missing file; applyRemote (last write wins, book deletion cascades,
+  never marks pending); markSynced (only unchanged items). Red: 14 tests failed (incl. updated schema test) → green;
+  three older upgrade tests now expect the computed hasFile: true (interface change).
+- src/sync/engine.ts: single-flight sync (push batch, apply remote, mark synced, advance cursor; up to 50 rounds),
+  statuses (syncing, synced, offline, signed-out, unavailable, failed), onRemoteChanges(bookIds). Tests use two real
+  local stores and an in-memory server with the same rules. Red (module missing) → 8 green.
+- Mistake: commit 5e85771 went in with one failing test because my command piped vitest into grep (grep's exit
+  code gated the commit). The test ("keeps the later of two edits") tied on equal clocks and was decided by random
+  device ids; fixed by giving device B a later clock (5892b62), 5/5 runs green. Commits are now gated on vitest's
+  own exit code.
+- src/sync/http-client.ts (fetch with redirect:'manual': network error → offline; Access redirect/401/403 →
+  signed-out; 404/405 → unavailable; other errors or malformed replies → failed). Red → 6 green.
+- Lint boundary (item 10): probe calling fetch/window.fetch in src/ui → exit 0 before, exit 1 after (2 errors);
+  clean → 0; indexedDB still banned in src/ui (1); fetch banned in src/storage (1). Rule restructured because ESLint
+  replaces rule options per file instead of merging them.
+- Unit total: 195 passed.
+
+### 2026-10-19 21:35 EDT | Phase 09a | Claude Code (Opus 5.5) | UI wiring, two-device e2e, verify; docs
+- UI: trigger wrapper (src/sync/triggering.ts; red → 3 green); SyncStatusLine (red → green); Library with cloud-only
+  rows and "Remove from this device" / "Delete everywhere" (red → green, 4 tests); useSync; App and ReaderView wiring
+  (syncVersion reloads annotations). Existing e2e updated where the confirm button changed ("Yes, remove" →
+  "Delete everywhere": 8 failures in 4 tests, then green). Lint caught indexedDB use in App (moved the check into
+  src/storage) and a ref read during render (useSync now takes a stable callback).
+- E2E (e2e/sync/sync.spec.ts, playwright.sync.config.ts; wrangler pages dev, local D1, per-test x-dev-user):
+  7 tests × chromium/webkit. Investigation of a WebKit failure: network logging showed device B DID receive the
+  bookmark; a database dump showed it stored; a timing probe showed UI lag of 49–72 ms normally but 8.3 s
+  sometimes; serial runs still took 33–53 s per test. Cause: my tests never closed their browser contexts, so
+  earlier tests' pages kept running in the same WebKit process. Fixed with a device fixture that closes them:
+  14/14 passed twice (~15 s total).
+- Mutation checks (chromium, each reverted): no UI refresh on remote changes → failed; ignore remote deletions →
+  failed; remove-from-device deleting everywhere → failed; wrong offline text → failed. Two survived at first
+  (shouldApply always true; no 'online' listener) because the tests didn't exercise them; reordered the conflict
+  test and let the 2 s scheduled sync fire while offline; both breaks then failed.
+- Lint boundary for fetch (item 10): see the earlier entry. ESLint now ignores .wrangler/ (wrangler's generated
+  bundles).
+- Verification: scripts/verify.local.sh gains the sync step. `scripts/verify.sh` → PASS: unit 212, browser 175 + 1
+  skipped, sync 14, perf 8 (chromium first 199, jump 19, p95 16.8; webkit first 156, jump 59, p95 39 with samples
+  [39, 2444, 29], canvas 67.1). Budgets unchanged.
+- Docs: docs/deploy.md section 2b (two D1 databases, DB binding, ACCESS_TEAM_DOMAIN / ACCESS_AUD per environment);
+  AGENTS.md (test:sync, functions/, src/sync/, fetch rule, no wrangler.toml); phase 09a context file.
+- Remaining: CI on the branch (needs the user's OK to push; a push also deploys a preview), the user's D1 setup,
+  then deploy and item 13 (real devices).
+
+### 2026-10-19 21:36 EDT | Phase 09a | Claude Code (Opus 5.5) | Highlights in the two-device test; F-016
+- Gap found by me against contract item 1 (it names highlights; the e2e covered bookmarks and notes): the first sync
+  test now also highlights text on device A (text-4-pages.pdf) and expects a highlight box on B. Passed in chromium
+  and webkit; break "highlights not applied remotely" → failed; reverted. Full sync suite 14/14.
+- F-016 → passing (local evidence; real devices pending, item 13).
+
+### 2026-10-19 22:15 EDT | Planning | Claude Code (Opus 5.5) | Three features added for later
+- At the user's request, added three later features to the roadmap (planning only, no code): PLANS.md rows 14 Voice
+  notes, 15 Listen to a book, 16 Share excerpts (lowest priority), and a matching line in GOALS.md Scope.
+  Details (recording format, text-to-speech voice, where audio syncs, share targets) are decided when each phase
+  starts. Note: voice notes are audio files, so their cloud copy likely depends on 09b's file sync.
+
+### 2026-10-19 22:36 EDT | Phase 09a | Claude Code (Opus 5.5) | Pushed; CI green; preview behind Access
+- The user reported the Cloudflare setup complete (two D1 databases, DB binding per environment,
+  ACCESS_TEAM_DOMAIN / ACCESS_AUD per environment). Pushed branch phase-09a-sync-library-and-annotations at 27f0197
+  with the user's earlier agreement ("tell me when it's done and I'll push").
+- CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39358742684 → success
+  (02:24:35Z–02:34:50Z UTC).
+- Cloudflare Pages check on 27f0197: success (preview alias phase-09a-sync-library-and-a.book-reader-cpi.pages.dev).
+- Logged-out curl against the preview: GET /, GET /api/sync and POST /api/sync each → 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/... so the API is behind Access (item 8, deployed
+  side). The login redirect names the preview application's audience tag beginning 498b4e00; the preview's
+  ACCESS_AUD must equal it (not checked from here: agents don't read dashboard settings).
+- Not yet observed: a signed-in sync against the real D1 (needs the user's browser) and item 13 (two real devices).

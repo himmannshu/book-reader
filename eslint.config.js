@@ -3,8 +3,27 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+const STORAGE_MESSAGE = 'Use the storage interfaces (src/storage) instead.';
+const FETCH_MESSAGE =
+  'Only src/sync/http-client.ts talks to the network; use the SyncClient interface.';
+const INDEXED_DB_GLOBAL = { name: 'indexedDB', message: STORAGE_MESSAGE };
+const FETCH_GLOBAL = { name: 'fetch', message: FETCH_MESSAGE };
+const STORAGE_PROPERTIES = [
+  ...['window', 'globalThis', 'self'].map((object) => ({
+    object,
+    property: 'indexedDB',
+    message: STORAGE_MESSAGE,
+  })),
+  { object: 'navigator', property: 'storage', message: STORAGE_MESSAGE },
+];
+const FETCH_PROPERTIES = ['window', 'globalThis', 'self'].map((object) => ({
+  object,
+  property: 'fetch',
+  message: FETCH_MESSAGE,
+}));
+
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results'] },
+  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results', '.wrangler'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,
@@ -33,28 +52,31 @@ export default tseslint.config(
     },
   },
   {
-    // Only the storage adapters may touch browser storage, so persistence stays behind the
-    // BookStore interface and the cloud adapter (phase 09) can slot in.
+    // Boundaries for browser storage and the network:
+    // - only the storage adapters (src/storage) may touch IndexedDB or navigator.storage, so
+    //   persistence stays behind the storage interfaces;
+    // - only the sync client (src/sync/http-client.ts) may call fetch, so sync stays behind
+    //   the SyncClient interface (phase 09a).
+    // ESLint replaces (does not merge) a rule's options when several blocks match a file, so the
+    // exceptions below restate the remaining restriction.
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/storage/**'],
     rules: {
-      'no-restricted-globals': [
-        'error',
-        { name: 'indexedDB', message: 'Use the BookStore interface (src/storage) instead.' },
-      ],
-      'no-restricted-properties': [
-        'error',
-        ...['window', 'globalThis', 'self'].map((object) => ({
-          object,
-          property: 'indexedDB',
-          message: 'Use the BookStore interface (src/storage) instead.',
-        })),
-        {
-          object: 'navigator',
-          property: 'storage',
-          message: 'Use the BookStore interface (src/storage) instead.',
-        },
-      ],
+      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL, FETCH_GLOBAL],
+      'no-restricted-properties': ['error', ...STORAGE_PROPERTIES, ...FETCH_PROPERTIES],
+    },
+  },
+  {
+    files: ['src/storage/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-globals': ['error', FETCH_GLOBAL],
+      'no-restricted-properties': ['error', ...FETCH_PROPERTIES],
+    },
+  },
+  {
+    files: ['src/sync/http-client.ts'],
+    rules: {
+      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL],
+      'no-restricted-properties': ['error', ...STORAGE_PROPERTIES],
     },
   },
   {

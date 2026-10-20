@@ -8,3 +8,4 @@ harness/
 *.md
 .claude/
 perf-results/
+.wrangler/

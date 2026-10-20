@@ -87,18 +87,20 @@ describe('IndexedDB book store', () => {
     expect(persistCalls()).toBe(1);
   });
 
-  it('creates schema version 4 with metadata, file and annotation stores', async () => {
+  it('creates schema version 5 with metadata, file, annotation and sync stores', async () => {
     const { store, factory } = setup();
     await store.list();
     const db = await openRaw(factory);
     expect(db.version).toBe(DB_VERSION);
-    expect(DB_VERSION).toBe(4);
+    expect(DB_VERSION).toBe(5);
     expect([...db.objectStoreNames].sort()).toEqual([
       'bookFiles',
       'bookmarks',
       'books',
       'highlights',
       'notes',
+      'syncMeta',
+      'syncState',
     ]);
     db.close();
   });
@@ -126,7 +128,7 @@ describe('IndexedDB book store', () => {
     old.close();
 
     const { books, bookmarks, highlights } = createIndexedDBStores({ factory });
-    expect(await books.list()).toEqual([record]);
+    expect(await books.list()).toEqual([{ ...record, hasFile: true }]);
     expect(await bookmarks.list('v2')).toEqual([mark('v2', 3)]);
     await highlights.put(passage('v2', 'h1', 0, 100));
     expect(await highlights.list('v2')).toEqual([passage('v2', 'h1', 0, 100)]);
@@ -153,7 +155,7 @@ describe('IndexedDB book store', () => {
     old.close();
 
     const { books, bookmarks } = createIndexedDBStores({ factory });
-    expect(await books.list()).toEqual([record]);
+    expect(await books.list()).toEqual([{ ...record, hasFile: true }]);
     expect(new TextDecoder().decode(await books.getBytes('v1'))).toBe('%PDF');
     await bookmarks.put(mark('v1', 2));
     expect(await bookmarks.list('v1')).toEqual([mark('v1', 2)]);

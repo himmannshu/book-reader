@@ -6,20 +6,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 08 Complete with recorded exceptions (contract Amendment 1): the installed iPhone app did not
-  work offline; the user deprioritized offline reading. Production: https://book-reader-cpi.pages.dev
-  (behind Access, email one-time code; previews too).
-- Next: phase 09a (planned, contract approved), then 09b. The user asked to move to phase 09 now.
+- Phase 09a In progress on branch phase-09a-sync-library-and-annotations, pushed. Items 1–12
+  observed (CI run 39358742684 green; preview deployed; /api/sync redirects to Access when logged
+  out). User finished the D1 / env var setup. Remaining: item 13 (the user checks sync on two real
+  devices using the preview URL https://phase-09a-sync-library-and-a.book-reader-cpi.pages.dev).
+- Phase 08 Complete with exceptions (iPhone offline deferred). Phase 09b planned as an outline.
+  Phases 14–16 (voice notes, listen to a book, share excerpts) added to PLANS.md for later.
 
 ## In flight
 
-- Second deploy pushed for item 6's real-world part: the user may report whether the installed app
-  shows "A new version is ready."
+- Waiting on the user: the two-device check on the preview (item 13).
 
 ## Next action
 
-1. Build phase 09a per harness/build/phase-09a-sync-library-and-annotations.md and its approved
-   contract, on branch phase-09a-sync-library-and-annotations. Then 09b (plan it in detail first).
+1. If the preview's status line says "Sign in again to sync" or "Sync failed", check the
+   preview's ACCESS_AUD against the audience tag in the Access login redirect (starts 498b4e00)
+   and the DB binding for Preview, then have the user redeploy.
+2. After item 13 passes: mark 09a Complete, ask before merging into main (production deploy),
+   then plan 09b in detail.
 
 ## Decisions worth remembering
 
@@ -64,15 +68,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 20:51 EDT
-- Branch: main
-- HEAD: e67f148 phase 08: iPhone offline failed; deferred by the user (contract Amendment 1); phase closed with exceptions
-- Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 20:22 EDT (commit e9a9c00)
+Snapshot 2026-10-19 22:35 EDT
+- Branch: phase-09a-sync-library-and-annotations
+- HEAD: 27f0197 planning: add voice notes, listen to a book, share excerpts as later phases
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-19 21:34 EDT (commit 6899844)
 - Recent commits:
-    e67f148 phase 08: iPhone offline failed; deferred by the user (contract Amendment 1); phase closed with exceptions
-    95c252d phase 08: record green CI on main
-    c97a653 phase 09 planning: refresh handoff snapshot
-    85cfca5 phase 09: split into 09a/09b; 09a plan and contract (planning docs only)
-    82c7860 phase 08: refresh handoff snapshot
+    27f0197 planning: add voice notes, listen to a book, share excerpts as later phases
+    591048d phase 09a: refresh handoff snapshot
+    2089d47 phase 09a: F-016 passing locally; handoff
+    cd04837 phase 09a: two-device e2e covers highlights too (contract item 1)
+    541e72d phase 09a: sync in verify; deploy guide for D1; AGENTS, context and build log
+- Changed files:
+     M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->

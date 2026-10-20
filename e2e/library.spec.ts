@@ -65,7 +65,7 @@ test('removing a book asks first, then deletes it for good', async ({ page }) =>
   await bookItem(page, 'basic-3-pages')
     .getByRole('button', { name: 'Remove basic-3-pages' })
     .click();
-  await bookItem(page, 'basic-3-pages').getByRole('button', { name: 'Yes, remove' }).click();
+  await bookItem(page, 'basic-3-pages').getByRole('button', { name: 'Delete everywhere' }).click();
   await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
   expect(await storedCounts(page)).toEqual({ books: 0, files: 0 });
 

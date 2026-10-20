@@ -41,6 +41,8 @@ const actionsHaveFocus = () => document.activeElement?.closest('.selection-actio
 
 interface UseHighlightsOptions {
   bookId: string | null;
+  /** Bumped when another device changed data; reloads the highlights. */
+  syncVersion?: number;
   store: HighlightStore;
   viewer: RefObject<Viewer | null>;
   scroller: RefObject<HTMLElement | null>;
@@ -58,6 +60,7 @@ interface UseHighlightsOptions {
  */
 export function useHighlights({
   bookId,
+  syncVersion = 0,
   store,
   viewer,
   scroller,
@@ -106,7 +109,7 @@ export function useHighlights({
     return () => {
       cancelled = true;
     };
-  }, [bookId, store]);
+  }, [bookId, store, syncVersion]);
 
   useEffect(() => {
     viewer.current?.setHighlights(items ?? []);

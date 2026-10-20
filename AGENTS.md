@@ -85,7 +85,9 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Regenerate test PDFs: `npm run fixtures` (writes tests/fixtures/, deterministic)
 - Regenerate app icons: `npm run icons` (writes public/icons/, deterministic)
 - Deploy: there is no deploy command. Cloudflare Pages builds from GitHub (see docs/deploy.md).
-- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → perf)
+- Sync tests (two devices, local D1): `npm run test:sync` (playwright.sync.config.ts runs
+  `wrangler pages dev` on port 8788 with local D1; no Cloudflare account needed)
+- What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → sync → perf)
 
 ## Conventions
 
@@ -110,6 +112,9 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   - `tests/config/`: Node-side unit tests for config files (for example `public/_headers`).
   - `public/`: static files copied as-is into the build (icons, Cloudflare `_headers`).
   - `docs/`: guides for the user, such as `docs/deploy.md` (Cloudflare setup).
+  - `functions/`: Cloudflare Pages Functions (the sync API). `functions/_lib/` holds testable code;
+    only `functions/api/*` files are routes. Type-checked with tsconfig.functions.json.
+  - `src/sync/`: the sync engine, the store trigger and the only `fetch` call (`http-client.ts`).
 - Unit tests sit next to the code as `*.test.ts`.
 - Annotations are stored in PDF coordinates (page index plus rectangles in PDF points) together
   with the quoted text. Never store screen pixels.
@@ -117,6 +122,10 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   IndexedDB, `navigator.storage` or `fetch` to the cloud directly (lint enforces the first two).
 - Tests never touch the network or the live cloud. Cloudflare pieces are tested with local
   `wrangler` emulation.
+- Network: only `src/sync/http-client.ts` may call `fetch` (lint enforces it). Sync rules live in
+  `src/core/sync.ts` and are shared by the browser and the server.
+- No `wrangler.toml`: Pages would then take its bindings from the file instead of the dashboard.
+  Local runs pass bindings as command-line flags (see playwright.sync.config.ts).
 - Book files are stored as ArrayBuffers, not Blobs: Safari private browsing and Playwright's WebKit
   reject Blobs in IndexedDB.
 - Never run `npm run test:perf` in two worktrees at once. The runs share port 4174 and the CPU, so
