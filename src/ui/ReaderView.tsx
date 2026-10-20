@@ -512,11 +512,13 @@ export function ReaderView({
               changeZoom(value === 'fit-width' || value === 'fit-page' ? value : Number(value));
             }}
           >
-            {ZOOM_CHOICES.map((choice) => (
-              <option key={choice} value={String(choice)}>
-                {zoomLabel(choice)}
-              </option>
-            ))}
+            {(ZOOM_CHOICES.includes(zoom) ? ZOOM_CHOICES : [...ZOOM_CHOICES, zoom]).map(
+              (choice) => (
+                <option key={choice} value={String(choice)}>
+                  {zoomLabel(choice)}
+                </option>
+              ),
+            )}
           </select>
           <button
             type="button"

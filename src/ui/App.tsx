@@ -318,7 +318,8 @@ export function App({
     try {
       return await readingStates.get(bookId);
     } catch (err) {
-      logUnexpected(err, "Reading the book's last position failed");
+      // The book still opens, at page 1; say why in the console (phase 10 review).
+      console.error("Reading the book's last position failed", err);
       return null;
     }
   }

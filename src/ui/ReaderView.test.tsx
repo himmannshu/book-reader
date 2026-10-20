@@ -241,3 +241,25 @@ describe('ReaderView resuming a book opened with Open PDF', () => {
     expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('fit-width');
   });
 });
+
+describe('ReaderView zoom menu', () => {
+  it('shows a saved zoom that is not one of the set levels', () => {
+    const { doc } = fakeDoc();
+    render(
+      <ReaderView
+        doc={doc}
+        bookId="book"
+        bookmarks={memoryBookmarks()}
+        highlights={noHighlights}
+        initialState={{
+          bookId: 'book',
+          position: { pageIndex: 0, fraction: 0, pixelsAbove: 0 },
+          zoom: 120,
+          savedAt: 1,
+        }}
+      />,
+    );
+    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('120');
+    expect(screen.getByRole('option', { name: '120%' })).toBeInTheDocument();
+  });
+});

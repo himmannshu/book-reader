@@ -63,3 +63,11 @@ be revisited.
 See the build log entry for the baseline: WebKit and Playwright's pinned Chromium cannot be
 downloaded (network policy), so local browser checks run on a Chromium 153 build from npm and
 WebKit is covered by the full CI run on the branch.
+
+## Deferred from the phase 10 review (non-blocking, for phase 14)
+
+- The horizontal scroll position is not saved, so a book read at 400% reopens centred.
+- The phone toolbar takes about a third of the screen height when it wraps.
+- Dark turns photos into negatives (the page filter inverts everything); a per-image fix needs
+  the engine to tell images apart.
+- In fit page, iOS's address bar showing or hiding changes the window height and redraws pages.
