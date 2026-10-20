@@ -338,7 +338,10 @@ test.describe('memory when zoomed in', () => {
 
   test('at 400% canvases stay under the size cap and budget, and scrolling does not redraw pages over and over', async ({
     page,
-  }) => {
+  }, testInfo) => {
+    // Linux CI WebKit paints these 12-megapixel canvases in software, which is slow (phase 10
+    // review B2); the frame gaps are recorded below so a real freeze is told apart from that.
+    test.slow();
     await importBook(page, `${LONG}.pdf`);
     await zoomSelect(page).selectOption('400');
     await expect.poll(() => pageWidth(page)).toBeCloseTo(612 * 4 * ACTUAL, 0);
@@ -350,26 +353,35 @@ test.describe('memory when zoomed in', () => {
         .evaluateAll((list) => (list as HTMLCanvasElement[]).map((c) => c.width * c.height));
     for (const pixels of await canvases()) expect(pixels).toBeLessThanOrEqual(16_777_216);
 
-    // Count how often pages start drawing while scrolling about half a page.
-    await reader(page).evaluate((element) => {
-      const w = window as unknown as { renders: number };
-      w.renders = 0;
-      new MutationObserver((records) => {
+    // Scroll about half a page, 40 px per frame, counting how often pages start drawing and
+    // the longest gap between frames.
+    const { renders, gaps } = await reader(page).evaluate(async (element) => {
+      let renders = 0;
+      const observer = new MutationObserver((records) => {
         for (const record of records) {
-          if ((record.target as HTMLElement).dataset.state === 'rendering') w.renders++;
+          if ((record.target as HTMLElement).dataset.state === 'rendering') renders++;
         }
-      }).observe(element, { subtree: true, attributeFilter: ['data-state'] });
-    });
-    for (let step = 0; step < 60; step++) {
-      await reader(page).evaluate((element) => {
-        element.scrollTop += 40;
       });
-      await page.evaluate(
-        () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
-      );
-    }
-    const renders = await page.evaluate(() => (window as unknown as { renders: number }).renders);
+      observer.observe(element, { subtree: true, attributeFilter: ['data-state'] });
+      const frame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
+      const gaps: number[] = [];
+      let last = await frame();
+      for (let step = 0; step < 60; step++) {
+        element.scrollTop += 40;
+        const now = await frame();
+        gaps.push(now - last);
+        last = now;
+      }
+      observer.disconnect();
+      return { renders, gaps };
+    });
+    const sorted = [...gaps].sort((a, b) => a - b);
+    const summary = `median ${Math.round(sorted[30] ?? 0)} ms, max ${Math.round(sorted.at(-1) ?? 0)} ms`;
+    testInfo.annotations.push({ type: 'frame gaps at 400%', description: summary });
+    console.log(`[${testInfo.project.name}] frame gaps at 400%: ${summary}`);
     expect(renders).toBeLessThanOrEqual(4);
+    // A freeze (as the review feared), not just slow painting, would show as a gap of seconds.
+    expect(sorted.at(-1) ?? 0, summary).toBeLessThan(5000);
     const all = await canvases();
     for (const pixels of all) expect(pixels).toBeLessThanOrEqual(16_777_216);
     expect(all.reduce((sum, pixels) => sum + pixels * 4, 0)).toBeLessThanOrEqual(96_000_000);

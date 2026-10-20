@@ -1451,3 +1451,19 @@ Contract evidence from this final canonical run (contract unchanged after approv
   must check; stay inside free tiers (Cloudflare, GitHub Actions). New file harness/USER-CHECKLIST.md holds that
   list (a new file outside the table in AGENTS.md, added because the user asked for it). HANDOFF standing
   instructions updated.
+
+### 2026-10-20 06:35 UTC | Phase 10 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL; CI red; fixes
+- Full CI run https://github.com/himmannshu/book-reader/actions/runs/39376651997 on 39980d4 → failure: 200 passed,
+  1 skipped, 3 failed, all WebKit: bookmarks "still listed … after a reload" and "a removed bookmark stays removed
+  after a reload" (the reopen helper expected page 1; fixed in 1152b2d), and comfort "at 400% …" (test timeout
+  30 s while waiting for animation frames, on the first try and the retry).
+- Evaluator (fresh context): harness/code_review/phase-10-review.md, verdict FAIL. Blockers: CI red / never run on
+  HEAD; the WebKit 400% stall needs a reproduction, not a longer timeout; device check pending (user).
+  Non-blocking: silent failed read of the saved place; horizontal position not saved; zoom menu wrong for a saved
+  zoom outside the levels; plus smaller notes (phone toolbar height, dark photos inverted, fit page redraws when
+  iOS bars move).
+- Fixes: the 400% test now scrolls inside the page and records every frame gap (annotation + console), asserts no
+  gap reaches 5 s (a freeze), and is marked slow (90 s) for software-painted WebKit; Chromium here: median 17 ms,
+  max 33 ms. A failed read of the saved place is always logged. The zoom menu lists a saved custom zoom (unit test).
+  Deferred to phase 14 (recorded in the context file): saving the horizontal position, phone toolbar height, photo
+  inversion in Dark, fit-page redraws on iOS bar changes.
