@@ -1124,3 +1124,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Integrations → Identity providers (my guide said Settings → Authentication). Previews are protected through the
   Pages project's Settings → Access policy. docs/deploy.md section 2 rewritten accordingly. No Cloudflare settings
   changed by the agent.
+
+### 2026-10-19 20:19 EDT | Phase 08 | Claude Code (Opus 5.5) | Item 11: production and previews behind the email-code login
+- User reports: added One-time PIN, enabled the preview access policy, set the email policy.
+- Logged-out checks (curl, no credentials): https://book-reader-cpi.pages.dev/ and /sw.js, and
+  https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ and /sw.js → all HTTP 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/<host>. Both login pages now read "Log in to
+  book-reader - Cloudflare Pages | Email | Send login code" (One-time PIN), no longer "Sign in with: Cloudflare".
+- Item 11 observed for production and previews (the user's own email-code login is theirs to confirm in item 12).
+- CI run 39345677490 on bc2b12f still in progress at the verify step.
