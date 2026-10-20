@@ -1096,3 +1096,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - harness/context/phase-08-installable-and-hosted-context.md written.
 - Remaining: user's Cloudflare setup (docs/deploy.md 1–2), then with the user's OK: push branch (CI + preview),
   check logged-out requests reach Access (item 11), merge/push main (production), user install + offline check (12).
+
+### 2026-10-19 20:06 EDT | Phase 08 | Claude Code (Opus 5.5) | Hosted URL check; login method; branch pushed
+- User set up Cloudflare Pages: production URL https://book-reader-cpi.pages.dev/ (project book-reader-cpi).
+- Logged-out checks (curl, no credentials, read-only): `/` and `/sw.js` → HTTP 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/book-reader-cpi.pages.dev (www-authenticate:
+  Cloudflare-Access). https://main.book-reader-cpi.pages.dev/ → 404 (no alias for the production branch).
+- The Access login page shows "Log in to *" and only "Sign in with: Cloudflare" (Cloudflare-account login, likely
+  the Pages built-in access policy), not the agreed email one-time PIN. Private, but not the planned method.
+- User decision: switch to the email one-time code (user changing Zero Trust settings: add One-time PIN, enable it on
+  the application, policy Emails = the user's address, add *.book-reader-cpi.pages.dev for previews).
+- User authorized pushing the branch: pushed phase-08-installable-and-hosted at bc2b12f (CI + preview deploy).
+  Watching CI and probing the preview alias logged-out.
