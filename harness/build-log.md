@@ -1253,3 +1253,16 @@ Contract evidence from this final canonical run (contract unchanged after approv
   notes, 15 Listen to a book, 16 Share excerpts (lowest priority), and a matching line in GOALS.md Scope.
   Details (recording format, text-to-speech voice, where audio syncs, share targets) are decided when each phase
   starts. Note: voice notes are audio files, so their cloud copy likely depends on 09b's file sync.
+
+### 2026-10-19 22:36 EDT | Phase 09a | Claude Code (Opus 5.5) | Pushed; CI green; preview behind Access
+- The user reported the Cloudflare setup complete (two D1 databases, DB binding per environment,
+  ACCESS_TEAM_DOMAIN / ACCESS_AUD per environment). Pushed branch phase-09a-sync-library-and-annotations at 27f0197
+  with the user's earlier agreement ("tell me when it's done and I'll push").
+- CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39358742684 → success
+  (02:24:35Z–02:34:50Z UTC).
+- Cloudflare Pages check on 27f0197: success (preview alias phase-09a-sync-library-and-a.book-reader-cpi.pages.dev).
+- Logged-out curl against the preview: GET /, GET /api/sync and POST /api/sync each → 302 to
+  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/... so the API is behind Access (item 8, deployed
+  side). The login redirect names the preview application's audience tag beginning 498b4e00; the preview's
+  ACCESS_AUD must equal it (not checked from here: agents don't read dashboard settings).
+- Not yet observed: a signed-in sync against the real D1 (needs the user's browser) and item 13 (two real devices).

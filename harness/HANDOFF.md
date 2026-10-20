@@ -6,23 +6,24 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 09a In progress on branch phase-09a-sync-library-and-annotations (not pushed).
-  Items 1–11 observed locally; verify PASS (unit 212, browser 175+1 skipped, sync 14, perf 8).
-  Remaining: item 12's CI part (push needs the user's OK; a push also deploys a preview) and
-  item 13 (real devices after the user's D1 setup, docs/deploy.md section 2b).
+- Phase 09a In progress on branch phase-09a-sync-library-and-annotations, pushed. Items 1–12
+  observed (CI run 39358742684 green; preview deployed; /api/sync redirects to Access when logged
+  out). User finished the D1 / env var setup. Remaining: item 13 (the user checks sync on two real
+  devices using the preview URL https://phase-09a-sync-library-and-a.book-reader-cpi.pages.dev).
 - Phase 08 Complete with exceptions (iPhone offline deferred). Phase 09b planned as an outline.
+  Phases 14–16 (voice notes, listen to a book, share excerpts) added to PLANS.md for later.
 
 ## In flight
 
-- Waiting on the user: D1 setup (two databases, DB binding, ACCESS_TEAM_DOMAIN / ACCESS_AUD per
-  environment) and an OK to push the branch.
+- Waiting on the user: the two-device check on the preview (item 13).
 
 ## Next action
 
-1. With the user's OK, push the branch: CI run plus a preview deploy. Check that /api/sync is
-   behind Access when logged out (curl).
-2. After the user's D1 setup: the user checks sync on two real devices (item 13). Then mark 09a
-   Complete, ask before merging into main (production deploy), then plan 09b in detail.
+1. If the preview's status line says "Sign in again to sync" or "Sync failed", check the
+   preview's ACCESS_AUD against the audience tag in the Access login redirect (starts 498b4e00)
+   and the DB binding for Preview, then have the user redeploy.
+2. After item 13 passes: mark 09a Complete, ask before merging into main (production deploy),
+   then plan 09b in detail.
 
 ## Decisions worth remembering
 
@@ -67,15 +68,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 21:36 EDT
+Snapshot 2026-10-19 22:35 EDT
 - Branch: phase-09a-sync-library-and-annotations
-- HEAD: 2089d47 phase 09a: F-016 passing locally; handoff
-- Uncommitted files: 0
+- HEAD: 27f0197 planning: add voice notes, listen to a book, share excerpts as later phases
+- Uncommitted files: 2
 - Last verify: PASS at 2026-10-19 21:34 EDT (commit 6899844)
 - Recent commits:
+    27f0197 planning: add voice notes, listen to a book, share excerpts as later phases
+    591048d phase 09a: refresh handoff snapshot
     2089d47 phase 09a: F-016 passing locally; handoff
     cd04837 phase 09a: two-device e2e covers highlights too (contract item 1)
     541e72d phase 09a: sync in verify; deploy guide for D1; AGENTS, context and build log
-    6899844 phase 09a: sync e2e: order the conflict so the older edit arrives last; isolate the back-online trigger
-    6974988 phase 09a: two-device sync e2e against wrangler pages dev with local D1; per-test dev user; devices closed after each test
+- Changed files:
+     M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->
