@@ -1,0 +1,153 @@
+// Server-side sync storage on D1 (SQLite). One row per synced item, per user. Every applied change
+// gets a fresh per-user sequence number, so a device asks for "everything after my cursor".
+import { shouldApply, type SyncItem, type SyncKind } from '../../src/core/sync';
+
+export type SqlValue = string | number | null;
+
+/** The few database operations the store needs; D1 in production, node:sqlite in unit tests. */
+export interface SqlDb {
+  exec(sql: string): Promise<void>;
+  all<T>(sql: string, params?: SqlValue[]): Promise<T[]>;
+  run(sql: string, params?: SqlValue[]): Promise<void>;
+}
+
+const SCHEMA_VERSION = 1;
+
+/** Creates or upgrades the tables. Idempotent, so the Function can run it on first use. */
+export async function migrate(db: SqlDb): Promise<void> {
+  await db.exec(
+    'CREATE TABLE IF NOT EXISTS schema_version (version INTEGER NOT NULL);' +
+      'CREATE TABLE IF NOT EXISTS sync_seq (user TEXT PRIMARY KEY, seq INTEGER NOT NULL);' +
+      'CREATE TABLE IF NOT EXISTS sync_items (' +
+      'user TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, book_id TEXT NOT NULL, ' +
+      'data TEXT, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL, device TEXT NOT NULL, ' +
+      'seq INTEGER NOT NULL, PRIMARY KEY (user, kind, id));' +
+      'CREATE INDEX IF NOT EXISTS sync_items_by_seq ON sync_items (user, seq);' +
+      'CREATE INDEX IF NOT EXISTS sync_items_by_book ON sync_items (user, book_id);',
+  );
+  const rows = await db.all<{ version: number }>('SELECT version FROM schema_version');
+  if (rows.length === 0) {
+    await db.run('INSERT INTO schema_version (version) VALUES (?)', [SCHEMA_VERSION]);
+  }
+}
+
+/** Next sequence number for this user; one atomic statement, so concurrent syncs never share one. */
+async function nextSeq(db: SqlDb, user: string): Promise<number> {
+  const rows = await db.all<{ seq: number }>(
+    'INSERT INTO sync_seq (user, seq) VALUES (?, 1) ' +
+      'ON CONFLICT(user) DO UPDATE SET seq = seq + 1 RETURNING seq',
+    [user],
+  );
+  const seq = rows[0]?.seq;
+  if (typeof seq !== 'number') throw new Error('Could not allocate a sync sequence number');
+  return seq;
+}
+
+interface Row {
+  kind: SyncKind;
+  id: string;
+  book_id: string;
+  data: string | null;
+  updated_at: number;
+  deleted: number;
+  device: string;
+  seq: number;
+}
+
+async function write(db: SqlDb, user: string, item: SyncItem): Promise<void> {
+  const seq = await nextSeq(db, user);
+  await db.run(
+    'INSERT INTO sync_items (user, kind, id, book_id, data, updated_at, deleted, device, seq) ' +
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user, kind, id) DO UPDATE SET ' +
+      'book_id = excluded.book_id, data = excluded.data, updated_at = excluded.updated_at, ' +
+      'deleted = excluded.deleted, device = excluded.device, seq = excluded.seq',
+    [
+      user,
+      item.kind,
+      item.id,
+      item.bookId,
+      item.deleted ? null : JSON.stringify(item.data),
+      item.updatedAt,
+      item.deleted ? 1 : 0,
+      item.device,
+      seq,
+    ],
+  );
+}
+
+/** Applies changes with last write wins. A deleted book also deletes its annotations. */
+export async function applyChanges(
+  db: SqlDb,
+  user: string,
+  changes: readonly SyncItem[],
+): Promise<{ applied: number }> {
+  let applied = 0;
+  for (const change of changes) {
+    const stored = await db.all<{ updated_at: number; device: string }>(
+      'SELECT updated_at, device FROM sync_items WHERE user = ? AND kind = ? AND id = ?',
+      [user, change.kind, change.id],
+    );
+    const current = stored[0];
+    const stamp = current && { updatedAt: current.updated_at, device: current.device };
+    if (!shouldApply(stamp, change)) continue;
+    await write(db, user, change);
+    applied++;
+
+    if (change.kind === 'book' && change.deleted) {
+      const annotations = await db.all<Row>(
+        "SELECT * FROM sync_items WHERE user = ? AND book_id = ? AND kind != 'book' AND deleted = 0",
+        [user, change.id],
+      );
+      for (const row of annotations) {
+        await write(db, user, {
+          kind: row.kind,
+          id: row.id,
+          bookId: row.book_id,
+          updatedAt: Math.max(change.updatedAt, row.updated_at + 1),
+          deleted: true,
+          device: change.device,
+          data: null,
+        });
+      }
+    }
+  }
+  return { applied };
+}
+
+export interface Pulled {
+  items: SyncItem[];
+  /** Pass back as `since` next time. */
+  cursor: number;
+  /** True if there are more changes after this page. */
+  more: boolean;
+}
+
+/** Changes after `since`, oldest first, without echoing `device` its own writes. */
+export async function changesSince(
+  db: SqlDb,
+  user: string,
+  since: number,
+  device: string,
+  limit = 500,
+): Promise<Pulled> {
+  const rows = await db.all<Row>(
+    'SELECT kind, id, book_id, data, updated_at, deleted, device, seq FROM sync_items ' +
+      'WHERE user = ? AND seq > ? ORDER BY seq LIMIT ?',
+    [user, since, limit + 1],
+  );
+  const more = rows.length > limit;
+  const page = rows.slice(0, limit);
+  const cursor = page.length > 0 ? (page[page.length - 1]?.seq ?? since) : since;
+  const items = page
+    .filter((row) => row.device !== device)
+    .map((row) => ({
+      kind: row.kind,
+      id: row.id,
+      bookId: row.book_id,
+      updatedAt: row.updated_at,
+      deleted: row.deleted === 1,
+      device: row.device,
+      data: row.data === null ? null : (JSON.parse(row.data) as unknown),
+    }));
+  return { items, cursor, more };
+}
