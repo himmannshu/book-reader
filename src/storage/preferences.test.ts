@@ -58,3 +58,19 @@ describe('preferences', () => {
     error.mockRestore();
   });
 });
+
+describe('shelf sort preference', () => {
+  it('starts at recent and keeps the chosen sort', () => {
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => void data.set(key, value),
+    } as unknown as Storage;
+    const prefs = createPreferences(() => storage);
+    expect(prefs.shelfSort()).toBe('recent');
+    prefs.setShelfSort('title');
+    expect(createPreferences(() => storage).shelfSort()).toBe('title');
+    data.set('book-reader:shelf-sort', 'size');
+    expect(createPreferences(() => storage).shelfSort()).toBe('recent');
+  });
+});

@@ -149,7 +149,13 @@ export function ReaderView({
       const { bookId: id, readingStates: store, now: clock } = saving.current;
       if (!dirty || id === null) return;
       dirty = false;
-      const state = { bookId: id, position: viewer.position, zoom: viewer.zoom, savedAt: clock() };
+      const state = {
+        bookId: id,
+        position: viewer.position,
+        zoom: viewer.zoom,
+        savedAt: clock(),
+        pageCount: doc.pageCount,
+      };
       store.put(state).catch((error: unknown) => {
         // Reading goes on; the next pause tries again.
         dirty = true;

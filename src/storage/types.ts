@@ -2,6 +2,7 @@ import type { Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import type { Note } from '../core/notes';
 import type { ReadingState, Theme } from '../core/reading-state';
+import type { ShelfSort } from '../core/shelf';
 import type { SyncItem } from '../core/sync';
 
 // The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
@@ -61,12 +62,32 @@ export interface ReadingStateStore {
   get(bookId: string): Promise<ReadingState | null>;
   /** Saves the state; ignored if the book is no longer in the library. */
   put(state: ReadingState): Promise<void>;
+  /** Every book's saved state (for the library's progress). Damaged records are left out. */
+  list(): Promise<ReadingState[]>;
+}
+
+/** A small picture of a book's first page (phase 11). */
+export interface Cover {
+  bookId: string;
+  /** Image bytes (an ArrayBuffer: Safari refuses Blobs in IndexedDB). */
+  bytes: ArrayBuffer;
+  /** Media type, such as image/jpeg. */
+  type: string;
+}
+
+/** Covers drawn on this device. Never synced; kept when only the file is removed. */
+export interface CoverStore {
+  list(): Promise<Cover[]>;
+  /** Saves a cover; ignored if the book is no longer in the library. */
+  put(cover: Cover): Promise<void>;
 }
 
 /** Small app-wide settings, read synchronously so the first render already uses them. */
 export interface Preferences {
   theme(): Theme;
   setTheme(theme: Theme): void;
+  shelfSort(): ShelfSort;
+  setShelfSort(sort: ShelfSort): void;
 }
 
 /** Local bookkeeping for sync (phase 09a). Only the sync engine uses it. */

@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import { THEMES, validTheme, type ReadingState, type Theme } from '../core/reading-state';
+import type { ShelfSort } from '../core/shelf';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
 import { createIndexedDBStores, indexedDBAvailable } from '../storage/indexeddb-book-store';
@@ -18,6 +19,7 @@ import {
   type BookRecord,
   type BookStore,
   type BookmarkStore,
+  type CoverStore,
   type HighlightStore,
   type NoteStore,
   type Preferences,
@@ -31,6 +33,7 @@ import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
 import { THEME_LABELS, applyTheme } from './theme';
+import { drawCover, startCoverQueue } from './covers';
 import { UpdateNotice } from './UpdateNotice';
 import { useSync, type SyncSetup } from './useSync';
 
@@ -122,6 +125,7 @@ export function App({
   highlights = defaultStores.highlights,
   notes = defaultStores.notes,
   readingStates = defaultStores.readingStates,
+  covers = defaultStores.covers,
   preferences = defaultPreferences,
   sync = defaultSync,
 }: {
@@ -131,6 +135,7 @@ export function App({
   highlights?: HighlightStore;
   notes?: NoteStore;
   readingStates?: ReadingStateStore;
+  covers?: CoverStore;
   preferences?: Preferences;
   sync?: SyncSetup | null;
 }) {
@@ -155,19 +160,119 @@ export function App({
     preferences.setTheme(next);
   }
 
+  // The shelf (phase 11): cover images and reading states, both local to this device.
+  const [shelfSort, setShelfSort] = useState<ShelfSort>(() => preferences.shelfSort());
+  const [shelf, setShelf] = useState<{
+    covers: ReadonlyMap<string, string>;
+    states: ReadonlyMap<string, ReadingState>;
+  }>({ covers: new Map(), states: new Map() });
+  /** Books that have a cover, for the code that decides whether to draw one. */
+  const coverIds = useRef(new Set<string>());
+  /** Books whose cover could not be drawn this session; not tried again until a reload. */
+  const coverFailed = useRef(new Set<string>());
+
+  const loadShelf = useCallback(
+    () =>
+      Promise.all([covers.list(), readingStates.list()]).then(
+        ([coverList, stateList]) => {
+          const urls = new Map(
+            coverList.map((cover) => [
+              cover.bookId,
+              URL.createObjectURL(new Blob([cover.bytes], { type: cover.type })),
+            ]),
+          );
+          coverIds.current = new Set(urls.keys());
+          setShelf((previous) => {
+            for (const url of previous.covers.values()) URL.revokeObjectURL(url);
+            const states = new Map(stateList.map((state) => [state.bookId, state]));
+            return { covers: urls, states };
+          });
+        },
+        // The shelf still lists the books, just without covers or progress.
+        (err: unknown) => logUnexpected(err, 'Reading covers and progress failed'),
+      ),
+    [covers, readingStates],
+  );
+
+  useEffect(() => {
+    void loadShelf();
+  }, [loadShelf]);
+
+  /** Draws and keeps a cover for a book from its open document. */
+  const saveCover = useCallback(
+    async (bookId: string, from: PdfDoc) => {
+      const cover = await drawCover(from);
+      await covers.put({ bookId, ...cover });
+    },
+    [covers],
+  );
+
   // Free the previous document's memory and worker when another book replaces it. Keyed on the
   // document, not the book: the book changes when a newly opened file gets its stored id.
+  // A book that has no cover yet gets one first, while its document is still open: page 1 is
+  // drawn small as the reader closes, so covers never cost reading time.
   const doc = book?.doc;
+  const docBook = useRef(new Map<PdfDoc, string>());
   useEffect(() => {
+    if (book?.bookId) docBook.current.set(book.doc, book.bookId);
+  }, [book]);
+  useEffect(() => {
+    const docs = docBook.current;
     return () => {
-      void doc?.destroy();
+      if (!doc) return;
+      const bookId = docs.get(doc);
+      docs.delete(doc);
+      if (!bookId || coverIds.current.has(bookId)) {
+        void doc.destroy();
+        return;
+      }
+      saveCover(bookId, doc)
+        .then(loadShelf)
+        .catch((err: unknown) => console.error('Drawing the cover failed', err))
+        .finally(() => void doc.destroy());
     };
-  }, [doc]);
+  }, [doc, saveCover, loadShelf]);
+
+  // Reload covers and progress whenever the Library shows: this runs after the reader has
+  // unmounted, so after it saved its place.
+  const showingLibrary = book === null;
+  useEffect(() => {
+    if (showingLibrary) void loadShelf();
+  }, [showingLibrary, loadShelf]);
+
+  // While the Library shows, books with a file here but no cover get one, one book at a time.
+  useEffect(() => {
+    if (!showingLibrary) return;
+    const missing = books
+      .filter((record) => record.hasFile !== false)
+      .map((record) => record.id)
+      .filter((id) => !shelf.covers.has(id) && !coverFailed.current.has(id));
+    const queue = startCoverQueue(
+      missing,
+      async (bookId) => {
+        try {
+          const opened = await engine.open(await store.getBytes(bookId));
+          try {
+            await saveCover(bookId, opened);
+          } finally {
+            await opened.destroy();
+          }
+        } catch (err) {
+          coverFailed.current.add(bookId);
+          throw err;
+        }
+        await loadShelf();
+      },
+      { onError: (err) => logUnexpected(err, 'Drawing a cover failed') },
+    );
+    return () => queue.stop();
+  }, [showingLibrary, books, shelf, engine, store, saveCover, loadShelf]);
 
   const onRemoteChanges = useCallback(() => {
     setSyncVersion((version) => version + 1);
     store.list().then(setBooks, (err: unknown) => logUnexpected(err, 'Listing books failed'));
-  }, [store]);
+    void loadShelf();
+  }, [store, loadShelf]);
   const {
     status: syncStatus,
     uploads,
@@ -464,6 +569,13 @@ export function App({
           canDownload={canDownload}
           downloading={downloading}
           onCancelDownload={() => download.current?.abort()}
+          covers={shelf.covers}
+          states={shelf.states}
+          sort={shelfSort}
+          onSortChange={(next) => {
+            setShelfSort(next);
+            preferences.setShelfSort(next);
+          }}
         />
       )}
     </div>

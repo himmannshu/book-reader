@@ -74,6 +74,7 @@ describe('validReadingState', () => {
   it('accepts a saved state with a fit mode or a percentage', () => {
     expect(validReadingState(good)).toBe(true);
     expect(validReadingState({ ...good, zoom: 150 })).toBe(true);
+    expect(validReadingState({ ...good, pageCount: 300 })).toBe(true);
   });
 
   it('rejects damaged records', () => {
@@ -91,6 +92,9 @@ describe('validReadingState', () => {
       { ...good, zoom: 0 },
       { ...good, zoom: MAX_ZOOM + 1 },
       { ...good, savedAt: '1' },
+      { ...good, pageCount: 0 },
+      { ...good, pageCount: 2.5 },
+      { ...good, pageCount: '300' },
     ]) {
       expect(validReadingState(bad), JSON.stringify(bad)).toBe(false);
     }

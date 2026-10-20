@@ -13,7 +13,11 @@ import {
 import { ReaderView as Reader } from './ReaderView';
 
 const noNotes = { list: async () => [], put: async () => {}, remove: async () => {} };
-const noReadingStates: ReadingStateStore = { get: async () => null, put: async () => {} };
+const noReadingStates: ReadingStateStore = {
+  get: async () => null,
+  put: async () => {},
+  list: async () => [],
+};
 function ReaderView(
   props: Omit<ComponentProps<typeof Reader>, 'notes' | 'readingStates'> & {
     readingStates?: ReadingStateStore;
@@ -203,6 +207,7 @@ describe('ReaderView resuming a book opened with Open PDF', () => {
     const store: ReadingStateStore = {
       get: () => new Promise((r) => (resolve = r)),
       put: async () => {},
+      list: async () => [],
     };
     return { store, arrive: (state: ReadingState | null) => resolve(state) };
   }

@@ -1,31 +1,45 @@
 // App-wide settings (phase 10), in localStorage: the theme must be known before the first render,
 // and IndexedDB can only be read asynchronously. Without storage they last for the session.
 import { validTheme, type Theme } from '../core/reading-state';
+import { validShelfSort, type ShelfSort } from '../core/shelf';
 import type { Preferences } from './types';
 
 /** Also read by the boot script in index.html, before the app loads. */
 const THEME_KEY = 'book-reader:theme';
+const SHELF_SORT_KEY = 'book-reader:shelf-sort';
 
 /** `storage` returns the Storage to use; it may throw where storage is blocked. */
 export function createPreferences(
   storage: () => Storage = () => globalThis.localStorage,
 ): Preferences {
-  let theme: Theme = 'light';
-  try {
-    const saved = storage().getItem(THEME_KEY);
-    if (validTheme(saved)) theme = saved;
-  } catch (error) {
-    console.error('Could not read settings; using the defaults', error);
-  }
+  const read = <T>(key: string, valid: (value: unknown) => value is T, fallback: T): T => {
+    try {
+      const saved = storage().getItem(key);
+      return valid(saved) ? saved : fallback;
+    } catch (error) {
+      console.error('Could not read settings; using the defaults', error);
+      return fallback;
+    }
+  };
+  const write = (key: string, value: string) => {
+    try {
+      storage().setItem(key, value);
+    } catch (error) {
+      console.error('Could not save a setting; it applies until the app is closed', error);
+    }
+  };
+  let theme: Theme = read(THEME_KEY, validTheme, 'light');
+  let shelfSort: ShelfSort = read(SHELF_SORT_KEY, validShelfSort, 'recent');
   return {
     theme: () => theme,
     setTheme(next) {
       theme = next;
-      try {
-        storage().setItem(THEME_KEY, next);
-      } catch (error) {
-        console.error('Could not save the theme; it applies until the app is closed', error);
-      }
+      write(THEME_KEY, next);
+    },
+    shelfSort: () => shelfSort,
+    setShelfSort(next) {
+      shelfSort = next;
+      write(SHELF_SORT_KEY, next);
     },
   };
 }

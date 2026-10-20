@@ -70,6 +70,8 @@ export interface ReadingState {
   zoom: ZoomSetting;
   /** Milliseconds since the epoch. */
   savedAt: number;
+  /** The book's page count, for the library's progress (phase 11; absent in older states). */
+  pageCount?: number;
 }
 
 const finite = (value: unknown): value is number =>
@@ -81,6 +83,10 @@ export function validReadingState(value: unknown): value is ReadingState {
   const state = value as Record<string, unknown>;
   const position = state.position as Record<string, unknown> | null | undefined;
   if (typeof state.bookId !== 'string' || !finite(state.savedAt) || !validZoom(state.zoom)) {
+    return false;
+  }
+  const { pageCount } = state;
+  if (pageCount !== undefined && !(Number.isInteger(pageCount) && (pageCount as number) >= 1)) {
     return false;
   }
   if (typeof position !== 'object' || position === null) return false;

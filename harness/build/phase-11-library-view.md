@@ -1,6 +1,6 @@
 # Phase 11: Library view
 
-- Status: Not started
+- Status: In progress
 - Branch: phase-11-library-view
 - Depends on: 03
 
@@ -52,3 +52,15 @@ Generating covers for many books at once can be slow; generate lazily and cache.
 
 Stop when every contract item has observed evidence in harness/build-log.md.
 Do not start the next phase.
+
+## Plan (2026-10-20)
+
+Approved by: agent under the user's standing instruction of 2026-10-20. Judgment calls are in
+harness/context/phase-11-library-view-context.md. Branch stacked on phase 10's.
+
+1. Core: progress from a reading state, shelf sort and filter (unit tests first).
+2. Storage: `CoverStore` (v8), `ReadingStateStore.list`, page count in reading state, sort in
+   preferences.
+3. UI: cover drawing helper and background queue, shelf grid, sort and filter controls.
+4. e2e/library-view.spec.ts (red first), including 100 seeded books.
+5. Verify, perf, full CI, evaluator.
