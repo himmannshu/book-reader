@@ -1247,3 +1247,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
   test now also highlights text on device A (text-4-pages.pdf) and expects a highlight box on B. Passed in chromium
   and webkit; break "highlights not applied remotely" → failed; reverted. Full sync suite 14/14.
 - F-016 → passing (local evidence; real devices pending, item 13).
+
+### 2026-10-19 22:15 EDT | Planning | Claude Code (Opus 5.5) | Three features added for later
+- At the user's request, added three later features to the roadmap (planning only, no code): PLANS.md rows 14 Voice
+  notes, 15 Listen to a book, 16 Share excerpts (lowest priority), and a matching line in GOALS.md Scope.
+  Details (recording format, text-to-speech voice, where audio syncs, share targets) are decided when each phase
+  starts. Note: voice notes are audio files, so their cloud copy likely depends on 09b's file sync.
