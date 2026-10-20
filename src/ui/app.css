@@ -1224,3 +1224,14 @@ body {
     gap: 0;
   }
 }
+
+/* Phase 16 review: the toast sits at the top, clear of the player and search bars at the bottom;
+   the player's status has a fixed width so its buttons don't move as it changes. */
+.notice {
+  top: var(--space-2);
+  bottom: auto;
+}
+
+.player-bar .player-status {
+  min-width: 9.5em;
+}

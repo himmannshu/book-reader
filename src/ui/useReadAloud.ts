@@ -48,6 +48,7 @@ export function useReadAloud({
   const read = useCallback(
     async (fromPage: number, fromSentence: number) => {
       const id = ++run.current;
+      let spokeAny = false;
       try {
         for (let pageIndex = fromPage; pageIndex < doc.pageCount; pageIndex++) {
           const text = await pageText(pageIndex);
@@ -66,11 +67,13 @@ export function useReadAloud({
             place.current = { pageIndex, sentence };
             setState({ status: 'reading', pageIndex, sentence });
             viewer.current?.setSpoken({ pageIndex, text: spoken, occurrence });
+            spokeAny = true;
             const result = await speaker.speak(spoken, rateRef.current);
             if (id !== run.current || result === 'stopped') return;
           }
         }
-        // The end of the book.
+        // The end of the book (or a book with no text at all from here on).
+        if (!spokeAny) onError('There is no text to read aloud from here.');
         place.current = null;
         setState({ status: 'idle' });
         viewer.current?.setSpoken(null);

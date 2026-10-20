@@ -1561,3 +1561,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   reader closed during the permission prompt; missing unit tests for the time limit and the upgrade; CI).
 - Fixes: see the review appendix. New unit tests: recorder (3), useVoiceNotes lifecycle (3, red on the old hook),
   v8 → v9 upgrade. Unit 352 passed; chromium voice-notes 5/5.
+
+### 2026-10-20 13:10 UTC | Phase 16 | Claude Code (Opus 5.5, cloud session) | Built; evaluator FAIL → fixes
+- Built (earlier today, worktree /home/user/book-reader-p16): sentence splitting with unit tests (6); viewer
+  marks shared with search; speech wrapper and hook; Listen button and player bar; e2e/listen.spec.ts with a
+  stand-in speechSynthesis (5/5). Toolbar padding trimmed under 360 px so seven 44 px buttons fit (design 12/12).
+- Full CI on phase 17 (run 39392502232, contains this branch) → failure: WebKit listen.spec pause/resume (race
+  with the end of the book), 274 passed, 3 skipped.
+- Evaluator: harness/code_review/phase-16-review.md, FAIL (that test; unstable player buttons; toast over the
+  player). Fixes: see the review appendix. Unit 358; chromium e2e 137 passed + 1 environment failure.
