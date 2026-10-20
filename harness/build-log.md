@@ -1547,3 +1547,8 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Evaluator: harness/code_review/phase-13-review.md, FAIL on CI only; search behaviour all checked and passing.
 - Fixes: benchmark query and result check (searchMs 2672 ms, "1 match on 1 page"), capped page count, Cmd/Ctrl+F
   per platform. Unit 333; chromium search + export 6/6.
+
+### 2026-10-20 09:40 UTC | Phase 14 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL → fixes
+- Evaluator: harness/code_review/phase-14-review.md, FAIL (search-result mark 2.91:1 in Dark; no tooltips below
+  1400 px; no green full CI). Fixes: `--mark-bg` tokens + contrast test pair, tooltips on all toolbar controls
+  (test), Display menu closes on an outside tap (test). Unit 336; chromium e2e 126 passed + 1 environment failure.

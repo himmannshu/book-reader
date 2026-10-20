@@ -533,7 +533,7 @@ export function App({
         {/* The open reader puts its tools here, so the reader has one bar (phase 14). */}
         <div ref={setToolsSlot} className="toolbar-tools" />
         {(!book || !narrow) && <ThemePicker theme={theme} onChange={chooseTheme} />}
-        <label className={book ? 'tool-button open-button' : 'button open-button'}>
+        <label className={book ? 'tool-button open-button' : 'button open-button'} title="Open PDF">
           <Icon name="open" />
           <span className="tool-label">Open PDF</span>
           <input

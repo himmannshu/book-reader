@@ -117,6 +117,18 @@ export function ReaderView({
   const narrow = useMediaQuery(NARROW_QUERY);
   const [displayOpen, setDisplayOpen] = useState(false);
   const displayButtonRef = useRef<HTMLButtonElement>(null);
+  // The Display menu closes on a tap or click outside it (and on Escape, below).
+  useEffect(() => {
+    if (!displayOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const menu = displayButtonRef.current?.closest('.display-menu');
+      if (menu && event.target instanceof Node && !menu.contains(event.target)) {
+        setDisplayOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [displayOpen]);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
   /** Fixed at mount: the reader is keyed by book, so a new book gets a new ReaderView. */
