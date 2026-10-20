@@ -6,8 +6,10 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-20, moving this session to a cloud session.
-- Phases 00–09b Complete (08 with the iPhone-offline exception). main = cb6ec8a + docs commits,
-  deployed to production. Verify PASS; main CI run 39369974201 green.
+- Phases 00–09b Complete (08 with the iPhone-offline exception). origin/main = cb6ec8a, deployed
+  to production (verify PASS; CI run 39369974201 green). The two later docs-only commits on local
+  main (42508fe, 1b47217) were not pushed (pushing main deploys production); they reach the cloud
+  through branch phase-10-reading-comfort, cut from them.
 - Roadmap (PLANS.md): 10 Reading comfort, 11 Library view, 12 Export, 13 Search, 14 UI and UX
   design pass (added 2026-10-20), 15 Voice notes, 16 Listen to a book, 17 Share excerpts.
 
@@ -41,12 +43,12 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Moving to the cloud. Next: phase 10 (Reading comfort) plan, contract and build.
+- Moving to the cloud from branch phase-10-reading-comfort. Next: phase 10 plan, contract, build.
 
 ## Next action
 
 1. Session start (AGENTS.md), including a verify baseline in the cloud environment.
-2. Phase 10 on branch phase-10-reading-comfort, cut from main.
+2. Phase 10 on branch phase-10-reading-comfort (already created from local main at 1b47217).
 
 ## Decisions worth remembering
 
@@ -91,21 +93,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 01:05 EDT
-- Branch: main
-- HEAD: 42508fe phase 09b: merged main verified and deployed; handoff
-- Uncommitted files: 5
+Snapshot 2026-10-20 01:07 EDT
+- Branch: phase-10-reading-comfort
+- HEAD: 1b47217 planning: UI/UX design pass as phase 14; standing instructions for autonomous work
+- Uncommitted files: 1
 - Last verify: PASS at 2026-10-20 00:30 EDT (commit cb6ec8a)
 - Recent commits:
+    1b47217 planning: UI/UX design pass as phase 14; standing instructions for autonomous work
     42508fe phase 09b: merged main verified and deployed; handoff
     cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
     d97c64c Merge ci-trim: quick checks on branches, full suite on main and before merging
     5117709 Merge phase 09b: sync book files
-    138cb22 ci: quick checks on branch pushes, full suite on main/PRs/on demand; 30 min; browser cache
 - Changed files:
-     M GOALS.md
-     M PLANS.md
      M harness/HANDOFF.md
-     M harness/build-log.md
-     M harness/features.json
 <!-- AUTO:END -->
