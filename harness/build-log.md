@@ -1445,3 +1445,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
   (baseline 29–42); p95 16.8 in 5 of 6 runs and 33.3 once (baseline 16.8 ×3); canvas 67.1 MB (unchanged); blank
   0%. No regression seen on this machine; the budget evidence is the full CI run.
 - Full CI run started: https://github.com/himmannshu/book-reader/actions/runs/39376651997 (on 39980d4).
+
+### 2026-10-20 06:00 UTC | Phase 10 | Claude Code (Opus 5.5, cloud session) | User instruction: run all phases; user checklist
+- User (going to sleep): continue phase after phase to 17 without waiting; keep a strict list of what the user
+  must check; stay inside free tiers (Cloudflare, GitHub Actions). New file harness/USER-CHECKLIST.md holds that
+  list (a new file outside the table in AGENTS.md, added because the user asked for it). HANDOFF standing
+  instructions updated.

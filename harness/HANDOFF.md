@@ -37,9 +37,15 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   loosen a test or budget to get a pass.
 - Run the evaluator subagent on each finished phase when practical; fix blockers it finds.
 
+- Added by the user later on 2026-10-20 (going to sleep): keep going through every phase to 17
+  without stopping or asking, unless a usage limit hits. Keep harness/USER-CHECKLIST.md as the
+  strict list of what the user must check, per phase. Never risk a bill: stay inside free tiers
+  (Cloudflare Pages builds: about one push per phase plus fixes; Actions: quick checks on pushes,
+  one full run per phase; R2 under the 9 GB cap; no paid APIs). Push branches as you see fit.
+
 ## Waiting on the user
 
-- Nothing yet.
+- Everything is listed in harness/USER-CHECKLIST.md (per phase, with exact steps).
 
 ## In flight
 
