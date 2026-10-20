@@ -8,6 +8,7 @@ import { sortByPage, type Bookmark } from '../core/bookmarks';
 import { sortByPosition, type Highlight } from '../core/highlights';
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
 import { sortNotes, validNote, type Note } from '../core/notes';
+import { validReadingState, type ReadingState } from '../core/reading-state';
 import { nextStamp, shouldApply, type SyncItem, type SyncKind } from '../core/sync';
 import {
   StorageError,
@@ -18,6 +19,7 @@ import {
   type HighlightStore,
   type NoteStore,
   type PerBookStore,
+  type ReadingStateStore,
   type SyncStore,
   type UploadRecord,
 } from './types';
@@ -27,7 +29,7 @@ export const indexedDBAvailable = typeof globalThis.indexedDB !== 'undefined';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 6;
+export const DB_VERSION = 7;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
 const BOOKMARKS = 'bookmarks';
@@ -36,12 +38,13 @@ const NOTES = 'notes';
 const SYNC_META = 'syncMeta';
 const SYNC_STATE = 'syncState';
 const UPLOADS = 'uploads';
+const READING = 'readingState';
 /** Stores of items that belong to a book; each has an index on `bookId`. */
 const PER_BOOK = [BOOKMARKS, HIGHLIGHTS, NOTES];
 const BY_BOOK = 'bookId';
 const BY_HIGHLIGHT = 'highlightId';
 const BY_PENDING = 'pending';
-const ALL_STORES = [BOOKS, FILES, ...PER_BOOK, SYNC_META, SYNC_STATE, UPLOADS];
+const ALL_STORES = [BOOKS, FILES, ...PER_BOOK, SYNC_META, SYNC_STATE, UPLOADS, READING];
 
 const STORE_OF: Record<SyncKind, string> = {
   book: BOOKS,
@@ -197,6 +200,10 @@ function upgrade(db: IDBDatabase, oldVersion: number, tx: IDBTransaction): void 
     // Phase 09b: upload progress per book. Books stored before have no row, so they upload.
     db.createObjectStore(UPLOADS, { keyPath: 'bookId' });
   }
+  if (oldVersion < 7) {
+    // Phase 10: where each book was left on this device. Not synced, so no syncMeta rows.
+    db.createObjectStore(READING, { keyPath: 'bookId' });
+  }
 }
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -221,6 +228,7 @@ export interface IndexedDBStores {
   notes: NoteStore;
   sync: SyncStore;
   files: FileTransferStore;
+  readingStates: ReadingStateStore;
 }
 
 /** All stores share one database connection. */
@@ -407,10 +415,12 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       guard(async () => {
         const me = await deviceId();
         const database = await db();
-        await atomic(database, [BOOKS, FILES, ...PER_BOOK, SYNC_META, UPLOADS], async (tx) => {
+        const names = [BOOKS, FILES, ...PER_BOOK, SYNC_META, UPLOADS, READING];
+        await atomic(database, names, async (tx) => {
           tx.objectStore(BOOKS).delete(id);
           tx.objectStore(FILES).delete(id);
           tx.objectStore(UPLOADS).delete(id);
+          tx.objectStore(READING).delete(id);
           await deleteAnnotationsOf(tx, id, me);
           await stamp(tx, me, 'book', id, id, true);
         });
@@ -609,6 +619,7 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
               if (item.kind === 'book') {
                 tx.objectStore(FILES).delete(item.id);
                 tx.objectStore(UPLOADS).delete(item.id);
+                tx.objectStore(READING).delete(item.id);
                 await deleteAnnotationsOf(tx, item.id, undefined);
               }
             } else if (typeof item.data === 'object' && item.data !== null) {
@@ -668,9 +679,36 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       }),
   };
 
+  const readingStates: ReadingStateStore = {
+    get: (bookId) =>
+      guard(async () => {
+        const database = await db();
+        const row: unknown = await request(
+          database.transaction(READING).objectStore(READING).get(bookId),
+        );
+        return validReadingState(row) ? row : null;
+      }),
+
+    put: (state) =>
+      guard(async () => {
+        if (!validReadingState(state)) {
+          console.error('Not saving a malformed reading state', state);
+          return;
+        }
+        const { bookId, position, zoom, savedAt } = state;
+        const row: ReadingState = { bookId, position: { ...position }, zoom, savedAt };
+        const database = await db();
+        await atomic(database, [BOOKS, READING], async (tx) => {
+          if ((await request(tx.objectStore(BOOKS).getKey(bookId))) === undefined) return;
+          tx.objectStore(READING).put(row);
+        });
+      }),
+  };
+
   return {
     books,
     files,
+    readingStates,
     bookmarks: perBook<Bookmark>(BOOKMARKS, 'bookmark', sortByPage),
     highlights: {
       ...highlights,

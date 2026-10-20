@@ -13,6 +13,7 @@ import {
   type TextPiece,
 } from '../core/highlights';
 import { markPageRendered } from '../core/perf-marks';
+import { zoomPercent, type ZoomSetting } from '../core/reading-state';
 import { RenderCancelledError, type PageSize, type PdfDoc, type RenderTask } from '../engine/types';
 import {
   anchorAt,
@@ -21,6 +22,7 @@ import {
   pageAt,
   planRender,
   scrollTopFor,
+  type Anchor,
   type Layout,
   type LayoutOptions,
 } from './layout';
@@ -36,6 +38,8 @@ export interface ViewerOptions {
   maxCanvasBytes: number;
   /** Cap on device pixel ratio for canvas resolution, to bound memory on high-DPI screens. */
   maxPixelRatio: number;
+  /** Largest canvas for one page, in pixels. iOS Safari draws bigger canvases blank. */
+  maxCanvasPixels: number;
   /**
    * How long scrolling must pause before visible pages get their selectable text. Laying out a
    * page's text costs main-thread time, and nobody selects text mid-scroll.
@@ -43,6 +47,10 @@ export interface ViewerOptions {
   textDelayMs: number;
   /** Called with the current page (see currentPageAt) on open and whenever it changes. */
   onPageChange?: (pageIndex: number) => void;
+  /** How pages are sized at first (default fit width). */
+  zoom?: ZoomSetting;
+  /** Where to open the book: this place goes at the top of the window. */
+  initialPosition?: Anchor;
 }
 
 export const defaultViewerOptions: ViewerOptions = {
@@ -50,6 +58,7 @@ export const defaultViewerOptions: ViewerOptions = {
   overscan: 1,
   maxCanvasBytes: 96_000_000,
   maxPixelRatio: 2,
+  maxCanvasPixels: 16_777_216,
   textDelayMs: 200,
 };
 
@@ -77,7 +86,10 @@ export class Viewer {
   readonly #slots: Slot[];
   readonly #resizeObserver: ResizeObserver;
   #sizes: PageSize[];
-  #layout: Layout = { pages: [], totalHeight: 0 };
+  #layout: Layout = { pages: [], totalHeight: 0, width: 0 };
+  #zoom: ZoomSetting;
+  /** Used by the first layout instead of the scroll position. */
+  #openAt: Anchor | undefined;
   #layoutWidth = -1;
   #viewportHeight = -1;
   #frame = 0;
@@ -95,6 +107,8 @@ export class Viewer {
     this.#scroller = scroller;
     this.#doc = doc;
     this.#options = options;
+    this.#zoom = options.zoom ?? 'fit-width';
+    this.#openAt = options.initialPosition;
     // Until real sizes load, assume every page matches the first one. This lets page 1 draw
     // immediately instead of waiting to measure the whole book.
     this.#sizes = Array.from({ length: doc.pageCount }, () => doc.firstPageSize);
@@ -119,9 +133,12 @@ export class Viewer {
     this.#relayout();
     scroller.addEventListener('scroll', this.#onScroll, { passive: true });
     this.#resizeObserver = new ResizeObserver(() => {
-      // A new width rescales every page; a new height only changes which pages are visible.
+      // A new width rescales every page; a new height only changes which pages are visible,
+      // except in fit page, where it changes the page size too.
+      const heightChanged = this.#scroller.clientHeight !== this.#viewportHeight;
       if (this.#scroller.clientWidth !== this.#layoutWidth) this.#relayout();
-      else if (this.#scroller.clientHeight !== this.#viewportHeight) this.#update();
+      else if (heightChanged && this.#zoom === 'fit-page') this.#relayout();
+      else if (heightChanged) this.#update();
     });
     this.#resizeObserver.observe(scroller);
 
@@ -143,6 +160,34 @@ export class Viewer {
   /** The page covering the most of the reader (0-based). */
   get currentPage(): number {
     return Math.max(this.#currentPage, 0);
+  }
+
+  /** The place at the top of the window. */
+  get position(): Anchor {
+    return (
+      anchorAt(this.#layout, this.#scroller.scrollTop) ?? {
+        pageIndex: 0,
+        fraction: 0,
+        pixelsAbove: 0,
+      }
+    );
+  }
+
+  get zoom(): ZoomSetting {
+    return this.#zoom;
+  }
+
+  /** The zoom percentage the current page is shown at (also in fit width and fit page). */
+  get zoomPercent(): number {
+    const box = this.#layout.pages[this.currentPage];
+    return box ? zoomPercent(box.scale) : 100;
+  }
+
+  /** Resizes the pages, keeping the reader's place. */
+  setZoom(zoom: ZoomSetting): void {
+    if (this.#destroyed || zoom === this.#zoom) return;
+    this.#zoom = zoom;
+    this.#relayout();
   }
 
   /** Brings page `index` (0-based, clamped to the book) to the top of the reader. */
@@ -169,10 +214,14 @@ export class Viewer {
     if (this.#destroyed) return;
     const box = this.#layout.pages[rect.pageIndex];
     if (!box) return;
-    this.#scroller.scrollTop = Math.max(
-      0,
-      box.top + rect.y * box.scale - this.#options.layout.padding,
-    );
+    const { padding } = this.#options.layout;
+    this.#scroller.scrollTop = Math.max(0, box.top + rect.y * box.scale - padding);
+    // Zoomed wider than the window: bring the passage's left edge into view too.
+    const x = box.left + rect.x * box.scale;
+    const viewLeft = this.#scroller.scrollLeft;
+    if (x < viewLeft || x > viewLeft + this.#scroller.clientWidth - padding) {
+      this.#scroller.scrollLeft = Math.max(0, x - padding);
+    }
     this.#update();
   }
 
@@ -234,19 +283,29 @@ export class Viewer {
 
   /** Recomputes page positions, keeping the reader's place, then redraws what is visible. */
   #relayout(): void {
-    const anchor = anchorAt(this.#layout, this.#scroller.scrollTop);
+    const anchor = this.#openAt ?? anchorAt(this.#layout, this.#scroller.scrollTop);
+    this.#openAt = undefined;
     const width = this.#scroller.clientWidth;
+    const height = this.#scroller.clientHeight;
+    // Keep the middle of the view in the middle when the content gets wider or narrower.
+    const previous = this.#layout;
+    const centre =
+      previous.width > 0 ? (this.#scroller.scrollLeft + width / 2) / previous.width : 0.5;
     const scaleChanged = width !== this.#layoutWidth;
     this.#layoutWidth = width;
-    const previous = this.#layout;
-    this.#layout = computeLayout(this.#sizes, width, this.#options.layout);
+    this.#layout = computeLayout(this.#sizes, width, this.#options.layout, {
+      zoom: this.#zoom,
+      viewportHeight: height,
+    });
 
     this.#content.style.height = `${this.#layout.totalHeight}px`;
+    this.#content.style.width = `${this.#layout.width}px`;
     this.#layout.pages.forEach((box, index) => {
       const slot = this.#slots[index];
       if (!slot) return;
       const style = slot.element.style;
       style.top = `${box.top}px`;
+      style.left = `${box.left}px`;
       style.width = `${box.width}px`;
       style.height = `${box.height}px`;
       // A page whose drawn resolution no longer matches must be drawn again.
@@ -255,6 +314,7 @@ export class Viewer {
     });
 
     if (anchor) this.#scroller.scrollTop = scrollTopFor(this.#layout, anchor);
+    this.#scroller.scrollLeft = Math.max(0, centre * this.#layout.width - width / 2);
     this.#update();
   }
 
@@ -266,6 +326,7 @@ export class Viewer {
       overscan: this.#options.overscan,
       pixelRatio: Math.min(window.devicePixelRatio || 1, this.#options.maxPixelRatio),
       maxCanvasBytes: this.#options.maxCanvasBytes,
+      maxCanvasPixels: this.#options.maxCanvasPixels,
     });
     // Release first, so memory is freed before new canvases are allocated.
     this.#slots.forEach((slot, index) => {

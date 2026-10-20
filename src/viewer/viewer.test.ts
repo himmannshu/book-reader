@@ -63,6 +63,13 @@ function scroller(width: number, height: number): HTMLElement {
       scrollTop = value;
     },
   });
+  let scrollLeft = 0;
+  Object.defineProperty(element, 'scrollLeft', {
+    get: () => scrollLeft,
+    set: (value: number) => {
+      scrollLeft = Math.max(0, value);
+    },
+  });
   document.body.append(element);
   return element;
 }
@@ -342,5 +349,110 @@ describe('Viewer text and highlights', () => {
 
     viewer.setHighlights([]);
     expect(element.querySelectorAll('.highlight-box')).toHaveLength(0);
+  });
+});
+
+describe('Viewer position and zoom', () => {
+  let viewer: Viewer | undefined;
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    viewer?.destroy();
+    viewer = undefined;
+    document.body.replaceChildren();
+    vi.unstubAllGlobals();
+  });
+
+  // 1000 px wide: pages are 900 px wide and 1260 px tall, 16 px apart, 24 px padding.
+  const pageTop = (index: number) => 24 + index * (1260 + 16);
+
+  it('opens at a saved position and draws that page first', () => {
+    const { doc, started } = fakeDoc(10);
+    const element = scroller(1000, 600);
+    const onPageChange = vi.fn();
+    viewer = new Viewer(element, doc, {
+      ...defaultViewerOptions,
+      onPageChange,
+      initialPosition: { pageIndex: 6, fraction: 0.5, pixelsAbove: 0 },
+    });
+    expect(element.scrollTop).toBeCloseTo(pageTop(6) + 630);
+    expect(started()[0]).toBe(6);
+    expect(onPageChange.mock.calls).toEqual([[6]]);
+    expect(viewer.position).toEqual({ pageIndex: 6, fraction: 0.5, pixelsAbove: 0 });
+  });
+
+  it('reports the place at the top of the window', () => {
+    const { doc } = fakeDoc(10);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+    element.scrollTop = pageTop(2) + 315;
+    expect(viewer.position).toEqual({ pageIndex: 2, fraction: 0.25, pixelsAbove: 0 });
+  });
+
+  it('opens at a saved zoom', () => {
+    const { doc } = fakeDoc(3);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, { ...defaultViewerOptions, zoom: 150 });
+    const page = element.querySelector<HTMLElement>('[data-page-index="0"]');
+    // 500 pt at 150% of actual size (96/72 px per pt) is 1000 px.
+    expect(page?.style.width).toBe('1000px');
+    expect(viewer.zoom).toBe(150);
+    expect(viewer.zoomPercent).toBeCloseTo(150);
+  });
+
+  it('keeps the reading place when the zoom changes, and redraws at the new scale', async () => {
+    const { doc, started } = fakeDoc(10);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+    element.scrollTop = pageTop(4) + 630;
+    element.dispatchEvent(new Event('scroll'));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(started()).toContain(4);
+    expect(viewer.zoomPercent).toBeCloseTo((900 / 500 / (96 / 72)) * 100);
+
+    viewer.setZoom(200);
+    // 500 pt at 200% is 1333.33 px wide and 1866.67 px tall.
+    const height = 700 * (8 / 3);
+    expect(element.scrollTop).toBeCloseTo(24 + 4 * (height + 16) + height / 2);
+    expect(viewer.position.pageIndex).toBe(4);
+    expect(viewer.position.fraction).toBeCloseTo(0.5);
+    expect(started().filter((index) => index === 4)).toHaveLength(2);
+  });
+
+  it('positions pages wider than the window from the left and keeps the view centred', () => {
+    const { doc } = fakeDoc(3);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+    viewer.setZoom(300);
+    // 500 pt at 300% is 2000 px; with 24 px margins the content is 2048 px wide.
+    const content = element.querySelector<HTMLElement>('.viewer-content');
+    const page = element.querySelector<HTMLElement>('[data-page-index="0"]');
+    expect(content?.style.width).toBe('2048px');
+    expect(page?.style.left).toBe('24px');
+    expect(element.scrollLeft).toBeCloseTo(1024 - 500);
+
+    viewer.setZoom('fit-width');
+    expect(content?.style.width).toBe('1000px');
+    expect(page?.style.left).toBe('50px');
+    expect(element.scrollLeft).toBe(0);
+  });
+
+  it('fit page fits the whole page in the window', () => {
+    const { doc } = fakeDoc(3);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, { ...defaultViewerOptions, zoom: 'fit-page' });
+    const page = element.querySelector<HTMLElement>('[data-page-index="0"]');
+    // 600 px window minus 24 px margins: 552 px tall, so 552 × 5/7 wide.
+    expect(page?.style.height).toBe('552px');
+    expect(parseFloat(page?.style.width ?? '')).toBeCloseTo((552 * 5) / 7);
   });
 });

@@ -7,6 +7,7 @@ import {
   planRender,
   scrollTopFor,
   type LayoutOptions,
+  type ViewOptions,
 } from './layout';
 
 const LETTER = { width: 612, height: 792 };
@@ -33,7 +34,83 @@ describe('computeLayout', () => {
   });
 
   it('returns an empty layout for no pages', () => {
-    expect(computeLayout([], 1000, opts)).toEqual({ pages: [], totalHeight: 0 });
+    expect(computeLayout([], 1000, opts)).toEqual({ pages: [], totalHeight: 0, width: 0 });
+  });
+
+  it('centres pages in a content box as wide as the container', () => {
+    const layout = computeLayout([LETTER], 1000, opts);
+    expect(layout.width).toBe(1000);
+    expect(layout.pages[0]?.left).toBe(50);
+  });
+});
+
+describe('computeLayout zoom modes', () => {
+  const view = (options: ViewOptions) => options;
+  const LANDSCAPE = { width: 792, height: 612 };
+
+  it('fit width is the default and keeps the capped reading column', () => {
+    const fit = computeLayout(
+      [LETTER],
+      2000,
+      opts,
+      view({ zoom: 'fit-width', viewportHeight: 700 }),
+    );
+    expect(fit).toEqual(computeLayout([LETTER], 2000, opts));
+    expect(fit.pages[0]?.width).toBe(900);
+  });
+
+  it('fit page fits each whole page inside the window', () => {
+    // 1000 × 700 window: 660 px of height for a letter page → 510 px wide.
+    const layout = computeLayout(
+      [LETTER, LANDSCAPE],
+      1000,
+      opts,
+      view({ zoom: 'fit-page', viewportHeight: 700 }),
+    );
+    const [portrait, wide] = layout.pages;
+    expect(portrait?.height).toBeCloseTo(660);
+    expect(portrait?.width).toBeCloseTo(660 * (612 / 792));
+    // A landscape page is limited by the width first (the 900 px column).
+    expect(wide?.width).toBeCloseTo(Math.min(900, 660 * (792 / 612)));
+    expect(wide?.height).toBeLessThanOrEqual(660 + 1e-9);
+    // Narrower pages are centred.
+    expect(portrait?.left).toBeCloseTo((1000 - (portrait?.width ?? 0)) / 2);
+  });
+
+  it('fit page is never wider than fit width', () => {
+    const layout = computeLayout(
+      [LETTER],
+      400,
+      opts,
+      view({ zoom: 'fit-page', viewportHeight: 5000 }),
+    );
+    expect(layout.pages[0]?.width).toBe(360);
+  });
+
+  it('a percentage draws pages at that share of actual size, keeping their own widths', () => {
+    const layout = computeLayout(
+      [LETTER, LANDSCAPE],
+      1000,
+      opts,
+      view({ zoom: 150, viewportHeight: 700 }),
+    );
+    expect(layout.pages[0]?.scale).toBeCloseTo(1.5 * (96 / 72));
+    expect(layout.pages[0]?.width).toBeCloseTo(612 * 2);
+    expect(layout.pages[1]?.width).toBeCloseTo(792 * 2);
+  });
+
+  it('widens the content beyond the container when a page is wider, so its left edge can be reached', () => {
+    // 200% of a landscape page is 2112 px wide; with 20 px margins the content is 2152 px.
+    const layout = computeLayout(
+      [LETTER, LANDSCAPE],
+      1000,
+      opts,
+      view({ zoom: 200, viewportHeight: 700 }),
+    );
+    expect(layout.width).toBeCloseTo(792 * (8 / 3) + 40);
+    expect(layout.pages[1]?.left).toBeCloseTo(20);
+    expect(layout.pages[0]?.left).toBeCloseTo((layout.width - 612 * (8 / 3)) / 2);
+    for (const page of layout.pages) expect(page.left).toBeGreaterThanOrEqual(20 - 1e-9);
   });
 });
 
@@ -51,7 +128,7 @@ describe('planRender', () => {
   };
 
   it('returns null for an empty layout', () => {
-    const empty = { pages: [], totalHeight: 0 };
+    const empty = { pages: [], totalHeight: 0, width: 0 };
     expect(
       planRender(empty, 0, 500, { overscan: 1, pixelRatio: 1, maxCanvasBytes: 1e9 }),
     ).toBeNull();
@@ -111,6 +188,32 @@ describe('planRender', () => {
     expect(p && p.last - p.first + 1).toBe(9);
   });
 
+  it('keeps every canvas under the per-canvas pixel cap', () => {
+    // A 100 × 100 page at ratio 2 is 40,000 px; a 10,000 px cap allows ratio 1.
+    const p = planRender(layout, 555, 150, {
+      overscan: 1,
+      pixelRatio: 2,
+      maxCanvasBytes: 1e12,
+      maxCanvasPixels: 10_000,
+    });
+    if (!p) throw new Error('expected a plan');
+    expect(p.pixelRatio).toBeLessThanOrEqual(1);
+    expect(100 * p.pixelRatio * (100 * p.pixelRatio)).toBeLessThanOrEqual(10_000);
+  });
+
+  it('keeps the same lowered resolution while scrolling over budget (phase 02 F1)', () => {
+    // A 150 px viewport shows 2 or 3 of these pages depending on where it is.
+    const ratios = new Set<number>();
+    for (let top = 400; top < 900; top += 7) {
+      const p = plan(top, 150, 2, 60_000);
+      if (!p) throw new Error('expected a plan');
+      ratios.add(p.pixelRatio);
+      const visible = p.visibleLast - p.visibleFirst + 1;
+      expect(visible * PAGE_BYTES * p.pixelRatio ** 2).toBeLessThanOrEqual(60_000);
+    }
+    expect([...ratios]).toHaveLength(1);
+  });
+
   it('handles a single page book', () => {
     const one = computeLayout([LETTER], 1000, opts);
     const p = planRender(one, 0, 500, { overscan: 2, pixelRatio: 2, maxCanvasBytes: 1e9 });
@@ -159,7 +262,7 @@ describe('anchorAt / scrollTopFor', () => {
   });
 
   it('returns null for an empty layout', () => {
-    expect(anchorAt({ pages: [], totalHeight: 0 }, 0)).toBeNull();
+    expect(anchorAt({ pages: [], totalHeight: 0, width: 0 }, 0)).toBeNull();
   });
 });
 
@@ -229,7 +332,7 @@ describe('currentPageAt', () => {
   });
 
   it('returns null for an empty layout', () => {
-    expect(currentPageAt({ pages: [], totalHeight: 0 }, 0, 100)).toBeNull();
+    expect(currentPageAt({ pages: [], totalHeight: 0, width: 0 }, 0, 100)).toBeNull();
   });
 });
 

@@ -7,13 +7,16 @@ const STORAGE_MESSAGE = 'Use the storage interfaces (src/storage) instead.';
 const FETCH_MESSAGE =
   'Only src/sync/http-client.ts talks to the network; use the SyncClient interface.';
 const INDEXED_DB_GLOBAL = { name: 'indexedDB', message: STORAGE_MESSAGE };
+const LOCAL_STORAGE_GLOBAL = { name: 'localStorage', message: STORAGE_MESSAGE };
 const FETCH_GLOBAL = { name: 'fetch', message: FETCH_MESSAGE };
 const STORAGE_PROPERTIES = [
-  ...['window', 'globalThis', 'self'].map((object) => ({
-    object,
-    property: 'indexedDB',
-    message: STORAGE_MESSAGE,
-  })),
+  ...['window', 'globalThis', 'self'].flatMap((object) =>
+    ['indexedDB', 'localStorage'].map((property) => ({
+      object,
+      property,
+      message: STORAGE_MESSAGE,
+    })),
+  ),
   { object: 'navigator', property: 'storage', message: STORAGE_MESSAGE },
 ];
 const FETCH_PROPERTIES = ['window', 'globalThis', 'self'].map((object) => ({
@@ -61,7 +64,7 @@ export default tseslint.config(
     // exceptions below restate the remaining restriction.
     files: ['src/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL, FETCH_GLOBAL],
+      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL, LOCAL_STORAGE_GLOBAL, FETCH_GLOBAL],
       'no-restricted-properties': ['error', ...STORAGE_PROPERTIES, ...FETCH_PROPERTIES],
     },
   },
@@ -75,7 +78,7 @@ export default tseslint.config(
   {
     files: ['src/sync/http-client.ts'],
     rules: {
-      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL],
+      'no-restricted-globals': ['error', INDEXED_DB_GLOBAL, LOCAL_STORAGE_GLOBAL],
       'no-restricted-properties': ['error', ...STORAGE_PROPERTIES],
     },
   },

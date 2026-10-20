@@ -1,6 +1,7 @@
 import type { Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import type { Note } from '../core/notes';
+import type { ReadingState, Theme } from '../core/reading-state';
 import type { SyncItem } from '../core/sync';
 
 // The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
@@ -53,6 +54,20 @@ export interface PerBookStore<T extends { id: string; bookId: string }> {
 export type BookmarkStore = PerBookStore<Bookmark>;
 export type HighlightStore = PerBookStore<Highlight>;
 export type NoteStore = PerBookStore<Note>;
+
+/** Where each book was left on this device (phase 10). Never synced; deleted with the book. */
+export interface ReadingStateStore {
+  /** The saved state, or null if the book was never read here (or the record is damaged). */
+  get(bookId: string): Promise<ReadingState | null>;
+  /** Saves the state; ignored if the book is no longer in the library. */
+  put(state: ReadingState): Promise<void>;
+}
+
+/** Small app-wide settings, read synchronously so the first render already uses them. */
+export interface Preferences {
+  theme(): Theme;
+  setTheme(theme: Theme): void;
+}
 
 /** Local bookkeeping for sync (phase 09a). Only the sync engine uses it. */
 export interface SyncStore {
