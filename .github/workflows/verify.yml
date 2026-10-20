@@ -1,13 +1,26 @@
 name: verify
 
+# The repository is private, so Actions minutes are limited (2000 a month on GitHub Free) and the
+# runners have 2 cores. The full suite takes ~17 minutes there, so it runs only where it counts:
+#   - quick (lint, format, types, unit; ~2 min): every push to a branch other than main;
+#   - full (scripts/verify.sh, the same command both agents run locally): pushes to main, pull
+#     requests, and on demand before merging a phase: gh workflow run verify.yml --ref <branch>
+# Locally, scripts/verify.sh stays the evidence for every step.
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch makes an older run pointless (main always runs to the end).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  verify:
+  quick:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,7 +28,35 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run --silent lint
+      - run: npm run --silent format:check
+      - run: npm run --silent typecheck
+      - run: npm run --silent test:unit
+
+  verify:
+    if: github.event_name != 'push' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Cache the downloaded browsers per Playwright version; the system libraries they need are
+      # installed every time (they live outside the cache).
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium webkit
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium webkit
       # The same single command both agents use locally.
       - run: scripts/verify.sh
       - if: failure()

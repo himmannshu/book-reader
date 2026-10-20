@@ -1372,3 +1372,16 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Every 09a and 09b contract item now has observed evidence → both phases Complete (PLANS.md, phase files).
   F-010 and F-016 evidence updated with the real-device checks.
 - 09b is not merged into main yet (a push to main deploys production; waiting for the user's OK).
+
+### 2026-10-20 01:00 EDT | Infrastructure | Claude Code (Opus 5.5) | CI trimmed (user decision)
+- Measured (run 39367480019): setup ~1.3 min (browser install 63 s), verify.sh 913 s: lint+format+types 17 s,
+  unit 24 s, browser e2e 9.8 min (1 worker on the 2-core private-repo runner), sync 3.0 min, perf 1.7 min. Total
+  16.7 min against a 20-minute timeout; durations grew 8.7 → 16.7 min across phases. 33 runs in 2 days ≈ 276 wall
+  minutes (≈310 billed), against 2000 a month on GitHub Free for a private repo.
+- User decision: quick checks on branch pushes; full suite on main, pull requests and on demand before merging a
+  phase; timeout 30 min; cache Playwright browsers. Also added: cancel a branch's older run when a newer push
+  arrives (main always finishes). Parallel jobs not used (more billed minutes).
+- .github/workflows/verify.yml rewritten (jobs `quick` and `verify`); AGENTS.md documents
+  `gh workflow run verify.yml --ref <branch>` as the pre-merge CI check. YAML parsed and Prettier-clean locally;
+  actionlint is not installed, so the first GitHub run is the real check. The quick job is unobserved until the
+  next branch push.
