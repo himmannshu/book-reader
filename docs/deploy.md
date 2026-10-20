@@ -106,10 +106,11 @@ are fine), and another device downloads a book the first time you open it there.
 Cloudflare R2. Its free tier is 10 GB, and the app stops uploading at **9 GB** so it never costs
 money. Production and previews get **separate** buckets.
 
-1. **Turn on R2:** in the dashboard, open **Storage & Databases** → **R2 Object Storage**
-   (in some layouts under **R2**). Cloudflare may ask you to add a payment method before R2 can be
-   used, even on the free tier. Nothing is charged under 10 GB.
-2. **Create two buckets:** **Create bucket**, name `book-reader-files`, keep the defaults (automatic
+1. **Turn on R2:** in the dashboard, open **Storage & databases** → **R2** → **Overview**.
+   Cloudflare may ask you to activate R2 (and add a payment method) first, even on the free
+   tier. Nothing is charged under 10 GB.
+2. **Create two buckets:** on the R2 Overview page, **Create bucket**, name `book-reader-files`,
+   keep the defaults (automatic
    location, Standard storage). Then again for `book-reader-files-preview`. Keep them private:
    don't turn on public access or a custom domain. The app reaches them only through its own
    login-protected API.
