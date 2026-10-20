@@ -143,9 +143,17 @@ test('note actions remain fully reachable for a highlight near the reader bottom
   await highlight(page);
   await page.setViewportSize({ width: 1280, height: 360 });
   await layoutReady(page);
-  await page.getByTestId('reader').evaluate((reader) => {
+  // Waits for the scroll event, which comes a frame after scrollTop changes: scrolling closes the
+  // highlight menu, so a click before it would have its menu closed at once.
+  await page.getByTestId('reader').evaluate(async (reader) => {
     const box = reader.querySelector('.highlight-box')?.getBoundingClientRect();
-    if (box) reader.scrollTop += box.bottom - reader.getBoundingClientRect().bottom + 16;
+    const by = box ? Math.round(box.bottom - reader.getBoundingClientRect().bottom + 16) : 0;
+    if (by === 0) return;
+    const scrolled = new Promise((resolve) =>
+      reader.addEventListener('scroll', resolve, { once: true }),
+    );
+    reader.scrollTop += by;
+    await scrolled;
   });
   await expect
     .poll(() =>

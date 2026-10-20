@@ -1662,3 +1662,27 @@ Contract evidence from this final canonical run (contract unchanged after approv
   10–17); main fast-forwarded to test-suite-trim (phase 18 + trim). docs-readme stays unmerged (GIF to come).
 - `phase-10-reading-comfort-k8v7pk` could not be deleted from here (the session's git proxy drops branch
   deletions; no delete tool); its two commits live on docs-readme and phase-18. The user deletes it on GitHub.
+
+### 2026-10-20 16:30 EDT | Mac WebKit baseline | Claude Code (Opus 5.5) | Local baseline red; 9 WebKit failures fixed on `mac-webkit-baseline`
+- First local session after the cloud run. `scripts/verify.sh` on main (fea67a5) → FAIL at browser tests: unit 379
+  passed; browser 242 passed, 9 failed (all WebKit), 1 skipped; sync and perf not reached. First WebKit run on macOS
+  (the cloud could not run WebKit; CI runs it on Linux).
+- Causes, probes and fixes: harness/context/mac-webkit-baseline-context.md. In short: voice notes' fake microphone
+  lost to wrapper garbage collection (moved to `MediaDevices.prototype`); export expected Linux WebKit's underscored
+  download name (WebKit now accepts either); fonts offline loaded the page twice during the worker install
+  (`loadControlled` no longer reloads a page that shows the app); the 44 px checks found macOS Safari drawing native
+  selects at 27 px (`.picker` now `appearance: none` with a token chevron; the only app change); library reopen not
+  reproduced (load).
+- Focused runs after the fixes: voice notes + export (WebKit) 6 passed; design spec (WebKit) 8 passed; fonts group
+  serial 27/27; pwa + design-system, both engines, one worker: 28 passed, 1 skipped; full WebKit project ×5: the 9
+  pass every time.
+- Load-sensitive check seen here, unchanged (thresholds need the user): library-view "100 books" filter < 100 ms
+  (14–25 ms alone; 126 and 156 ms in 2 of 3 full WebKit runs).
+- `scripts/verify.sh` on the branch, twice → FAIL both times, at one Chromium test: notes "note actions remain fully
+  reachable for a highlight near the reader bottom". Also fails on main (3 of 3 serial runs of notes.spec.ts). Cause:
+  the test clicked before the scroll event, which closes the highlight menu by design (context file). Fix: wait for
+  the scroll event. notes.spec.ts serial ×6 (Chromium) 11 passed each; WebKit 12 passed.
+- `scripts/verify.sh` on the branch (the changes above, uncommitted) → PASS: unit 379; browser 251 passed + 1 skipped
+  (chromium + webkit); sync 27; perf 10 (heavy-600-v1: chromium first 194 ms, jump 31, p95 16.8, canvas 67.1 MB, search
+  874; webkit first 177, jump 78, p95 31, canvas 67.1, search 925; blank frames 0 / 1%). Budgets unchanged. First
+  complete local pass on the Mac, WebKit and perf included.

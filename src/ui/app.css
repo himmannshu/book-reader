@@ -490,14 +490,27 @@ body {
   gap: 4px;
 }
 
+/* Drawn by the app, not the system: Safari on the Mac ignores the height of a native select (27 px
+   whatever min-height says), so its pickers came out shorter than the buttons beside them. The
+   chevron is two gradient triangles in ink-muted, so it follows the theme. */
 .picker {
+  appearance: none;
+  -webkit-appearance: none;
   font: inherit;
   /* 16 px: iOS zooms the page into smaller fields. */
   font-size: 16px;
-  padding: 5px 6px;
+  padding: 5px 26px 5px 8px;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
-  background: var(--surface-sunken);
+  background-color: var(--surface-sunken);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-muted) 50%),
+    linear-gradient(135deg, var(--ink-muted) 50%, transparent 50%);
+  background-position:
+    right 15px center,
+    right 10px center;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
   color: var(--ink);
 }
 

@@ -82,12 +82,13 @@ export async function importBook(page: Page, file: string) {
 }
 
 /**
- * Loads the app, waits until its service worker has activated, and reloads so the worker controls
- * the page (offline tests). Polls the registration instead of awaiting `serviceWorker.ready`,
- * which WebKit sometimes never resolves when the page was loaded twice in a row.
+ * Loads the app (unless the page already shows it), waits until its service worker has activated,
+ * and reloads so the worker controls the page (offline tests). Loading the page again while the
+ * worker is still installing can leave WebKit's install stuck for good, so it never reloads
+ * before activation. Polls the registration instead of awaiting `serviceWorker.ready`.
  */
 export async function loadControlled(page: Page) {
-  await page.goto('/');
+  if (page.url() === 'about:blank') await page.goto('/');
   await expect
     .poll(() =>
       page.evaluate(

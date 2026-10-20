@@ -3,9 +3,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { importBook } from './helpers';
 
+// The stand-ins go on MediaDevices.prototype, not on navigator.mediaDevices: WebKit on macOS can
+// garbage-collect the mediaDevices wrapper when nothing holds it, and a property set on it is lost.
+
 /** Replaces the microphone with a 440 Hz tone (installed before the app loads). */
 function fakeMicrophone() {
-  navigator.mediaDevices.getUserMedia = async () => {
+  MediaDevices.prototype.getUserMedia = async () => {
     const context = new AudioContext();
     const tone = context.createOscillator();
     const output = context.createMediaStreamDestination();
@@ -16,7 +19,7 @@ function fakeMicrophone() {
 }
 
 function deniedMicrophone() {
-  navigator.mediaDevices.getUserMedia = async () => {
+  MediaDevices.prototype.getUserMedia = async () => {
     throw new DOMException('Permission denied', 'NotAllowedError');
   };
 }
