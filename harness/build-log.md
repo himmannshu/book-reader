@@ -1313,3 +1313,43 @@ Contract evidence from this final canonical run (contract unchanged after approv
   no-such-upload / missing API, 409, 410, 503, 507, 401, redirect, 500, bad JSON), ranges checked against
   Content-Range, AbortError passes through.
 - Full unit run green; lint and typecheck clean.
+
+### 2026-10-20 00:55 EDT | Phase 09b | Claude Code (Opus 5.5) | Uploader, downloader, UI, e2e; verify PASS
+- Uploader (src/sync/uploader.ts) and downloader (src/sync/downloader.ts), with unit tests (8 + 5; the test files
+  were written before the code, though I ran them only after both existed). Unit mutation checks, each reverted:
+  uploader ignoring saved parts → resume test failed; no SHA-256 check → damaged test failed; storage-full not
+  recorded → full test failed.
+- UI: useSync runs the uploader after each successful sync; Library rows for books on other devices open with
+  "Downloading… N%" and Cancel; readable messages (offline, still uploading, damaged, signed out, deleted, not set
+  up); a failed save after download still opens the book with the storage message; the status line shows
+  "Uploading N book(s) (P%)" and "Cloud storage is full (9 GB)…". Library and status-line unit tests (6) failed
+  first, then pass.
+- Server: dev-mode-only `x-dev-files-cap` header (localhost only, like x-dev-user) so one e2e user can have a tiny
+  cap; unit test shows production mode ignores it.
+- E2E e2e/sync/files.spec.ts (8 tests) over `wrangler pages dev --r2 FILES=…`; the device fixture and helpers moved
+  from sync.spec.ts to e2e/sync/devices.ts. The 09a test "a book added on one device is listed on the other" no
+  longer expects the cloud-only row to be unopenable (09b makes it openable); it still checks the listing and that
+  importing brings annotations. Big PDFs (20 MB) are written by hand at test time into the OS temp dir
+  (Playwright's loader can't import pdf-lib: "Unexpected module status 3"). `npx tsx` was used once to check the
+  generator; it downloaded tsx into npm's cache only (no project change).
+- A first full sync run failed one test in chromium (resume): the sync scheduled 2 s after import resumed and
+  finished the upload before the test waited for the "complete" request. The helper now polls HEAD /api/files/<id>
+  for 200. Then `--repeat-each=3 files.spec.ts` → 48 passed.
+- E2E mutation checks (chromium, each reverted): no hash check → damaged test failed; download not kept → reload
+  test failed; uploader ignoring saved parts → resume test failed; server keeping deleted books' files → first
+  survived (GET already answered 404 for a deleted book), so the test now re-imports the book with uploads held
+  back and checks HEAD is 404; then the mutation failed it.
+- Docs: docs/deploy.md section 2c (R2 buckets `book-reader-files` / `-preview`, binding `FILES`; dashboard path
+  Storage & databases → R2 → Overview → Create bucket, per Cloudflare docs); section 2b now says one Access
+  application can cover both environments. AGENTS.md notes R2 and the files API.
+- `scripts/verify.sh` → PASS: unit 260, browser 175 + 1 skipped, sync 30, perf 8 (chromium first 176, jump 24,
+  p95 16.7; webkit first 150, jump 55, p95 31; canvas 67.1). Budgets unchanged.
+- Contract 09b evidence (local): 1 files.spec "opens on another without importing" (+ progress shown in the 20 MB
+  test); 2 "bigger than one part" (parts 1,2,3; stored SHA-256 = id) + files.test.ts; 3 "resumes from the next part"
+  (PUTs 1,2,2,3) + uploader.test.ts (resume after reload, expired upload); 4 "damaged download" + downloader.test.ts;
+  5 "offline, or before the upload has finished"; 6 "Delete everywhere removes the file" + files.test.ts (410 on
+  complete after delete); 7 "Remove from this device … downloads again"; 8 "cloud is full" + files/uploader unit;
+  9 files.test.ts (401 without token, per-user keys) — deployed curl pending; 10 file-transfer-store.test.ts (v5 →
+  v6); 11 perf above (the perf suite doesn't run uploads; uploads start only after a sync and never block opening);
+  12 local PASS — CI pending (needs a push); 13 pending (user, after R2 setup and deploy).
+- F-010 → passing (local evidence; real devices pending).
