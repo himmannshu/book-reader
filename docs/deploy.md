@@ -85,8 +85,8 @@ preview can never change your real data.
    - `ACCESS_TEAM_DOMAIN` = your team domain, e.g. `gentle-pond-af51.cloudflareaccess.com`
    - `ACCESS_AUD` = the **Application Audience (AUD) tag** of the Access application that
      protects that environment. Find it in Zero Trust → Access → Applications → the application
-     → Overview (or Basic information). Production and previews usually have **different**
-     applications, so they get different AUD values.
+     → Overview (or Basic information). If one Access application covers both production and
+     previews (as it does for this project), both environments use the same AUD value.
 4. Bindings and variables apply to the **next** deployment. Ask the agent to push, or redeploy
    from the dashboard.
 
@@ -97,6 +97,39 @@ notes for books you've opened on both.
 
 If the bar says **Sync failed**, the binding or a variable is missing or wrong. If it says
 **Sign in again to sync**, your Access session has expired: reload the page and log in.
+
+## 2c. Move book files between devices (phase 09b)
+
+With this, a book you add on one device opens on your others without importing it again. Each
+device uploads its books in the background (8 MB at a time, so big books and patchy connections
+are fine), and another device downloads a book the first time you open it there. Files go to
+Cloudflare R2. Its free tier is 10 GB, and the app stops uploading at **9 GB** so it never costs
+money. Production and previews get **separate** buckets.
+
+1. **Turn on R2:** in the dashboard, open **Storage & Databases** → **R2 Object Storage**
+   (in some layouts under **R2**). Cloudflare may ask you to add a payment method before R2 can be
+   used, even on the free tier. Nothing is charged under 10 GB.
+2. **Create two buckets:** **Create bucket**, name `book-reader-files`, keep the defaults (automatic
+   location, Standard storage). Then again for `book-reader-files-preview`. Keep them private:
+   don't turn on public access or a custom domain. The app reaches them only through its own
+   login-protected API.
+3. **Bind them to the Pages project:** your Pages project → **Settings** → **Bindings** → **Add** →
+   **R2 bucket**:
+   - Variable name: `FILES`
+   - Production: `book-reader-files`
+   - Preview: `book-reader-files-preview`
+4. As with D1, this applies to the **next** deployment.
+
+No keys or tokens are needed: the app never talks to R2 directly.
+
+**Check it:** add a book on the Mac. The top bar shows **Uploading 1 book (…%)** for a moment,
+then nothing extra. On the iPhone, the book is listed as "On your other devices · 12.4 MB ·
+downloads when you open it". Tap it: it shows **Downloading… N%**, then opens, with the Mac's
+highlights and notes. After that it is on the iPhone like any other book.
+
+If opening says "Downloading books isn't set up here yet", the `FILES` binding is missing for that
+environment. "This book is still uploading from your other device" means the other device hasn't
+finished: open the app there for a while (iPhones pause uploads when the app is closed).
 
 ## 3. Install the app
 

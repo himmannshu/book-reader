@@ -85,8 +85,8 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Regenerate test PDFs: `npm run fixtures` (writes tests/fixtures/, deterministic)
 - Regenerate app icons: `npm run icons` (writes public/icons/, deterministic)
 - Deploy: there is no deploy command. Cloudflare Pages builds from GitHub (see docs/deploy.md).
-- Sync tests (two devices, local D1): `npm run test:sync` (playwright.sync.config.ts runs
-  `wrangler pages dev` on port 8788 with local D1; no Cloudflare account needed)
+- Sync tests (two devices, local D1 and R2): `npm run test:sync` (playwright.sync.config.ts runs
+  `wrangler pages dev` on port 8788 with local D1 and R2; no Cloudflare account needed)
 - What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → sync → perf)
 
 ## Conventions
@@ -112,9 +112,11 @@ Do not reverse one silently. Append a superseding entry there and note it in the
   - `tests/config/`: Node-side unit tests for config files (for example `public/_headers`).
   - `public/`: static files copied as-is into the build (icons, Cloudflare `_headers`).
   - `docs/`: guides for the user, such as `docs/deploy.md` (Cloudflare setup).
-  - `functions/`: Cloudflare Pages Functions (the sync API). `functions/_lib/` holds testable code;
-    only `functions/api/*` files are routes. Type-checked with tsconfig.functions.json.
-  - `src/sync/`: the sync engine, the store trigger and the only `fetch` call (`http-client.ts`).
+  - `functions/`: Cloudflare Pages Functions (the sync and files APIs; bindings `DB` = D1,
+    `FILES` = R2). `functions/_lib/` holds testable code; only `functions/api/**` files are routes.
+    Type-checked with tsconfig.functions.json.
+  - `src/sync/`: the sync engine, the book-file uploader and downloader, the store trigger, and
+    the only `fetch` calls (`http-client.ts`).
 - Unit tests sit next to the code as `*.test.ts`.
 - Annotations are stored in PDF coordinates (page index plus rectangles in PDF points) together
   with the quoted text. Never store screen pixels.
