@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, type Page } from '@playwright/test';
-import { fixturePath, importBook, pageSlot } from '../helpers';
+import { expectPageAtTop, fixturePath, importBook, pageSlot } from '../helpers';
 import { bigPdf } from './big-pdf';
 import {
   backToLibrary,
@@ -241,7 +241,9 @@ test('"Remove from this device" frees the file; the book downloads again with it
   await libraryItem(a, TITLE).getByRole('button', { name: 'Remove from this device' }).click();
   await expect(libraryItem(a, TITLE)).toContainText('On your other devices');
 
-  await downloadAndOpen(a, TITLE);
+  // The reading place stays with the book on this device (phase 10), so it reopens at page 3.
+  await libraryItem(a, TITLE).getByRole('button', { name: TITLE, exact: true }).click();
+  await expectPageAtTop(a, 2);
   await expect.poll(() => bookmarkLabels(a)).toEqual(['Page 3']);
 });
 
