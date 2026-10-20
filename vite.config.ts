@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/** Unit tests that need a DOM: React components and hooks, the viewer, the recorder. */
+const DOM_TESTS = ['src/ui/**/*.test.tsx', 'src/viewer/viewer.test.ts', 'src/ui/recorder.test.ts'];
+
 // The Light theme's `surface` colour from the design (src/ui/tokens.css).
 const THEME = '#faf7f2';
 const BACKGROUND = '#faf7f2';
@@ -48,8 +51,27 @@ export default defineConfig({
     }),
   ],
   test: {
-    environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.ts', 'functions/**/*.test.ts'],
-    setupFiles: ['./src/test-setup.ts'],
+    // Most tests are plain logic and run in Node; only the ones that render React or drive the
+    // viewer get jsdom (creating it per file was two thirds of the unit run in CI).
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          include: ['src/**/*.test.{ts,tsx}', 'tests/**/*.test.ts', 'functions/**/*.test.ts'],
+          exclude: DOM_TESTS,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'dom',
+          environment: 'jsdom',
+          include: DOM_TESTS,
+          setupFiles: ['./src/test-setup.ts'],
+        },
+      },
+    ],
   },
 });
