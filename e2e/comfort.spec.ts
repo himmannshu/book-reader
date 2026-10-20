@@ -400,6 +400,8 @@ test.describe('on a phone', () => {
     expect(await noSidewaysScroll()).toBe(true);
 
     await importBook(page, 'basic-3-pages.pdf');
+    // Phase 14: on phones, theme and zoom are in the Display menu.
+    await page.getByRole('button', { name: 'Display', exact: true }).click();
     for (const control of [
       themeSelect(page),
       zoomSelect(page),

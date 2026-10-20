@@ -41,6 +41,15 @@ export function zoomOut(currentPercent: number): number | null {
   return ZOOM_LEVELS.findLast((level) => level < currentPercent - LEVEL_TOLERANCE) ?? null;
 }
 
+/** The level closest to a zoom reached by pinching (closest by ratio, so 118% → 125%). */
+export function nearestZoomLevel(percent: number): number {
+  let best: number = MIN_ZOOM;
+  for (const level of ZOOM_LEVELS) {
+    if (Math.abs(Math.log(level / percent)) < Math.abs(Math.log(best / percent))) best = level;
+  }
+  return best;
+}
+
 export function zoomLabel(zoom: ZoomSetting): string {
   if (zoom === 'fit-width') return 'Fit width';
   if (zoom === 'fit-page') return 'Fit page';
@@ -72,6 +81,11 @@ export interface ReadingState {
   savedAt: number;
   /** The book's page count, for the library's progress (phase 11; absent in older states). */
   pageCount?: number;
+  /**
+   * The horizontal middle of the view, as a share of the content width (phase 14), so a book read
+   * zoomed in reopens at the same side of the page. Absent: centred.
+   */
+  centreX?: number;
 }
 
 const finite = (value: unknown): value is number =>
@@ -85,7 +99,8 @@ export function validReadingState(value: unknown): value is ReadingState {
   if (typeof state.bookId !== 'string' || !finite(state.savedAt) || !validZoom(state.zoom)) {
     return false;
   }
-  const { pageCount } = state;
+  const { pageCount, centreX } = state;
+  if (centreX !== undefined && !(finite(centreX) && centreX >= 0 && centreX <= 1)) return false;
   if (pageCount !== undefined && !(Number.isInteger(pageCount) && (pageCount as number) >= 1)) {
     return false;
   }

@@ -52,6 +52,8 @@ export interface ViewerOptions {
   zoom?: ZoomSetting;
   /** Where to open the book: this place goes at the top of the window. */
   initialPosition?: Anchor;
+  /** Where to open horizontally: the middle of the view, as a share of the content width. */
+  initialCentre?: number;
 }
 
 export const defaultViewerOptions: ViewerOptions = {
@@ -101,6 +103,7 @@ export class Viewer {
   #zoom: ZoomSetting;
   /** Used by the first layout instead of the scroll position. */
   #openAt: Anchor | undefined;
+  #openCentre: number | undefined;
   #layoutWidth = -1;
   #viewportHeight = -1;
   #frame = 0;
@@ -121,6 +124,7 @@ export class Viewer {
     this.#options = options;
     this.#zoom = options.zoom ?? 'fit-width';
     this.#openAt = options.initialPosition;
+    this.#openCentre = options.initialCentre;
     // Until real sizes load, assume every page matches the first one. This lets page 1 draw
     // immediately instead of waiting to measure the whole book.
     this.#sizes = Array.from({ length: doc.pageCount }, () => doc.firstPageSize);
@@ -182,6 +186,16 @@ export class Viewer {
         fraction: 0,
         pixelsAbove: 0,
       }
+    );
+  }
+
+  /** The horizontal middle of the view, as a share of the content width (0.5 when centred). */
+  get horizontalCentre(): number {
+    const width = this.#layout.width;
+    if (width <= 0) return 0.5;
+    return Math.min(
+      1,
+      Math.max(0, (this.#scroller.scrollLeft + this.#scroller.clientWidth / 2) / width),
     );
   }
 
@@ -324,7 +338,9 @@ export class Viewer {
     // Keep the middle of the view in the middle when the content gets wider or narrower.
     const previous = this.#layout;
     const centre =
-      previous.width > 0 ? (this.#scroller.scrollLeft + width / 2) / previous.width : 0.5;
+      this.#openCentre ??
+      (previous.width > 0 ? (this.#scroller.scrollLeft + width / 2) / previous.width : 0.5);
+    this.#openCentre = undefined;
     const scaleChanged = width !== this.#layoutWidth;
     this.#layoutWidth = width;
     this.#layout = computeLayout(this.#sizes, width, this.#options.layout, {
@@ -645,5 +661,15 @@ export class Viewer {
   #setState(slot: Slot, state: SlotState): void {
     slot.state = state;
     slot.element.dataset.state = state;
+    // A page that failed to draw says so instead of staying blank (phase 01 review B3).
+    const message = slot.element.querySelector(':scope > .page-error');
+    if (state === 'error' && !message) {
+      const note = document.createElement('p');
+      note.className = 'page-error';
+      note.textContent = "This page couldn't be drawn.";
+      slot.element.append(note);
+    } else if (state !== 'error') {
+      message?.remove();
+    }
   }
 }

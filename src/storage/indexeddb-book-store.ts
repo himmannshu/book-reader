@@ -714,9 +714,10 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
           console.error('Not saving a malformed reading state', state);
           return;
         }
-        const { bookId, position, zoom, savedAt, pageCount } = state;
+        const { bookId, position, zoom, savedAt, pageCount, centreX } = state;
         const row: ReadingState = { bookId, position: { ...position }, zoom, savedAt };
         if (pageCount !== undefined) row.pageCount = pageCount;
+        if (centreX !== undefined) row.centreX = centreX;
         const database = await db();
         await atomic(database, [BOOKS, READING], async (tx) => {
           if ((await request(tx.objectStore(BOOKS).getKey(bookId))) === undefined) return;

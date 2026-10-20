@@ -113,6 +113,20 @@ describe('Viewer drawing order', () => {
     expect(started()).toEqual([0, 1]);
   });
 
+  it('says on the page when it could not be drawn, and clears it when drawn again', async () => {
+    const { doc, render } = fakeDoc(5);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const element = scroller(1000, 600);
+    viewer = new Viewer(element, doc, defaultViewerOptions);
+    render(0).fail(new Error('broken page'));
+    await flush();
+    const slot = element.querySelector('[data-page-index="0"]');
+    expect(slot?.querySelector('.page-error')?.textContent).toBe("This page couldn't be drawn.");
+    // Zooming draws it again, and the message goes.
+    viewer.setZoom(150);
+    expect(slot?.querySelector('.page-error')).toBeNull();
+  });
+
   it('still starts overscan pages when a visible page fails to draw', async () => {
     const { doc, started, render } = fakeDoc(5);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);

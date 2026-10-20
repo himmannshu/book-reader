@@ -148,7 +148,7 @@ describe('ReaderView bookmarks', () => {
     expect(screen.getByRole('button', { name: 'Page 1' })).toBeInTheDocument();
   });
 
-  it('disables the toggle and says why when the book is not saved on this device', () => {
+  it('marks the toggle disabled and says why, also on a tap, when the book is not saved here', () => {
     const { doc } = fakeDoc();
     render(
       <ReaderView
@@ -159,10 +159,16 @@ describe('ReaderView bookmarks', () => {
       />,
     );
     const toggle = screen.getByRole('button', { name: 'Bookmark page' });
-    expect(toggle).toBeDisabled();
+    // Phase 14: aria-disabled rather than disabled, so a tap can say why (iOS has no tooltips).
+    expect(toggle).toHaveAttribute('aria-disabled', 'true');
     expect(toggle).toHaveAttribute('title', 'Bookmarks need this book saved on this device.');
+    fireEvent.click(toggle);
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Bookmarks need this book saved on this device.',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
-    expect(screen.getByText('Bookmarks need this book saved on this device.')).toBeInTheDocument();
+    // In the panel too (and still in the alert).
+    expect(screen.getAllByText('Bookmarks need this book saved on this device.')).toHaveLength(2);
   });
 
   it('shows a readable message when a bookmark cannot be saved', async () => {

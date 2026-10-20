@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { titleFromFileName } from '../core/library';
 import { markOpened, markOpenStart } from '../core/perf-marks';
-import { THEMES, validTheme, type ReadingState, type Theme } from '../core/reading-state';
+import type { ReadingState, Theme } from '../core/reading-state';
 import type { ShelfSort } from '../core/shelf';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
@@ -33,7 +33,9 @@ import { withSyncTrigger } from '../sync/triggering';
 import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
-import { THEME_LABELS, applyTheme } from './theme';
+import { applyTheme } from './theme';
+import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
+import { Icon } from './icons';
 import { CoverWorker, drawCover, type DrawnCover } from './covers';
 import { UpdateNotice } from './UpdateNotice';
 import { useSync, type SyncSetup } from './useSync';
@@ -152,6 +154,8 @@ export function App({
   /** Bumped when another device changed data, so the open reader reloads its annotations. */
   const [syncVersion, setSyncVersion] = useState(0);
   const [theme, setTheme] = useState<Theme>(() => preferences.theme());
+  const [toolsSlot, setToolsSlot] = useState<HTMLDivElement | null>(null);
+  const narrow = useMediaQuery(NARROW_QUERY);
 
   // Before paint, so the first frame already has the theme (index.html also sets it at startup).
   useLayoutEffect(() => applyTheme(theme), [theme]);
@@ -515,15 +519,23 @@ export function App({
 
   return (
     <div className="app">
-      <header className="toolbar">
-        <h1>Book Reader</h1>
-        {book && (
-          <button type="button" className="button secondary" onClick={backToLibrary}>
-            Library
-          </button>
+      <header className={book ? 'toolbar reading' : 'toolbar'}>
+        {book ? (
+          <ToolButton icon="back" label="Library" className="back-button" onClick={backToLibrary} />
+        ) : (
+          <h1>Book Reader</h1>
         )}
-        <label className="button">
-          Open PDF
+        {book && (
+          <p className="book-info" data-testid="book-info">
+            {book.fileName} · {book.doc.pageCount} {book.doc.pageCount === 1 ? 'page' : 'pages'}
+          </p>
+        )}
+        {/* The open reader puts its tools here, so the reader has one bar (phase 14). */}
+        <div ref={setToolsSlot} className="toolbar-tools" />
+        {(!book || !narrow) && <ThemePicker theme={theme} onChange={chooseTheme} />}
+        <label className={book ? 'tool-button open-button' : 'button open-button'}>
+          <Icon name="open" />
+          <span className="tool-label">Open PDF</span>
           <input
             className="visually-hidden"
             type="file"
@@ -532,39 +544,17 @@ export function App({
             disabled={busy}
           />
         </label>
-        <label className="theme-picker">
-          Theme
-          <select
-            className="picker"
-            value={theme}
-            onChange={(event) => {
-              const next = event.currentTarget.value;
-              if (validTheme(next)) chooseTheme(next);
-            }}
-          >
-            {THEMES.map((option) => (
-              <option key={option} value={option}>
-                {THEME_LABELS[option]}
-              </option>
-            ))}
-          </select>
-        </label>
-        {book && (
-          <p className="book-info" data-testid="book-info">
-            {book.fileName} · {book.doc.pageCount} {book.doc.pageCount === 1 ? 'page' : 'pages'}
-          </p>
-        )}
-        {notice && (
-          <p className="notice" role="status">
-            {notice}
-          </p>
-        )}
         <SyncStatusLine
           status={syncStatus}
           uploads={uploads}
           onSyncNow={() => void syncEngine?.syncNow()}
         />
       </header>
+      {notice && (
+        <p className="notice" role="status">
+          {notice}
+        </p>
+      )}
       <UpdateNotice />
       {error && (
         <p className="error" role="alert">
@@ -583,6 +573,9 @@ export function App({
           notes={user.notes}
           readingStates={readingStates}
           initialState={book.readingState}
+          toolsSlot={toolsSlot}
+          theme={theme}
+          onThemeChange={chooseTheme}
           syncVersion={syncVersion}
         />
       ) : (

@@ -4,6 +4,7 @@ import {
   MIN_ZOOM,
   ZOOM_LEVELS,
   scaleForPercent,
+  nearestZoomLevel,
   validReadingState,
   zoomIn,
   zoomLabel,
@@ -98,5 +99,29 @@ describe('validReadingState', () => {
     ]) {
       expect(validReadingState(bad), JSON.stringify(bad)).toBe(false);
     }
+  });
+});
+
+describe('nearestZoomLevel', () => {
+  it('is the level closest to a pinched zoom, by ratio', () => {
+    expect(nearestZoomLevel(110.3 * 1.82)).toBe(200);
+    expect(nearestZoomLevel(118)).toBe(125);
+    expect(nearestZoomLevel(116)).toBe(110);
+    expect(nearestZoomLevel(5)).toBe(25);
+    expect(nearestZoomLevel(9000)).toBe(400);
+  });
+});
+
+describe('validReadingState with a horizontal place', () => {
+  const state = {
+    bookId: 'b',
+    position: { pageIndex: 0, fraction: 0, pixelsAbove: 0 },
+    zoom: 300,
+    savedAt: 1,
+  };
+  it('accepts a centre between 0 and 1 and rejects anything else', () => {
+    expect(validReadingState({ ...state, centreX: 0.25 })).toBe(true);
+    expect(validReadingState({ ...state, centreX: 1.5 })).toBe(false);
+    expect(validReadingState({ ...state, centreX: 'x' })).toBe(false);
   });
 });

@@ -10,9 +10,23 @@
   --reader-bg: #e6e1d6;
   --border: #ddd6c8;
   --border-soft: #eee8dc;
-  --control-border: #cfc8b8;
+  /* Phase 14: control borders need 3:1 against the surface (WCAG non-text contrast). */
+  --control-border: #8c8577;
   --field-bg: white;
   --page-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+  --accent-soft: rgb(61 90 128 / 14%);
+  /* Design tokens (phase 14). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --text-s: 0.85rem;
+  --text-m: 0.95rem;
+  /* Height of buttons and fields; 44 px on touch screens and phones. */
+  --control-h: 36px;
   color-scheme: light;
   font-family:
     system-ui,
@@ -38,8 +52,9 @@
   --reader-bg: #e3d5b8;
   --border: #d8c7a5;
   --border-soft: #e9dcc0;
-  --control-border: #ccb894;
+  --control-border: #8c7656;
   --field-bg: #fbf5e6;
+  --accent-soft: rgb(122 79 36 / 14%);
   /* Multiplied over each page: white paper turns warm, black text stays black. */
   --page-tint: #f3e2bf;
 }
@@ -56,9 +71,10 @@
   --reader-bg: #141415;
   --border: #3a3a3d;
   --border-soft: #303033;
-  --control-border: #4a4a4e;
+  --control-border: #7a7a80;
   --field-bg: #1f1f21;
   --page-shadow: none;
+  --accent-soft: rgb(143 179 224 / 18%);
   color-scheme: dark;
 }
 
@@ -84,8 +100,8 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
-  padding: 8px 16px;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-4);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -151,7 +167,8 @@ body {
 }
 
 .reader-scroller:focus-visible {
-  outline: 2px solid var(--accent);
+  /* Quiet: the pages get focus whenever a book opens (phase 14). */
+  outline: 2px solid var(--accent-soft);
   outline-offset: -2px;
 }
 
@@ -207,12 +224,6 @@ body {
   border: 1px solid var(--accent);
   font: inherit;
   font-size: 0.9rem;
-}
-
-.notice {
-  margin: 0 0 0 auto;
-  color: var(--muted);
-  font-size: 0.85rem;
 }
 
 .library {
@@ -323,11 +334,8 @@ body {
 
 .reader-tools {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 6px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .reader-body {
@@ -793,4 +801,336 @@ body {
 .search-result[aria-current='true'] {
   background: var(--reader-bg);
   outline: 2px solid var(--accent);
+}
+
+/* ---- Phase 14 design pass: toolbar, buttons, touch targets ---- */
+
+@media (pointer: coarse), (max-width: 699px) {
+  :root {
+    --control-h: 44px;
+  }
+}
+
+.button,
+.picker {
+  min-height: var(--control-h);
+  border-radius: var(--radius-s);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.icon {
+  flex: none;
+}
+
+/* Quiet toolbar buttons: an icon, and a label on wide screens. */
+.tool-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: var(--control-h);
+  height: var(--control-h);
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-s);
+  cursor: pointer;
+}
+
+.tool-button:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.tool-button:focus-visible,
+.button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.tool-button[aria-expanded='true'],
+.tool-button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tool-button:disabled,
+.tool-button[aria-disabled='true'] {
+  color: var(--muted);
+  cursor: default;
+}
+
+.tool-button.icon-only,
+.toolbar .tool-button {
+  padding: 0;
+  width: var(--control-h);
+}
+
+.tool-button.icon-only .tool-label,
+.toolbar .tool-label {
+  /* Visually hidden, still the button's name. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Labels next to the icons where there is room for them. */
+@media (min-width: 1400px) {
+  .toolbar .tool-button:not(.icon-only) {
+    width: auto;
+    padding: 0 10px;
+  }
+
+  .toolbar .tool-button:not(.icon-only) .tool-label {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+  }
+}
+
+.toolbar .open-button.button .tool-label {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+}
+
+.toolbar .open-button.button {
+  width: auto;
+  padding: 0 14px;
+}
+
+.toolbar-tools {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.toolbar-tools:empty {
+  display: none;
+}
+
+.toolbar.reading .book-info {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.picker-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-s);
+  color: var(--muted);
+}
+
+.toolbar.reading .picker-caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.zoom-controls .picker {
+  min-width: 6.5em;
+}
+
+.display-menu {
+  position: relative;
+}
+
+.display-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 220px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 20%);
+}
+
+.display-popover .picker-label {
+  justify-content: space-between;
+}
+
+/* The notice is a toast that fades on its own, instead of taking a row of the toolbar. */
+.notice {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: 40;
+  max-width: calc(100% - 2 * var(--space-4));
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: notice-fade 0.4s ease 4s forwards;
+}
+
+@keyframes notice-fade {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Phones: two compact rows in the reader (back, title, open; then the tools). */
+@media (max-width: 699px) {
+  .toolbar {
+    padding: var(--space-1) var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .toolbar h1 {
+    margin-right: auto;
+  }
+
+  .toolbar.reading .book-info {
+    order: 1;
+  }
+
+  .toolbar.reading .back-button {
+    order: 0;
+  }
+
+  .toolbar.reading .open-button {
+    order: 2;
+  }
+
+  .toolbar.reading .toolbar-tools {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+
+  .toolbar.reading .reader-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .toolbar .open-button.button {
+    padding: 0 var(--space-3);
+  }
+}
+
+/* Touch-sized controls everywhere else too (phase 14). */
+@media (pointer: coarse), (max-width: 699px) {
+  .panel-entry,
+  .library-item button,
+  .note-buttons button,
+  .confirmation-dialog button,
+  .search-steps .button,
+  .library-filter {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .side-panel .bookmark-remove {
+    min-height: 44px;
+  }
+}
+
+/* After choosing a search result on a phone (phase 14). */
+.search-bar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  transform: translateX(-50%);
+}
+
+.search-bar-count {
+  min-width: 4.5em;
+  text-align: center;
+  font-size: var(--text-s);
+  color: var(--muted);
+}
+
+.page-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--space-4);
+  color: #6b675e;
+  font-size: var(--text-m);
+  text-align: center;
+}
+
+/* Phase 14 refinements after looking at the screens. */
+.toolbar .bookmark-toggle {
+  margin-left: 0;
+}
+
+.display-popover .picker-caption,
+.display-popover .zoom-caption {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  font-size: var(--text-s);
+  color: var(--muted);
+}
+
+.display-popover .zoom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.notice {
+  left: var(--space-4);
+  right: var(--space-4);
+  width: fit-content;
+  margin: 0 auto;
+  transform: none;
+}
+
+@media (max-width: 699px) {
+  .library-header h2 {
+    flex: 1;
+  }
+
+  .library-filter {
+    order: 3;
+    flex-basis: 100%;
+    width: 100%;
+  }
 }

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import {
   useEffect,
   useImperativeHandle,
@@ -15,10 +16,12 @@ import {
   MAX_ZOOM,
   MIN_ZOOM,
   ZOOM_LEVELS,
+  nearestZoomLevel,
   zoomIn,
   zoomLabel,
   zoomOut,
   type ReadingState,
+  type Theme,
   type ZoomSetting,
 } from '../core/reading-state';
 import type { OutlineItem, PdfDoc } from '../engine/types';
@@ -32,16 +35,18 @@ import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
+import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
 import { SearchPanel } from './SearchPanel';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
 
-/** Below this width a side panel covers the pages instead of sitting beside them. */
-const NARROW_QUERY = '(max-width: 699px)';
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
+const DISPLAY_ID = 'display-menu';
+/** Ctrl+wheel distance (px) for one zoom step: one mouse notch, or a short trackpad pinch. */
+const WHEEL_STEP = 50;
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
@@ -68,6 +73,11 @@ interface ReaderViewProps {
   notes: NoteStore;
   /** Where each book was left on this device. */
   readingStates: ReadingStateStore;
+  /** Where the reader puts its toolbar (the app's header), so the reader has one bar. */
+  toolsSlot?: HTMLElement | null;
+  /** The theme, for the Display menu on narrow screens. */
+  theme?: Theme;
+  onThemeChange?(theme: Theme): void;
   /** Where this book was left, to open there (null: from the start, or found once it is saved). */
   initialState?: ReadingState | null;
   ref?: Ref<ReaderHandle>;
@@ -89,6 +99,9 @@ export function ReaderView({
   notes,
   readingStates,
   initialState = null,
+  toolsSlot = null,
+  theme = 'light',
+  onThemeChange,
   ref,
   syncVersion = 0,
   now = Date.now,
@@ -102,6 +115,9 @@ export function ReaderView({
   const notesButtonRef = useRef<HTMLButtonElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
+  const narrow = useMediaQuery(NARROW_QUERY);
+  const [displayOpen, setDisplayOpen] = useState(false);
+  const displayButtonRef = useRef<HTMLButtonElement>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
   /** Fixed at mount: the reader is keyed by book, so a new book gets a new ReaderView. */
@@ -141,6 +157,7 @@ export function ReaderView({
       onPageChange: setCurrentPage,
       zoom: opening.current?.zoom,
       initialPosition: opening.current?.position,
+      initialCentre: opening.current?.centreX,
     });
     viewerRef.current = viewer;
     // Focus the pages so arrow keys, Page Down and Space scroll the book right away.
@@ -164,6 +181,7 @@ export function ReaderView({
         zoom: viewer.zoom,
         savedAt: clock(),
         pageCount: doc.pageCount,
+        centreX: viewer.horizontalCentre,
       };
       store.put(state).catch((error: unknown) => {
         // Reading goes on; the next pause tries again.
@@ -248,6 +266,48 @@ export function ReaderView({
     const level = direction === 'in' ? zoomIn(viewer.zoomPercent) : zoomOut(viewer.zoomPercent);
     if (level !== null) changeZoom(level);
   }
+
+  // Pinch to zoom (phase 14): a trackpad pinch arrives as ctrl+wheel in Chrome and Firefox, and as
+  // gesture events in Safari (also for two fingers on iPad and iPhone). Each settles on a level.
+  const zooming = useRef({ step: stepZoom, set: changeZoom });
+  useEffect(() => {
+    zooming.current = { step: stepZoom, set: changeZoom };
+  });
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    let wheel = 0;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      wheel += event.deltaY;
+      if (Math.abs(wheel) < WHEEL_STEP) return;
+      zooming.current.step(wheel < 0 ? 'in' : 'out');
+      wheel = 0;
+    };
+    let startPercent = 100;
+    const onGestureStart = (event: Event) => {
+      event.preventDefault();
+      startPercent = viewerRef.current?.zoomPercent ?? 100;
+    };
+    const onGestureChange = (event: Event) => event.preventDefault();
+    const onGestureEnd = (event: Event) => {
+      event.preventDefault();
+      const scale = (event as Event & { scale?: number }).scale ?? 1;
+      if (Math.abs(scale - 1) < 0.05) return;
+      zooming.current.set(nearestZoomLevel(startPercent * scale));
+    };
+    scroller.addEventListener('wheel', onWheel, { passive: false });
+    scroller.addEventListener('gesturestart', onGestureStart);
+    scroller.addEventListener('gesturechange', onGestureChange);
+    scroller.addEventListener('gestureend', onGestureEnd);
+    return () => {
+      scroller.removeEventListener('wheel', onWheel);
+      scroller.removeEventListener('gesturestart', onGestureStart);
+      scroller.removeEventListener('gesturechange', onGestureChange);
+      scroller.removeEventListener('gestureend', onGestureEnd);
+    };
+  }, []);
 
   /** + (or =), - and 0 zoom while the pages have focus. Cmd/Ctrl + and - stay the browser's. */
   function onPagesKeyDown(event: ReactKeyboardEvent) {
@@ -427,6 +487,16 @@ export function ReaderView({
     }
   }
 
+  const searchResults =
+    searchState.status === 'searching' || searchState.status === 'done' ? searchState.results : [];
+
+  /** Next or previous match, wrapping around (the search bar on phones). */
+  function stepSearch(delta: number) {
+    if (searchResults.length === 0) return;
+    const from = searchCurrent ?? (delta > 0 ? -1 : 0);
+    chooseSearchResult((from + delta + searchResults.length) % searchResults.length);
+  }
+
   // Cmd/Ctrl+F opens the book's search instead of the browser's (which can't see the pages).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -518,6 +588,11 @@ export function ReaderView({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (noteConfirmation) return;
+      if (displayOpen) {
+        setDisplayOpen(false);
+        displayButtonRef.current?.focus();
+        return;
+      }
       if (dismissHighlightAction()) return;
       if (!openPanel) return;
       requestNoteNavigation(() => {
@@ -527,100 +602,122 @@ export function ReaderView({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation]);
+  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation, displayOpen]);
+
+  const zoomControls = (
+    <div className="zoom-controls">
+      <ToolButton
+        icon="minus"
+        label="Zoom out"
+        className="icon-only"
+        disabled={zoom === MIN_ZOOM}
+        onClick={() => stepZoom('out')}
+      />
+      <select
+        className="picker"
+        aria-label="Zoom"
+        value={String(zoom)}
+        onChange={(event) => {
+          const value = event.currentTarget.value;
+          changeZoom(value === 'fit-width' || value === 'fit-page' ? value : Number(value));
+        }}
+      >
+        {(ZOOM_CHOICES.includes(zoom) ? ZOOM_CHOICES : [...ZOOM_CHOICES, zoom]).map((choice) => (
+          <option key={choice} value={String(choice)}>
+            {zoomLabel(choice)}
+          </option>
+        ))}
+      </select>
+      <ToolButton
+        icon="plus"
+        label="Zoom in"
+        className="icon-only"
+        disabled={zoom === MAX_ZOOM}
+        onClick={() => stepZoom('in')}
+      />
+    </div>
+  );
+
+  const tools = (
+    <div className="reader-tools" role="toolbar" aria-label="Reader">
+      <ToolButton
+        ref={contentsButtonRef}
+        icon="contents"
+        label="Contents"
+        aria-expanded={openPanel === 'contents'}
+        aria-controls={openPanel === 'contents' ? CONTENTS_ID : undefined}
+        onClick={() => togglePanel('contents')}
+      />
+      <ToolButton
+        ref={bookmarksButtonRef}
+        icon="bookmarks"
+        label="Bookmarks"
+        aria-expanded={openPanel === 'bookmarks'}
+        aria-controls={openPanel === 'bookmarks' ? BOOKMARKS_ID : undefined}
+        onClick={() => togglePanel('bookmarks')}
+      />
+      <ToolButton
+        icon="bookmark"
+        filled={currentMark !== undefined}
+        label="Bookmark page"
+        className="bookmark-toggle"
+        aria-pressed={currentMark !== undefined}
+        // Not disabled while a change is saving: that would drop keyboard focus. Clicks are ignored
+        // instead. While the book isn't saved it is only marked disabled, so a tap can say why
+        // (iOS shows no tooltips; phase 05 review).
+        disabled={bookId !== null && !items}
+        aria-disabled={bookId === null ? true : undefined}
+        title={bookId === null ? UNSAVED_REASON : undefined}
+        onClick={() => {
+          if (bookId === null) setAnnotationError(UNSAVED_REASON);
+          else void toggleBookmark();
+        }}
+      />
+      <ToolButton
+        ref={notesButtonRef}
+        icon="notes"
+        label="Notes"
+        aria-expanded={openPanel === 'notes'}
+        aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
+        onClick={() => togglePanel('notes')}
+      />
+      <ToolButton
+        ref={searchButtonRef}
+        icon="search"
+        label="Search"
+        aria-expanded={openPanel === 'search'}
+        aria-controls={openPanel === 'search' ? SEARCH_ID : undefined}
+        onClick={() => togglePanel('search')}
+      />
+      {narrow ? (
+        <div className="display-menu">
+          <ToolButton
+            ref={displayButtonRef}
+            icon="display"
+            label="Display"
+            aria-expanded={displayOpen}
+            aria-controls={displayOpen ? DISPLAY_ID : undefined}
+            onClick={() => setDisplayOpen((open) => !open)}
+          />
+          {displayOpen && (
+            <div id={DISPLAY_ID} className="display-popover" role="group" aria-label="Display">
+              {onThemeChange && <ThemePicker theme={theme} onChange={onThemeChange} />}
+              <div className="zoom-row">
+                <span className="zoom-caption">Zoom</span>
+                {zoomControls}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        zoomControls
+      )}
+    </div>
+  );
 
   return (
     <div className="reader">
-      <div className="reader-tools">
-        <button
-          ref={contentsButtonRef}
-          type="button"
-          className="button secondary"
-          aria-expanded={openPanel === 'contents'}
-          aria-controls={openPanel === 'contents' ? CONTENTS_ID : undefined}
-          onClick={() => togglePanel('contents')}
-        >
-          Contents
-        </button>
-        <button
-          ref={bookmarksButtonRef}
-          type="button"
-          className="button secondary"
-          aria-expanded={openPanel === 'bookmarks'}
-          aria-controls={openPanel === 'bookmarks' ? BOOKMARKS_ID : undefined}
-          onClick={() => togglePanel('bookmarks')}
-        >
-          Bookmarks
-        </button>
-        <button
-          type="button"
-          className="button secondary bookmark-toggle"
-          aria-pressed={currentMark !== undefined}
-          // Not disabled while a change is saving: that would drop keyboard focus. Clicks are ignored instead.
-          disabled={!items}
-          title={bookId === null ? UNSAVED_REASON : undefined}
-          onClick={() => void toggleBookmark()}
-        >
-          Bookmark page
-        </button>
-        <button
-          ref={notesButtonRef}
-          type="button"
-          className="button secondary"
-          aria-expanded={openPanel === 'notes'}
-          aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
-          onClick={() => togglePanel('notes')}
-        >
-          Notes
-        </button>
-        <button
-          ref={searchButtonRef}
-          type="button"
-          className="button secondary"
-          aria-expanded={openPanel === 'search'}
-          aria-controls={openPanel === 'search' ? SEARCH_ID : undefined}
-          onClick={() => togglePanel('search')}
-        >
-          Search
-        </button>
-        <div className="zoom-controls">
-          <button
-            type="button"
-            className="button secondary"
-            aria-label="Zoom out"
-            disabled={zoom === MIN_ZOOM}
-            onClick={() => stepZoom('out')}
-          >
-            −
-          </button>
-          <select
-            className="picker"
-            aria-label="Zoom"
-            value={String(zoom)}
-            onChange={(event) => {
-              const value = event.currentTarget.value;
-              changeZoom(value === 'fit-width' || value === 'fit-page' ? value : Number(value));
-            }}
-          >
-            {(ZOOM_CHOICES.includes(zoom) ? ZOOM_CHOICES : [...ZOOM_CHOICES, zoom]).map(
-              (choice) => (
-                <option key={choice} value={String(choice)}>
-                  {zoomLabel(choice)}
-                </option>
-              ),
-            )}
-          </select>
-          <button
-            type="button"
-            className="button secondary"
-            aria-label="Zoom in"
-            disabled={zoom === MAX_ZOOM}
-            onClick={() => stepZoom('in')}
-          >
-            +
-          </button>
-        </div>
-      </div>
+      {toolsSlot ? createPortal(tools, toolsSlot) : tools}
       {annotationError && (
         <p className="error" role="alert">
           {annotationError}
@@ -670,6 +767,31 @@ export function ReaderView({
           onClick={marked.onPagesClick}
           onKeyDown={onPagesKeyDown}
         />
+        {narrow && searchCurrent !== null && openPanel !== 'search' && searchResults.length > 0 && (
+          <div className="search-bar" role="toolbar" aria-label="Search matches">
+            <ToolButton
+              icon="up"
+              label="Previous match"
+              className="icon-only"
+              onClick={() => stepSearch(-1)}
+            />
+            <span className="search-bar-count">
+              {searchCurrent + 1} of {searchResults.length}
+            </span>
+            <ToolButton
+              icon="down"
+              label="Next match"
+              className="icon-only"
+              onClick={() => stepSearch(1)}
+            />
+            <ToolButton
+              icon="close"
+              label="Close search"
+              className="icon-only"
+              onClick={() => runSearch('')}
+            />
+          </div>
+        )}
         <SelectionActions
           action={marked.action}
           unsavedReason={marked.unavailableReason}
