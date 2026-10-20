@@ -354,6 +354,18 @@ describe('handleFiles', () => {
     expect((await upload(db, bucket, capped, OTHER_BOOK, bytes(6))).status).toBe(200);
   });
 
+  it('lets local tests set a per-request cap, only in dev mode', async () => {
+    const db = memoryDb();
+    const bucket = memoryBucket();
+    await syncBooks(db, env(), bucket, [book(BOOK)]);
+    const tiny = { 'x-dev-files-cap': '5' };
+    const capped = await call(db, bucket, env(), 'POST', `${BOOK}/uploads`, '{"size":6}', tiny);
+    expect(capped.status).toBe(507);
+    const prod = { ACCESS_TEAM_DOMAIN: 'team.cloudflareaccess.com', ACCESS_AUD: 'aud' };
+    const ignored = await call(db, bucket, prod, 'POST', `${BOOK}/uploads`, '{"size":6}', tiny);
+    expect(ignored.status).toBe(401); // Production needs a real token first, and ignores the header.
+  });
+
   it("keeps each user's files apart", async () => {
     const db = memoryDb();
     const bucket = memoryBucket();

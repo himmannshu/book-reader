@@ -89,8 +89,10 @@ export async function forgetFiles(
   }
 }
 
-function capBytes(env: FilesEnv): number {
-  const cap = Number(env.FILES_CAP_BYTES);
+function capBytes(env: FilesEnv, request: Request): number {
+  // Local tests (dev mode, localhost only; see auth.ts) can give one test user a tiny cap.
+  const testCap = env.AUTH_MODE === 'dev' ? request.headers.get('x-dev-files-cap') : null;
+  const cap = Number(testCap ?? env.FILES_CAP_BYTES);
   return Number.isFinite(cap) && cap > 0 ? cap : DEFAULT_CAP_BYTES;
 }
 
@@ -141,7 +143,7 @@ async function createUpload(
   if (size > PART_SIZE * MAX_PARTS) throw new HttpError(413, 'too-large');
   await requireLiveBook(db, user, bookId);
   if ((await storedSize(db, user, bookId)) !== null) return json({ done: true });
-  if ((await storedTotal(db, user)) + size > capBytes(env)) {
+  if ((await storedTotal(db, user)) + size > capBytes(env, request)) {
     throw new HttpError(507, 'storage-full');
   }
   const uploadId = await bucket.createUpload(await fileKey(user, bookId));
