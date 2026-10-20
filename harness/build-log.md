@@ -1570,3 +1570,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   with the end of the book), 274 passed, 3 skipped.
 - Evaluator: harness/code_review/phase-16-review.md, FAIL (that test; unstable player buttons; toast over the
   player). Fixes: see the review appendix. Unit 358; chromium e2e 137 passed + 1 environment failure.
+
+### 2026-10-20 13:25 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39391982795 on 36073e0 → success (08:14–08:34Z).
+- Contract items 1–6 have evidence; item 7 (devices, layout confirmation) waits on the user. F-014 → passing.
