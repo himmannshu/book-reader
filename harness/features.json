@@ -13,21 +13,21 @@
       "phase": "01",
       "description": "Opening a PDF file renders its pages with continuous scrolling",
       "status": "passing",
-      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e 'opening a PDF draws its first page' and 'scrolling to the bottom\u2026' pass in chromium+webkit (canvas pixel band colors). See build-log Phase 01 close-out."
+      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e 'opening a PDF draws its first page' and 'scrolling to the bottom…' pass in chromium+webkit (canvas pixel band colors). See build-log Phase 01 close-out."
     },
     {
       "id": "F-002",
       "phase": "01",
       "description": "Only pages near the viewport are drawn while scrolling a long book",
       "status": "passing",
-      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e steps through long-300-pages, max canvases \u2264 8, page 1 released; fails when release is removed (mutation check). See build-log Phase 01."
+      "evidence": "2026-10-18 verify PASS at 5d07bf2: e2e steps through long-300-pages, max canvases ≤ 8, page 1 released; fails when release is removed (mutation check). See build-log Phase 01."
     },
     {
       "id": "F-003",
       "phase": "02",
       "description": "Speed budgets for first page, scrolling, jumping and cache memory run in scripts/verify.sh and fail on regression",
       "status": "passing",
-      "evidence": "2026-10-19 scripts/verify.sh PASS incl. `npm run test:perf` (8 passed, chromium+webkit at DPR 2); 300 ms per-page delay \u2192 perf step FAIL (firstPage/jump over budget); CI run 39197818164 green (chromium enforced \u00d74). See build-log Phase 02."
+      "evidence": "2026-10-19 scripts/verify.sh PASS incl. `npm run test:perf` (8 passed, chromium+webkit at DPR 2); 300 ms per-page delay → perf step FAIL (firstPage/jump over budget); CI run 39197818164 green (chromium enforced ×4). See build-log Phase 02."
     },
     {
       "id": "F-004",
@@ -41,7 +41,7 @@
       "phase": "04",
       "description": "The table of contents panel lists the book's outline and jumps to a chosen chapter",
       "status": "passing",
-      "evidence": "2026-10-19 e2e/contents.spec.ts (outline order and nesting; chapter, named destination and narrow jumps; book switch; Escape) passes in chromium+webkit; scripts/verify.sh PASS at ca5c0dc; evaluator re-review confirms items 1\u20139 (harness/code_review/phase-04-review.md); CI run 39279260419 on aaafd9f green."
+      "evidence": "2026-10-19 e2e/contents.spec.ts (outline order and nesting; chapter, named destination and narrow jumps; book switch; Escape) passes in chromium+webkit; scripts/verify.sh PASS at ca5c0dc; evaluator re-review confirms items 1–9 (harness/code_review/phase-04-review.md); CI run 39279260419 on aaafd9f green."
     },
     {
       "id": "F-006",
@@ -55,7 +55,7 @@
       "phase": "06",
       "description": "Selected text can be highlighted; highlights stay aligned at any scale and survive a reload",
       "status": "passing",
-      "evidence": "2026-10-19 scripts/verify.sh PASS after B1\u2013B3 and fixture-metadata corrections (122 unit, 130 e2e, 8 perf; local WebKit p95 37 ms). CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897 (same test counts; Chromium budgets enforced, Linux WebKit report-only by existing policy). User confirmed the real-book/device check works as expected. Browser regressions cover touch Highlight/Remove, repeated activation/retry, stale offers after text release, alignment, PDF coordinates and reload. Each blocker reproduced red before its fix. See build-log close-out and review correction appendix; phase 06 Complete. No new independent evaluator verdict."
+      "evidence": "2026-10-19 scripts/verify.sh PASS after B1–B3 and fixture-metadata corrections (122 unit, 130 e2e, 8 perf; local WebKit p95 37 ms). CI PASS on 7ac8b1e: https://github.com/himmannshu/book-reader/actions/runs/39320769897 (same test counts; Chromium budgets enforced, Linux WebKit report-only by existing policy). User confirmed the real-book/device check works as expected. Browser regressions cover touch Highlight/Remove, repeated activation/retry, stale offers after text release, alignment, PDF coordinates and reload. Each blocker reproduced red before its fix. See build-log close-out and review correction appendix; phase 06 Complete. No new independent evaluator verdict."
     },
     {
       "id": "F-008",
@@ -82,15 +82,15 @@
       "id": "F-011",
       "phase": "10",
       "description": "Each book reopens at the last reading position",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 e2e/comfort.spec.ts resume tests (Library, reload, hidden tab, Open PDF again; place within 2 px, that page drawn first) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39380276967 (chromium+webkit, 203 passed) on 9b5e7ba. Real-device check pending (harness/USER-CHECKLIST.md)."
     },
     {
       "id": "F-012",
       "phase": "10",
       "description": "Dark and sepia themes and zoom/fit modes are available and persist",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 e2e/comfort.spec.ts themes (pixels of pages and chrome, reload, no light flash), zoom/fit/keys/sideways scroll, zoom per book, highlight alignment at 50%/200%/fit page, memory at 400% pass in chromium (cloud) and full CI run 39380276967 (chromium+webkit) on 9b5e7ba; perf budgets PASS there. Real-device check pending."
     },
     {
       "id": "F-013",
