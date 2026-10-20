@@ -1,5 +1,9 @@
 # Phase 09: Cloud library
 
+> **Note (2026-10-19):** split by the user into phase 09a
+> (harness/build/phase-09a-sync-library-and-annotations.md) and phase 09b
+> (harness/build/phase-09b-sync-book-files.md). This file is kept for history.
+
 - Status: Not started
 - Branch: phase-09-cloud-library
 - Depends on: 05, 06, 07, 08

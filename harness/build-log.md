@@ -1146,3 +1146,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
   success". Production still behind Access after the deploy: / and /manifest.webmanifest → 302 to the Access login.
 - CI on main for e9a9c00 being watched. Remaining: item 12 (user install + offline), item 6's real-world part (a second
   deploy shows the update notice), item 13 (guide usable; the user completed setup with one correction).
+
+### 2026-10-19 20:32 EDT | Phase 09 planning | Claude Code (Opus 5.5) | Phase 09 split into 09a/09b; 09a planned and approved
+- User asked to plan phase 09 now, with phase 08 staying In progress until their install/offline check, and not to
+  build phase 09 until then. Planning documents only; no code, no code branch, nothing pushed.
+- User decisions: split into 09a (sync library list and annotations, D1) and 09b (book files, R2, chunked uploads);
+  API as Cloudflare Pages Functions behind the existing Access login; removing a book offers "Remove from this
+  device" and "Delete everywhere".
+- Written: PLANS.md rows 09a/09b replace 09; harness/build/phase-09a-sync-library-and-annotations.md;
+  harness/build/phase-09b-sync-book-files.md (outline); note at the top of phase-09-cloud-library.md;
+  harness/contracts/phase-09a-contract.md (approved at planning); features.json F-016 (09a, failing).
+  F-010's text and fields are unchanged (AGENTS.md); it now belongs to phase 09b.
+- Phase 08: CI run 39347261723 on main (e9a9c00) still in progress at this entry.

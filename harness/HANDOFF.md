@@ -23,8 +23,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 2. When the user reports item 12: with their OK, push the pending harness commits to main. That is a
    docs-only second deploy, which should make the installed app show the update notice (item 6).
    Then mark phase 08 Complete.
-3. Then ask what's next (phase 09 cloud library, open review findings, issue #2 contents generation,
-   printed page-number labels).
+3. Phase 09 is split into 09a/09b. 09a is planned, with its contract approved
+   (harness/build/phase-09a-sync-library-and-annotations.md, harness/contracts/phase-09a-contract.md).
+   Start building 09a ONLY after phase 08 is Complete (the user's instruction). 09b is an outline.
 
 ## Decisions worth remembering
 
