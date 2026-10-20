@@ -13,6 +13,10 @@ const PATHS = {
   open: 'M12 15V4M7 9l5-5 5 5M5 15v4h14v-4',
   display: 'M3 19l5-14 5 14M5 14h6M15 19l3-9 3 9M16 16h4',
   close: 'M6 6l12 12M18 6L6 18',
+  listen: 'M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11',
+  pause: 'M8 5v14M16 5v14',
+  play: 'M7 5l12 7-12 7z',
+  stop: 'M6 6h12v12H6z',
   up: 'M6 15l6-6 6 6',
   down: 'M6 9l6 6 6-6',
 } as const;

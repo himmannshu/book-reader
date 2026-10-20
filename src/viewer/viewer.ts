@@ -83,6 +83,15 @@ interface Slot {
   textReady?: boolean;
   /** Search match boxes (phase 13), made on first use. */
   searchHits?: HTMLDivElement;
+  /** The box over the sentence being read aloud (phase 16), made on first use. */
+  spokenHits?: HTMLDivElement;
+}
+
+/** The sentence being read aloud: its text, and which of its matches on the page (0-based). */
+export interface SpokenSpot {
+  pageIndex: number;
+  text: string;
+  occurrence: number;
 }
 
 /** A search match to show as the current one: the n-th match on a page (both 0-based). */
@@ -115,6 +124,7 @@ export class Viewer {
   #visibleLast = -1;
   #highlightList: readonly Highlight[] = [];
   #search: { query: string; current: SearchSpot | null; reveal: boolean } | null = null;
+  #spoken: SpokenSpot | null = null;
   #textTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** `scroller` must be a scrollable element (overflow: auto) that the viewer may fill. */
@@ -255,6 +265,27 @@ export class Viewer {
       this.scrollToPage(current.pageIndex);
     }
     this.#slots.forEach((slot, index) => this.#drawSearch(slot, index));
+  }
+
+  /**
+   * Marks the sentence being read aloud (null clears it). Its page is brought into view when it
+   * isn't drawn with text yet; on the page, the view follows the sentence.
+   */
+  setSpoken(spoken: SpokenSpot | null): void {
+    if (this.#destroyed) return;
+    const previous = this.#spoken?.pageIndex;
+    this.#spoken = spoken;
+    if (spoken && !this.#slots[spoken.pageIndex]?.textReady) {
+      const box = this.#layout.pages[spoken.pageIndex];
+      const top = this.#scroller.scrollTop;
+      const visible =
+        box && box.top < top + this.#scroller.clientHeight && box.top + box.height > top;
+      if (!visible) this.scrollToPage(spoken.pageIndex);
+    }
+    for (const index of new Set([previous, spoken?.pageIndex])) {
+      const slot = index === undefined ? undefined : this.#slots[index];
+      if (slot && index !== undefined) this.#drawSpoken(slot, index);
+    }
   }
 
   /** Brings a passage's first PDF-coordinate box into view, leaving a small reading margin. */
@@ -468,6 +499,7 @@ export class Viewer {
         if (slot.textTask !== task) return;
         slot.textReady = true;
         if (this.#search) this.#drawSearch(slot, index);
+        if (this.#spoken?.pageIndex === index) this.#drawSpoken(slot, index);
       },
       () => undefined,
     );
@@ -484,6 +516,7 @@ export class Viewer {
     slot.textTask = undefined;
     slot.textReady = false;
     slot.searchHits?.replaceChildren();
+    slot.spokenHits?.replaceChildren();
     slot.text?.remove();
     slot.text = undefined;
   }
@@ -563,13 +596,12 @@ export class Viewer {
   }
 
   /** Boxes over this page's search matches, found in its text layer (only visible pages). */
-  #drawSearch(slot: Slot, pageIndex: number): void {
-    const search = this.#search;
-    if (!search || !slot.text || !slot.textReady) {
-      slot.searchHits?.replaceChildren();
-      return;
-    }
-    // The page's text as the text layer shows it: its text nodes, and a line break per <br>.
+  /**
+   * Where each match of `query` is in this page's text layer: one list of screen boxes per match,
+   * in order. The text is the layer's text nodes, with a line break per <br>.
+   */
+  #textLayerMatches(slot: Slot, query: string): DOMRect[][] {
+    if (!slot.text) return [];
     const nodes: Text[] = [];
     const starts: number[] = [];
     let full = '';
@@ -599,47 +631,92 @@ export class Viewer {
       }
       return [node, within];
     };
-
-    if (!slot.searchHits) {
-      slot.searchHits = document.createElement('div');
-      slot.searchHits.className = 'search-layer';
-      slot.highlights.after(slot.searchHits);
-    }
-    const page = slot.element.getBoundingClientRect();
-    const current = search.current?.pageIndex === pageIndex ? search.current.occurrence : -1;
-    const percent = (value: number, of: number) => `${(value / of) * 100}%`;
-    const boxes: HTMLDivElement[] = [];
-    let currentBox: DOMRect | undefined;
-    findMatches(full, search.query).forEach((match, occurrence) => {
+    return findMatches(full, query).map((match) => {
       const start = at(match.start, false);
       const end = at(match.end, true);
-      if (!start || !end || page.width === 0) return;
+      if (!start || !end) return [];
       const range = document.createRange();
       range.setStart(...start);
       range.setEnd(...end);
-      for (const rect of range.getClientRects()) {
-        if (rect.width < 1 || rect.height < 1) continue;
-        const box = document.createElement('div');
-        box.className = occurrence === current ? 'search-hit current' : 'search-hit';
-        box.style.left = percent(rect.left - page.left, page.width);
-        box.style.top = percent(rect.top - page.top, page.height);
-        box.style.width = percent(rect.width, page.width);
-        box.style.height = percent(rect.height, page.height);
-        boxes.push(box);
-        if (occurrence === current) currentBox ??= rect;
-      }
+      return [...range.getClientRects()].filter((rect) => rect.width >= 1 && rect.height >= 1);
     });
-    slot.searchHits.replaceChildren(...boxes);
+  }
 
-    if (search.reveal && currentBox) {
-      // Put the match about a third of the way down the window.
-      search.reveal = false;
-      const view = this.#scroller.getBoundingClientRect();
-      this.#scroller.scrollTop += currentBox.top - view.top - this.#scroller.clientHeight / 3;
-      if (currentBox.left < view.left || currentBox.right > view.right) {
-        this.#scroller.scrollLeft += currentBox.left - view.left - this.#options.layout.padding;
-      }
+  /** Boxes in percent of the page, so they follow any later resize until redrawn. */
+  #boxes(slot: Slot, rects: readonly DOMRect[], className: string): HTMLDivElement[] {
+    const page = slot.element.getBoundingClientRect();
+    if (page.width === 0) return [];
+    const percent = (value: number, of: number) => `${(value / of) * 100}%`;
+    return rects.map((rect) => {
+      const box = document.createElement('div');
+      box.className = className;
+      box.style.left = percent(rect.left - page.left, page.width);
+      box.style.top = percent(rect.top - page.top, page.height);
+      box.style.width = percent(rect.width, page.width);
+      box.style.height = percent(rect.height, page.height);
+      return box;
+    });
+  }
+
+  /** Scrolls so a box on screen is about a third of the way down the window. */
+  #reveal(rect: DOMRect): void {
+    const view = this.#scroller.getBoundingClientRect();
+    this.#scroller.scrollTop += rect.top - view.top - this.#scroller.clientHeight / 3;
+    if (rect.left < view.left || rect.right > view.right) {
+      this.#scroller.scrollLeft += rect.left - view.left - this.#options.layout.padding;
     }
+  }
+
+  /** A layer over the page for marks (search matches, the spoken sentence), made on first use. */
+  #layer(slot: Slot, key: 'searchHits' | 'spokenHits', className: string): HTMLDivElement {
+    let layer = slot[key];
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.className = className;
+      slot.highlights.after(layer);
+      slot[key] = layer;
+    }
+    return layer;
+  }
+
+  /** Boxes over this page's search matches, found in its text layer (only visible pages). */
+  #drawSearch(slot: Slot, pageIndex: number): void {
+    const search = this.#search;
+    if (!search || !slot.text || !slot.textReady) {
+      slot.searchHits?.replaceChildren();
+      return;
+    }
+    const current = search.current?.pageIndex === pageIndex ? search.current.occurrence : -1;
+    const boxes: HTMLDivElement[] = [];
+    let currentBox: DOMRect | undefined;
+    this.#textLayerMatches(slot, search.query).forEach((rects, occurrence) => {
+      const isCurrent = occurrence === current;
+      boxes.push(...this.#boxes(slot, rects, isCurrent ? 'search-hit current' : 'search-hit'));
+      if (isCurrent) currentBox ??= rects[0];
+    });
+    this.#layer(slot, 'searchHits', 'search-layer').replaceChildren(...boxes);
+    if (search.reveal && currentBox) {
+      search.reveal = false;
+      this.#reveal(currentBox);
+    }
+  }
+
+  /** The sentence being read aloud (phase 16), followed on screen when it moves out of view. */
+  #drawSpoken(slot: Slot, pageIndex: number): void {
+    const spoken = this.#spoken;
+    if (!spoken || spoken.pageIndex !== pageIndex || !slot.text || !slot.textReady) {
+      slot.spokenHits?.replaceChildren();
+      return;
+    }
+    const rects = this.#textLayerMatches(slot, spoken.text)[spoken.occurrence] ?? [];
+    this.#layer(slot, 'spokenHits', 'spoken-layer').replaceChildren(
+      ...this.#boxes(slot, rects, 'spoken-hit'),
+    );
+    const first = rects[0];
+    const last = rects.at(-1);
+    if (!first || !last) return;
+    const view = this.#scroller.getBoundingClientRect();
+    if (first.top < view.top || last.bottom > view.bottom) this.#reveal(first);
   }
 
   /** Cancels any drawing and frees the canvas memory. Safe to call on any slot. */

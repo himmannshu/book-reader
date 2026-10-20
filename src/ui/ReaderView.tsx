@@ -44,6 +44,8 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
+import { browserSpeaker, type Speaker } from './speech';
+import { SPEEDS, useReadAloud } from './useReadAloud';
 import { VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
@@ -86,6 +88,8 @@ interface ReaderViewProps {
   readingStates: ReadingStateStore;
   /** Voice notes (phase 15); without one, the reader offers none. */
   voiceNotes?: VoiceNoteStore;
+  /** Speech for reading aloud (phase 16); the browser's own by default. */
+  speaker?: Speaker;
   /** Where the reader puts its toolbar (the app's header), so the reader has one bar. */
   toolsSlot?: HTMLElement | null;
   /** The theme, for the Display menu on narrow screens. */
@@ -112,6 +116,7 @@ export function ReaderView({
   notes,
   readingStates,
   voiceNotes = NO_VOICE_NOTES,
+  speaker: givenSpeaker,
   initialState = null,
   toolsSlot = null,
   theme = 'light',
@@ -459,6 +464,13 @@ export function ReaderView({
   const highlightList = marked.items ?? NO_HIGHLIGHTS;
   const written = useNotes({ bookId, syncVersion, store: notes, highlights: highlightList, now });
   const voice = useVoiceNotes({ bookId, store: voiceNotes, highlights: highlightList, now, newId });
+  const [defaultSpeaker] = useState(browserSpeaker);
+  const listen = useReadAloud({
+    doc,
+    viewer: viewerRef,
+    speaker: givenSpeaker ?? defaultSpeaker,
+    onError: setAnnotationError,
+  });
   const voiceUnavailableReason =
     bookId === null ? 'Voice notes work once the book is saved on this device.' : null;
 
@@ -712,6 +724,15 @@ export function ReaderView({
         onClick={() => togglePanel('notes')}
       />
       <ToolButton
+        icon="listen"
+        label="Listen"
+        aria-pressed={listen.state.status !== 'idle'}
+        onClick={() => {
+          if (listen.state.status === 'idle') void listen.start();
+          else listen.stop();
+        }}
+      />
+      <ToolButton
         ref={searchButtonRef}
         icon="search"
         label="Search"
@@ -809,6 +830,42 @@ export function ReaderView({
           onClick={marked.onPagesClick}
           onKeyDown={onPagesKeyDown}
         />
+        {listen.state.status !== 'idle' && (
+          <div className="player-bar" role="toolbar" aria-label="Read aloud">
+            <span className="player-status" role="status">
+              {listen.state.status === 'reading' ? 'Reading' : 'Paused on'} page{' '}
+              {listen.state.pageIndex + 1}
+            </span>
+            {listen.state.status === 'reading' ? (
+              <ToolButton icon="pause" label="Pause" className="icon-only" onClick={listen.pause} />
+            ) : (
+              <ToolButton
+                icon="play"
+                label="Resume"
+                className="icon-only"
+                onClick={listen.resume}
+              />
+            )}
+            <ToolButton
+              icon="stop"
+              label="Stop reading"
+              className="icon-only"
+              onClick={listen.stop}
+            />
+            <select
+              className="picker"
+              aria-label="Speed"
+              value={String(listen.rate)}
+              onChange={(event) => listen.changeRate(Number(event.currentTarget.value))}
+            >
+              {SPEEDS.map((speed) => (
+                <option key={speed} value={String(speed)}>
+                  {speed}×
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {narrow && searchCurrent !== null && openPanel !== 'search' && searchResults.length > 0 && (
           <div className="search-bar" role="toolbar" aria-label="Search matches">
             <ToolButton

@@ -1170,3 +1170,53 @@ body {
     opacity: 0.3;
   }
 }
+
+/* The sentence being read aloud (phase 16). */
+.spoken-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.spoken-hit {
+  position: absolute;
+  background: rgb(61 140 255 / 22%);
+  border-bottom: 2px solid rgb(61 110 200 / 70%);
+}
+
+/* Read aloud (phase 16). */
+.player-bar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: calc(100% - 2 * var(--space-4));
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  transform: translateX(-50%);
+}
+
+.player-status {
+  margin-right: var(--space-2);
+  font-size: var(--text-s);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Seven 44 px tools need 308 px: on the narrowest phones, trim the bar's padding and gaps. */
+@media (max-width: 359px) {
+  .toolbar {
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+  }
+
+  .toolbar .reader-tools {
+    gap: 0;
+  }
+}

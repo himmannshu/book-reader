@@ -89,4 +89,12 @@ Settings → Billing → Actions minutes used this month.
 - [ ] Decide: should voice notes reach your other devices? (They stay on the device that recorded
       them for now. Syncing would store the audio in R2, a few MB per note, within the 9 GB cap.)
 
+## Phase 16: Listen to a book (branch `phase-16-listen-to-book`)
+
+- [ ] Mac, iPad, iPhone: open a real book in the middle, press Listen (speaker icon). It reads from
+      the top of the window, the sentence is marked in blue, and the view follows to later pages.
+- [ ] Pause and Resume (it repeats the sentence it was on), Stop, and the speed menu.
+- [ ] iPhone: does it keep reading with the screen locked? (Safari may stop; tell the agent.)
+- [ ] Is the default voice fine, or would you like to choose one?
+
 <!-- Later phases append their sections below. -->
