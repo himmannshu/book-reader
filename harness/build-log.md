@@ -1512,3 +1512,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Evaluator: harness/code_review/phase-12-review.md, FAIL (escaping "1." showed a backslash; CI red).
 - Fixes: escaping (unit tests red then green), empty chapter headings, export reasons when loading failed, error
   message on a failed export, browser-specific download-name assertion. Unit 325; chromium export + notes 20/20.
+
+### 2026-10-20 13:25 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39391982795 on 36073e0 → success (08:14–08:34Z).
+- Contract items 1–6 have evidence; item 7 (devices, layout confirmation) waits on the user. F-014 → passing.
