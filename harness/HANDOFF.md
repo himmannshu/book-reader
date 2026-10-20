@@ -70,15 +70,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 20:23 EDT
+Snapshot 2026-10-19 20:32 EDT
 - Branch: main
-- HEAD: f342920 phase 08: record merge, production deploy and handoff for the install check
+- HEAD: 85cfca5 phase 09: split into 09a/09b; 09a plan and contract (planning docs only)
 - Uncommitted files: 0
 - Last verify: PASS at 2026-10-19 20:22 EDT (commit e9a9c00)
 - Recent commits:
+    85cfca5 phase 09: split into 09a/09b; 09a plan and contract (planning docs only)
+    82c7860 phase 08: refresh handoff snapshot
     f342920 phase 08: record merge, production deploy and handoff for the install check
     e9a9c00 Merge branch 'phase-08-installable-and-hosted': installable, offline, hosted behind Access
     03f5dcd phase 08: item 11: production and previews require the email-code login
-    2ad8f8f phase 08: deploy guide: current One-time PIN location and preview protection
-    5733233 phase 08: log public preview finding and hosted headers check
 <!-- AUTO:END -->
