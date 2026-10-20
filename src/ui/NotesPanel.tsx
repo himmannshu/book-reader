@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import type { Highlight } from '../core/highlights';
 import { validNoteText, type Note, type NoteTarget } from '../core/notes';
 import type { useNotes } from './useNotes';
@@ -93,6 +93,7 @@ export function NotesPanel({
   onChoose,
   onExport,
   exportUnavailableReason = null,
+  children,
 }: {
   id: string;
   notes: ReturnType<typeof useNotes>;
@@ -104,6 +105,8 @@ export function NotesPanel({
   onExport?(): void;
   /** Why export can't run yet, shown under the button; null when it can. */
   exportUnavailableReason?: string | null;
+  /** More sections after the notes (voice notes, phase 15). */
+  children?: ReactNode;
 }) {
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
@@ -196,6 +199,7 @@ export function NotesPanel({
           ))}
         </ul>
       )}
+      {children}
       {/* Last, so arrow keys go from Add note straight to the notes. */}
       {onExport && (
         <>

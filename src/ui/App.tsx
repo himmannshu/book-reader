@@ -25,6 +25,7 @@ import {
   type NoteStore,
   type Preferences,
   type ReadingStateStore,
+  type VoiceNoteStore,
 } from '../storage/types';
 import { downloadBook } from '../sync/downloader';
 import { FileError } from '../sync/file-client';
@@ -129,6 +130,7 @@ export function App({
   notes = defaultStores.notes,
   readingStates = defaultStores.readingStates,
   covers = defaultStores.covers,
+  voiceNotes = defaultStores.voiceNotes,
   preferences = defaultPreferences,
   sync = defaultSync,
 }: {
@@ -139,6 +141,7 @@ export function App({
   notes?: NoteStore;
   readingStates?: ReadingStateStore;
   covers?: CoverStore;
+  voiceNotes?: VoiceNoteStore;
   preferences?: Preferences;
   sync?: SyncSetup | null;
 }) {
@@ -572,6 +575,7 @@ export function App({
           highlights={user.highlights}
           notes={user.notes}
           readingStates={readingStates}
+          voiceNotes={voiceNotes}
           initialState={book.readingState}
           toolsSlot={toolsSlot}
           theme={theme}

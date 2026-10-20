@@ -25,7 +25,13 @@ import {
   type ZoomSetting,
 } from '../core/reading-state';
 import type { OutlineItem, PdfDoc } from '../engine/types';
-import type { BookmarkStore, HighlightStore, NoteStore, ReadingStateStore } from '../storage/types';
+import type {
+  BookmarkStore,
+  HighlightStore,
+  NoteStore,
+  ReadingStateStore,
+  VoiceNoteStore,
+} from '../storage/types';
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
@@ -37,6 +43,8 @@ import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
 import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
 import { SearchPanel } from './SearchPanel';
+import { useVoiceNotes } from './useVoiceNotes';
+import { VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
 
@@ -48,6 +56,11 @@ const DISPLAY_ID = 'display-menu';
 /** Ctrl+wheel distance (px) for one zoom step: one mouse notch, or a short trackpad pinch. */
 const WHEEL_STEP = 50;
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
+const NO_VOICE_NOTES: VoiceNoteStore = {
+  list: async () => [],
+  put: async () => {},
+  remove: async () => {},
+};
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
 const ZOOM_CHOICES: readonly ZoomSetting[] = ['fit-width', 'fit-page', ...ZOOM_LEVELS];
@@ -73,6 +86,8 @@ interface ReaderViewProps {
   notes: NoteStore;
   /** Where each book was left on this device. */
   readingStates: ReadingStateStore;
+  /** Voice notes (phase 15); without one, the reader offers none. */
+  voiceNotes?: VoiceNoteStore;
   /** Where the reader puts its toolbar (the app's header), so the reader has one bar. */
   toolsSlot?: HTMLElement | null;
   /** The theme, for the Display menu on narrow screens. */
@@ -98,6 +113,7 @@ export function ReaderView({
   highlights,
   notes,
   readingStates,
+  voiceNotes = NO_VOICE_NOTES,
   initialState = null,
   toolsSlot = null,
   theme = 'light',
@@ -454,6 +470,29 @@ export function ReaderView({
   });
   const highlightList = marked.items ?? NO_HIGHLIGHTS;
   const written = useNotes({ bookId, syncVersion, store: notes, highlights: highlightList, now });
+  const voice = useVoiceNotes({ bookId, store: voiceNotes, highlights: highlightList, now, newId });
+  const voiceUnavailableReason =
+    bookId === null ? 'Voice notes work once the book is saved on this device.' : null;
+
+  function recordVoiceNote(target: NoteTarget) {
+    written.request(() => {
+      marked.dismiss();
+      setOpenPanel('notes');
+      void voice.start(target);
+    });
+  }
+
+  function goToNoteTarget(target: NoteTarget) {
+    const passage =
+      target.kind === 'highlight'
+        ? highlightList.find((highlight) => highlight.id === target.highlightId)
+        : undefined;
+    const rect = passage?.rects[0];
+    if (rect) viewerRef.current?.scrollToRect(rect);
+    else viewerRef.current?.scrollToPage(target.pageIndex);
+    if (window.matchMedia(NARROW_QUERY).matches) setOpenPanel(null);
+    scrollerRef.current?.focus({ preventScroll: true });
+  }
   useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
 
   // Search (phase 13). Matches stay marked while there is a query, even with the panel closed.
@@ -563,7 +602,10 @@ export function ReaderView({
         (note) => note.target.kind === 'highlight' && note.target.highlightId === id,
       );
       const remove = async () => {
-        if (await marked.removeHighlight(id)) written.forgetHighlight(id);
+        if (await marked.removeHighlight(id)) {
+          written.forgetHighlight(id);
+          voice.forgetHighlight(id);
+        }
       };
       if (attached)
         written.ask({
@@ -745,7 +787,19 @@ export function ReaderView({
             onChoose={chooseNote}
             onExport={() => void exportAnnotations()}
             exportUnavailableReason={exportUnavailableReason}
-          />
+          >
+            <VoiceNotes
+              voice={voice}
+              currentPage={currentPage}
+              unavailableReason={voiceUnavailableReason}
+              quoteFor={(target) =>
+                target.kind === 'highlight'
+                  ? highlightList.find((highlight) => highlight.id === target.highlightId)?.quote
+                  : undefined
+              }
+              onGoTo={goToNoteTarget}
+            />
+          </NotesPanel>
         )}
         {openPanel === 'search' && (
           <SearchPanel
@@ -801,6 +855,15 @@ export function ReaderView({
             const highlight = highlightList.find((item) => item.id === id);
             if (highlight)
               openNote({ kind: 'highlight', pageIndex: highlight.pageIndex, highlightId: id });
+          }}
+          onVoiceNote={(id) => {
+            const highlight = highlightList.find((item) => item.id === id);
+            if (highlight)
+              recordVoiceNote({
+                kind: 'highlight',
+                pageIndex: highlight.pageIndex,
+                highlightId: id,
+              });
           }}
           noteLabel={
             marked.action?.kind === 'remove' &&

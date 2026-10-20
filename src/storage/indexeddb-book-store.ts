@@ -9,6 +9,7 @@ import { sortByPosition, type Highlight } from '../core/highlights';
 import { sortByRecentlyOpened, titleFromFileName } from '../core/library';
 import { sortNotes, validNote, type Note } from '../core/notes';
 import { validReadingState, type ReadingState } from '../core/reading-state';
+import { validVoiceNote, type VoiceNote } from '../core/voice-notes';
 import { nextStamp, shouldApply, type SyncItem, type SyncKind } from '../core/sync';
 import {
   StorageError,
@@ -24,6 +25,7 @@ import {
   type ReadingStateStore,
   type SyncStore,
   type UploadRecord,
+  type VoiceNoteStore,
 } from './types';
 
 /** False where the browser (or the unit-test environment) has no IndexedDB. */
@@ -31,7 +33,7 @@ export const indexedDBAvailable = typeof globalThis.indexedDB !== 'undefined';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 8;
+export const DB_VERSION = 9;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
 const BOOKMARKS = 'bookmarks';
@@ -42,12 +44,23 @@ const SYNC_STATE = 'syncState';
 const UPLOADS = 'uploads';
 const READING = 'readingState';
 const COVERS = 'covers';
+const VOICE = 'voiceNotes';
 /** Stores of items that belong to a book; each has an index on `bookId`. */
 const PER_BOOK = [BOOKMARKS, HIGHLIGHTS, NOTES];
 const BY_BOOK = 'bookId';
 const BY_HIGHLIGHT = 'highlightId';
 const BY_PENDING = 'pending';
-const ALL_STORES = [BOOKS, FILES, ...PER_BOOK, SYNC_META, SYNC_STATE, UPLOADS, READING, COVERS];
+const ALL_STORES = [
+  BOOKS,
+  FILES,
+  ...PER_BOOK,
+  SYNC_META,
+  SYNC_STATE,
+  UPLOADS,
+  READING,
+  COVERS,
+  VOICE,
+];
 
 const STORE_OF: Record<SyncKind, string> = {
   book: BOOKS,
@@ -211,6 +224,19 @@ function upgrade(db: IDBDatabase, oldVersion: number, tx: IDBTransaction): void 
     // Phase 11: a picture of page 1 per book, drawn on this device. Not synced.
     db.createObjectStore(COVERS, { keyPath: 'bookId' });
   }
+  if (oldVersion < 9) {
+    // Phase 15: voice notes, on this device only.
+    const voice = db.createObjectStore(VOICE, { keyPath: 'id' });
+    voice.createIndex(BY_BOOK, 'bookId');
+    voice.createIndex(BY_HIGHLIGHT, 'target.highlightId');
+  }
+}
+
+/** Deletes the voice notes found by an index lookup (by book or by highlight). */
+async function deleteVoiceNotes(tx: IDBTransaction, index: string, key: string): Promise<void> {
+  const store = tx.objectStore(VOICE);
+  const ids = (await request(store.index(index).getAllKeys(key))) as string[];
+  for (const id of ids) store.delete(id);
 }
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -237,6 +263,7 @@ export interface IndexedDBStores {
   files: FileTransferStore;
   readingStates: ReadingStateStore;
   covers: CoverStore;
+  voiceNotes: VoiceNoteStore;
 }
 
 /** All stores share one database connection. */
@@ -423,8 +450,9 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       guard(async () => {
         const me = await deviceId();
         const database = await db();
-        const names = [BOOKS, FILES, ...PER_BOOK, SYNC_META, UPLOADS, READING, COVERS];
+        const names = [BOOKS, FILES, ...PER_BOOK, SYNC_META, UPLOADS, READING, COVERS, VOICE];
         await atomic(database, names, async (tx) => {
+          await deleteVoiceNotes(tx, BY_BOOK, id);
           tx.objectStore(BOOKS).delete(id);
           tx.objectStore(FILES).delete(id);
           tx.objectStore(UPLOADS).delete(id);
@@ -630,6 +658,7 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
                 tx.objectStore(UPLOADS).delete(item.id);
                 tx.objectStore(READING).delete(item.id);
                 tx.objectStore(COVERS).delete(item.id);
+                await deleteVoiceNotes(tx, BY_BOOK, item.id);
                 await deleteAnnotationsOf(tx, item.id, undefined);
               }
             } else if (typeof item.data === 'object' && item.data !== null) {
@@ -755,11 +784,53 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       }),
   };
 
+  const voiceNotes: VoiceNoteStore = {
+    list: (bookId) =>
+      guard(async () => {
+        const database = await db();
+        const rows = (await request(
+          database.transaction(VOICE).objectStore(VOICE).index(BY_BOOK).getAll(bookId),
+        )) as unknown[];
+        return rows.filter(validVoiceNote);
+      }),
+
+    put: (note) =>
+      guard(async () => {
+        if (!validVoiceNote(note)) throw new StorageError('unknown', 'Malformed voice note');
+        const { id, bookId, target, audio, type, durationMs, createdAt } = note;
+        const row: VoiceNote = {
+          id,
+          bookId,
+          target: { ...target },
+          audio,
+          type,
+          durationMs,
+          createdAt,
+        };
+        const database = await db();
+        await atomic(database, [BOOKS, VOICE], async (tx) => {
+          if ((await request(tx.objectStore(BOOKS).getKey(bookId))) === undefined) {
+            throw new StorageError('not-found', `No book ${bookId}`);
+          }
+          tx.objectStore(VOICE).put(row);
+        });
+      }),
+
+    remove: (id) =>
+      guard(async () => {
+        const database = await db();
+        const tx = database.transaction(VOICE, 'readwrite');
+        tx.objectStore(VOICE).delete(id);
+        await done(tx);
+      }),
+  };
+
   return {
     books,
     files,
     readingStates,
     covers,
+    voiceNotes,
     bookmarks: perBook<Bookmark>(BOOKMARKS, 'bookmark', sortByPage),
     highlights: {
       ...highlights,
@@ -767,11 +838,12 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
         guard(async () => {
           const me = await deviceId();
           const database = await db();
-          await atomic(database, [HIGHLIGHTS, NOTES, SYNC_META], async (tx) => {
+          await atomic(database, [HIGHLIGHTS, NOTES, SYNC_META, VOICE], async (tx) => {
             const passages = tx.objectStore(HIGHLIGHTS);
             const passage = (await request(passages.get(id))) as Highlight | undefined;
             if (!passage) return;
             passages.delete(id);
+            await deleteVoiceNotes(tx, BY_HIGHLIGHT, id);
             await stamp(tx, me, 'highlight', id, passage.bookId, true);
             const items = tx.objectStore(NOTES);
             const noteIds = (await request(items.index(BY_HIGHLIGHT).getAllKeys(id))) as string[];

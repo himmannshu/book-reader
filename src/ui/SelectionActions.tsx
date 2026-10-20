@@ -13,6 +13,8 @@ interface SelectionActionsProps {
   onRemove(id: string): void;
   onNote?(id: string): void;
   noteLabel?: string;
+  /** Records a voice note on the chosen highlight (phase 15). */
+  onVoiceNote?(id: string): void;
   noteUnavailableReason?: string | null;
   removeUnavailableReason?: string | null;
 }
@@ -29,6 +31,7 @@ export function SelectionActions({
   onRemove,
   onNote,
   noteLabel = 'Add note',
+  onVoiceNote,
   noteUnavailableReason = null,
   removeUnavailableReason = null,
 }: SelectionActionsProps) {
@@ -81,6 +84,16 @@ export function SelectionActions({
               onClick={() => onNote(action.id)}
             >
               {noteLabel}
+            </button>
+          )}
+          {onVoiceNote && (
+            <button
+              type="button"
+              className="button"
+              disabled={noteUnavailableReason !== null}
+              onClick={() => onVoiceNote(action.id)}
+            >
+              Voice note
             </button>
           )}
           <button

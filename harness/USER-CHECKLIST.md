@@ -70,4 +70,12 @@ Settings → Billing → Actions minutes used this month.
       pages) takes about 2.7 s in the cloud machine; run `npm run test:perf` on the Mac to see
       yours, then tell the agent a number to put in e2e/perf/budgets.json.
 
+## Phase 15: Voice notes (branch `phase-15-voice-notes`)
+
+- [ ] Mac, iPad, iPhone: Notes → "Record voice note on this page". Allow the microphone once.
+      Speak, Stop and save; play it back in the Notes panel. Reload: still there.
+- [ ] Tap a highlight → "Voice note": the note lists with the highlighted words.
+- [ ] Decide: should voice notes reach your other devices? (They stay on the device that recorded
+      them for now. Syncing would store the audio in R2, a few MB per note, within the 9 GB cap.)
+
 <!-- Later phases append their sections below. -->

@@ -3,6 +3,7 @@ import type { Highlight } from '../core/highlights';
 import type { Note } from '../core/notes';
 import type { ReadingState, Theme } from '../core/reading-state';
 import type { ShelfSort } from '../core/shelf';
+import type { VoiceNote } from '../core/voice-notes';
 import type { SyncItem } from '../core/sync';
 
 // The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
@@ -64,6 +65,15 @@ export interface ReadingStateStore {
   put(state: ReadingState): Promise<void>;
   /** Every book's saved state (for the library's progress). Damaged records are left out. */
   list(): Promise<ReadingState[]>;
+}
+
+/** Voice notes (phase 15). On this device only; deleted with their book or highlight. */
+export interface VoiceNoteStore {
+  /** The book's voice notes (damaged records left out), in no particular order. */
+  list(bookId: string): Promise<VoiceNote[]>;
+  /** Saves a recording. Fails with not-found if the book isn't stored. */
+  put(note: VoiceNote): Promise<void>;
+  remove(id: string): Promise<void>;
 }
 
 /** A small picture of a book's first page (phase 11). */
