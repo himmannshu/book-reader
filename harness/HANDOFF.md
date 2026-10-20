@@ -6,25 +6,23 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-20
-- Phase 09b In progress on branch phase-09b-sync-book-files (not pushed). Items 1–11 observed
-  locally; verify PASS (unit 260, browser 175+1 skipped, sync 30, perf 8). Remaining: the user's R2
-  setup (docs/deploy.md section 2c: buckets book-reader-files / -preview, binding FILES), then a
-  push (CI + preview; item 12 and the logged-out curl for item 9), then item 13 on real devices.
-- Phase 09a merged and deployed; still In progress only for its annotation check on two devices
-  (item 13). One Access application covers production and previews (AUD starts 498b4e00).
+- Phase 09b In progress on branch phase-09b-sync-book-files, pushed (98f0915). Items 1–12 observed
+  (CI run 39367480019 green; preview deployed; /api/files redirects to Access when logged out).
+  R2 set up by the user. Remaining: item 13 on real devices using the preview
+  https://phase-09b-sync-book-files.book-reader-cpi.pages.dev
+- Phase 09a merged and deployed; still In progress only for its annotation check on two devices.
 - Phase 08 Complete with exceptions (iPhone offline deferred). Phases 14–16 added for later.
 
 ## In flight
 
-- Waiting on the user: R2 setup and an OK to push the 09b branch.
+- Waiting on the user: the two-device check on the 09b preview.
 
 ## Next action
 
-1. With the user's OK, push phase-09b-sync-book-files; check CI, the Pages check, and that
-   /api/files/<id> redirects to Access when logged out.
-2. User checks on the preview: add a book on the Mac, open it on the iPhone without importing
-   (largest real book). Then ask before merging into main.
-3. When the user reports 09a's annotation check, mark 09a Complete.
+1. If the preview can't download ("isn't set up here yet"), the Preview FILES binding is missing;
+   after a fix the user redeploys. "Still uploading": the Mac hasn't finished; keep the app open.
+2. After item 13 passes: mark 09b (and 09a, if its annotation check is reported) Complete, then
+   ask before merging into main (production deploy).
 
 ## Decisions worth remembering
 
@@ -69,19 +67,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 23:38 EDT
+Snapshot 2026-10-20 00:20 EDT
 - Branch: phase-09b-sync-book-files
-- HEAD: 2c6d7e4 phase 09b: R2 dashboard path in the deploy guide
-- Uncommitted files: 3
+- HEAD: 98f0915 phase 09b: evidence, F-010 passing locally, handoff
+- Uncommitted files: 2
 - Last verify: PASS at 2026-10-19 23:38 EDT (commit 2c6d7e4)
 - Recent commits:
+    98f0915 phase 09b: evidence, F-010 passing locally, handoff
     2c6d7e4 phase 09b: R2 dashboard path in the deploy guide
     50d5415 phase 09b: deploy guide for R2 (section 2c); AGENTS notes
     5832abb phase 09b: delete-everywhere e2e checks the cloud file is really gone
     846429e phase 09b: two-device e2e for book files (local R2); shared device fixture
-    ac31c49 phase 09b: Library downloads books from other devices; uploads after each sync; upload status
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/features.json
 <!-- AUTO:END -->

@@ -1353,3 +1353,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   v6); 11 perf above (the perf suite doesn't run uploads; uploads start only after a sync and never block opening);
   12 local PASS — CI pending (needs a push); 13 pending (user, after R2 setup and deploy).
 - F-010 → passing (local evidence; real devices pending).
+
+### 2026-10-20 00:22 EDT | Phase 09b | Claude Code (Opus 5.5) | Pushed; CI green; preview file API behind Access
+- The user reported R2 set up (buckets book-reader-files / book-reader-files-preview, FILES binding for Production
+  and Preview) and asked to push. Pushed phase-09b-sync-book-files at 98f0915.
+- CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39367480019 → success
+  (04:02:52Z–04:19:32Z UTC). Cloudflare Pages check on 98f0915 → success.
+- Item 9, deployed side: logged-out curl to https://phase-09b-sync-book-files.book-reader-cpi.pages.dev —
+  GET and HEAD /api/files/<id> and POST /api/files/<id>/uploads → 302 to the Access login.
+- Not yet observed: a signed-in upload/download against real R2 (item 13, the user's two-device check).
