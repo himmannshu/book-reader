@@ -1648,3 +1648,17 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - New useNotes unit tests 2 (failed delete retried; failed load + Retry); a mutation removing Retry's reload
   fails the second. Unit 379 passed. Chromium e2e 129 passed + the known pwa "installable" failure; sync
   (chromium) 15 passed; `VERIFY_BROWSER=safari` is refused.
+
+### 2026-10-20 19:55 UTC | Test-suite trim + phase 18 | Claude Code (Opus 5.5, cloud session) | Full CI green; merged
+- First full run on test-suite-trim (39482176177, 5f13b3a) → failure: WebKit hung on `navigator.serviceWorker.ready`
+  in the new offline-fonts test (both attempts); notes keyboard-focus test flaky (passed on retry; untouched).
+  Fix 5952687: one `loadControlled` helper (e2e/helpers.ts) that polls for an activated worker, used by the pwa
+  and design-system offline tests; chromium 3× repeat green.
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39483921300 on 5952687 → success. Wall time
+  12.0 min (was 23.5 for main's last full run): chromium job 7.5 min (static, unit, browser, sync, perf), webkit
+  job 12.0 min including a one-time 1-min browser download (empty per-engine cache). Actions minutes ≈ 19.5
+  (was 23.5).
+- The user asked to merge and complete phase 18: PLANS row 18 → Complete (device checks continue in use, as for
+  10–17); main fast-forwarded to test-suite-trim (phase 18 + trim). docs-readme stays unmerged (GIF to come).
+- `phase-10-reading-comfort-k8v7pk` could not be deleted from here (the session's git proxy drops branch
+  deletions; no delete tool); its two commits live on docs-readme and phase-18. The user deletes it on GitHub.

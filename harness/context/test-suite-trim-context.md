@@ -45,5 +45,9 @@ about 10 of 16 minutes, jsdom built for 44 files).
 ## Effect
 
 - Browser runs per full pass: 304 → 252; sync 30 → 27; two fixed waits gone.
+- CI full run (39483921300): wall 23.5 → 12.0 min; chromium job 7.5 min, webkit job 12.0 min (incl. a one-time
+  browser download); Actions minutes ≈ 23.5 → 19.5.
+- Found on the way: WebKit can hang on `serviceWorker.ready`; offline tests share `loadControlled` in
+  e2e/helpers.ts, which polls for an activated worker.
 - Not done: two Playwright workers in CI (timing tests such as the 100-book shelf may flake on two
   cores; try later if wanted), merging the overlapping two-device sync tests.

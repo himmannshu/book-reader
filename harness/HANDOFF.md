@@ -5,16 +5,14 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20.
-- Phases 00–17 Complete (10–17 merged into main 14de167 on 2026-10-20).
-- Phases 18–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
+- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20. The user is moving the work to a
+  local session on their own computer.
+- Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
+  main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
+- Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
   (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
-- Phase 18 (Design foundations): built on `phase-18-design-foundations` (cut from main); evaluator
-  PASS; full CI green (run 39477809896). Waiting on the user's device check and merge.
-- Test-suite trim (the user asked, 2026-10-20): branch `test-suite-trim`, stacked on phase 18.
-- Branch `docs-readme` holds the new README alone; the user merges it later (with a demo GIF).
-- Branch `phase-10-reading-comfort-k8v7pk` is merged and has two stray commits (README, plan) that
-  also live on the branches above; the user decides whether to delete it.
+- Branch `docs-readme` holds the new README alone; merge it when the demo GIF is ready.
+- Branch `phase-10-reading-comfort-k8v7pk` is merged and stale; the user deletes it on GitHub.
 - Everything the user must check is in harness/USER-CHECKLIST.md.
 
 ## Standing instructions from the user (2026-10-20; ended with the merge of 10–17)
@@ -53,16 +51,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Test-suite trim on `test-suite-trim` (see its build-log entry): full CI to run there.
-- Cloud environment notes: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm
-  stands in (build log 05:45 UTC); perf timings here are noisy, so only before/after comparisons
-  against main were made (worktree /home/user/book-reader-p17 is at main); budget evidence = full
-  CI runs. The pwa "installable" e2e always fails on this machine.
+- Nothing running.
+- Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). WebKit and the
+  perf budgets run locally now (the cloud container could not run them). Never run perf in two
+  places at once.
 
 ## Next action
 
-1. Finish and record the test-suite trim; then wait for the user (device check of phase 18, merges,
-   approval of the phase 19 plan before any phase 19 code).
+1. Phase 19 (Reader chrome): write harness/build/phase-19-reader-chrome.md and its contract, post
+   the plan to the user and wait for approval before code (AGENTS.md). Cut `phase-19-reader-chrome`
+   from main. Design references: harness/context/design-system/components/ReaderToolbar.md,
+   ReadingSettings.md, PagePill.md, SegmentedControl.md, and the README's "Screens, composed".
+2. Watch: the WebKit notes keyboard-focus test ("keyboard newline, save, cancel/delete confirmation
+   and jump keep usable focus") was flaky once in CI.
 
 ## Decisions worth remembering
 
