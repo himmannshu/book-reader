@@ -1241,3 +1241,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
   AGENTS.md (test:sync, functions/, src/sync/, fetch rule, no wrangler.toml); phase 09a context file.
 - Remaining: CI on the branch (needs the user's OK to push; a push also deploys a preview), the user's D1 setup,
   then deploy and item 13 (real devices).
+
+### 2026-10-19 21:36 EDT | Phase 09a | Claude Code (Opus 5.5) | Highlights in the two-device test; F-016
+- Gap found by me against contract item 1 (it names highlights; the e2e covered bookmarks and notes): the first sync
+  test now also highlights text on device A (text-4-pages.pdf) and expects a highlight box on B. Passed in chromium
+  and webkit; break "highlights not applied remotely" → failed; reverted. Full sync suite 14/14.
+- F-016 → passing (local evidence; real devices pending, item 13).

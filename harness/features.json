@@ -117,8 +117,8 @@
       "id": "F-016",
       "phase": "09a",
       "description": "Bookmarks, highlights and notes made on one device appear on another device that has the same book, and deletions reach it too",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-19 local: e2e/sync/sync.spec.ts (two devices, wrangler pages dev + local D1) passes in chromium+webkit: bookmarks, highlights and notes reach device B; deletions reach B; later edit wins. Mutation checks fail as expected. Not yet checked on real devices (contract item 13)."
     }
   ]
 }

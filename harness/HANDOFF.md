@@ -6,20 +6,23 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 08 Complete with recorded exceptions (contract Amendment 1): the installed iPhone app did not
-  work offline; the user deprioritized offline reading. Production: https://book-reader-cpi.pages.dev
-  (behind Access, email one-time code; previews too).
-- Next: phase 09a (planned, contract approved), then 09b. The user asked to move to phase 09 now.
+- Phase 09a In progress on branch phase-09a-sync-library-and-annotations (not pushed).
+  Items 1–11 observed locally; verify PASS (unit 212, browser 175+1 skipped, sync 14, perf 8).
+  Remaining: item 12's CI part (push needs the user's OK; a push also deploys a preview) and
+  item 13 (real devices after the user's D1 setup, docs/deploy.md section 2b).
+- Phase 08 Complete with exceptions (iPhone offline deferred). Phase 09b planned as an outline.
 
 ## In flight
 
-- Second deploy pushed for item 6's real-world part: the user may report whether the installed app
-  shows "A new version is ready."
+- Waiting on the user: D1 setup (two databases, DB binding, ACCESS_TEAM_DOMAIN / ACCESS_AUD per
+  environment) and an OK to push the branch.
 
 ## Next action
 
-1. Build phase 09a per harness/build/phase-09a-sync-library-and-annotations.md and its approved
-   contract, on branch phase-09a-sync-library-and-annotations. Then 09b (plan it in detail first).
+1. With the user's OK, push the branch: CI run plus a preview deploy. Check that /api/sync is
+   behind Access when logged out (curl).
+2. After the user's D1 setup: the user checks sync on two real devices (item 13). Then mark 09a
+   Complete, ask before merging into main (production deploy), then plan 09b in detail.
 
 ## Decisions worth remembering
 
