@@ -88,6 +88,10 @@ If you are about to stop for any reason, follow harness/prompts/04-handoff.md.
 - Sync tests (two devices, local D1): `npm run test:sync` (playwright.sync.config.ts runs
   `wrangler pages dev` on port 8788 with local D1; no Cloudflare account needed)
 - What verify runs: `scripts/verify.local.sh` (lint → format → types → unit → browser → sync → perf)
+- CI (.github/workflows/verify.yml; private repo, so Actions minutes are limited): a branch push
+  runs quick checks only (lint, format, types, unit). The full suite runs on pushes to `main`, on
+  pull requests, and on demand. Before merging a phase, run it on the branch and record the run:
+  `gh workflow run verify.yml --ref <branch>` (a phase's "CI is green" means this run).
 
 ## Conventions
 
