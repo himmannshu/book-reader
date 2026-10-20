@@ -1632,3 +1632,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Budget evidence = the full CI run.
 - Screenshots checked in all three themes at 1280 px and on an iPhone 13 emulation; the compact empty state's
   text was centred oddly and was fixed.
+
+### 2026-10-20 19:20 UTC | Phase 18 | Claude Code (Opus 5.5, cloud session) | Review PASS; full CI green
+- Evaluator: harness/code_review/phase-18-review.md, PASS conditional on CI; non-blocking findings fixed or answered
+  in the author appendix (abb4dd9).
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39477809896 on abb4dd9 → success (18:47–19:10Z):
+  browser tests chromium + webkit, sync 30 passed, perf PASS. Perf against main's last full run (39425682679):
+  firstPageMs chromium 514 vs 503, webkit 1468 vs 1799; jumpMs 69 vs 41 (chromium), 687 vs 1051 (webkit);
+  p95 33.3 vs 33.4 (chromium), 411 vs 543 (webkit); within CI noise, no regression (review N8).
+- Contract items 1–13 have evidence; item 14 (devices) waits on the user (USER-CHECKLIST, phase 18).
