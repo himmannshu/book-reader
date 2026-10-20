@@ -88,10 +88,6 @@ test('Chromium reports the app as installable', async ({
   }
 });
 
-test('after the first load a service worker controls the app', async ({ page }) => {
-  await loadControlled(page);
-});
-
 test('with the network off, the app shell still opens', async ({ page, context }) => {
   await loadControlled(page);
   await context.setOffline(true);

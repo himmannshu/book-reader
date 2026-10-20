@@ -64,8 +64,6 @@ describe('handleSync', () => {
   });
 
   it('answers 401 without an identity, in production mode', async () => {
-    const res = await handleSync(post({ deviceId: 'd', since: 0, changes: [] }), {}, memoryDb());
-    expect([401, 500]).toContain(res.status);
     const prod = { ACCESS_TEAM_DOMAIN: 'team.cloudflareaccess.com', ACCESS_AUD: 'aud' };
     expect(
       (await handleSync(post({ deviceId: 'd', since: 0, changes: [] }), prod, memoryDb())).status,

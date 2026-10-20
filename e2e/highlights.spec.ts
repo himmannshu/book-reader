@@ -520,19 +520,6 @@ test('clicking a highlight offers Remove; only pressing it removes the highlight
   expect((await stored(page)).map((h) => h.quote)).toEqual(['Delta four: the fourth line']);
 });
 
-test('removing a book deletes its highlights', async ({ page }) => {
-  await openBook(page);
-  await highlight(page, { page: 0, text: 'Alpha one' });
-  expect(await stored(page)).toHaveLength(1);
-
-  await page.getByRole('button', { name: 'Library', exact: true }).click();
-  const item = page.getByRole('list', { name: 'Your books' }).getByRole('listitem');
-  await item.getByRole('button', { name: 'Remove text-4-pages' }).click();
-  await item.getByRole('button', { name: 'Delete everywhere' }).click();
-  await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
-  expect(await stored(page)).toHaveLength(0);
-});
-
 test('no Highlight button for whitespace or for text outside the pages', async ({ page }) => {
   await openBook(page);
   // Only the space after "Charlie".

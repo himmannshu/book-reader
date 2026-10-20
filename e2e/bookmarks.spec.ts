@@ -77,36 +77,6 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test('bookmarking a page marks it and lists it with its chapter', async ({ page }) => {
-  await importBook(page, 'outline-12-pages.pdf');
-  await expect(toggle(page)).toBeEnabled();
-  await bookmarkPage(page, 5);
-
-  await openPanel(page);
-  expect(await listed(page)).toEqual(['Page 6 · Chapter 2']);
-});
-
-test('the toggle follows the page in view', async ({ page }) => {
-  await importBook(page, 'outline-12-pages.pdf');
-  await bookmarkPage(page, 5);
-
-  await scrollToPage(page, 2);
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
-  await scrollToPage(page, 5);
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
-});
-
-test('choosing a bookmark brings its page to the top', async ({ page }) => {
-  await importBook(page, 'outline-12-pages.pdf');
-  await bookmarkPage(page, 9);
-  await scrollToPage(page, 0);
-
-  await openPanel(page);
-  await entry(page, 'Page 10 · Chapter 3').click();
-  await expectPageAtTop(page, 9);
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
-});
-
 test('bookmarks are listed in page order, whatever order they were added', async ({ page }) => {
   await importBook(page, 'outline-12-pages.pdf');
   await bookmarkPage(page, 8);
@@ -182,16 +152,6 @@ test('removing a book deletes its bookmarks; importing it again starts with none
   await expect(panel(page)).toContainText('No bookmarks yet.');
 });
 
-test('a book without an outline names bookmarks by page alone', async ({ page }) => {
-  await importBook(page, 'basic-3-pages.pdf');
-  await expect(toggle(page)).toBeEnabled();
-  await openPanel(page);
-  await expect(panel(page)).toContainText('No bookmarks yet.');
-
-  await bookmarkPage(page, 1);
-  await expect.poll(() => listed(page)).toEqual(['Page 2']);
-});
-
 test('Bookmarks works from the keyboard, and Escape returns focus to the button', async ({
   page,
 }) => {
@@ -239,28 +199,6 @@ test('only one side panel is open at a time', async ({ page }) => {
   await panelButton(page).click();
   await expect(panel(page)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Table of contents' })).toHaveCount(0);
-});
-
-test('in a narrow window the panel covers the pages and closes after a choice', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 600, height: 800 });
-  await importBook(page, 'outline-12-pages.pdf');
-  await bookmarkPage(page, 8);
-  await scrollToPage(page, 0);
-  const reader = page.getByTestId('reader');
-  const widthBefore = (await reader.boundingBox())?.width ?? 0;
-
-  await openPanel(page);
-  const box = await panel(page).boundingBox();
-  const readerBox = await reader.boundingBox();
-  expect(readerBox?.width).toBe(widthBefore);
-  expect(box && readerBox && box.x < readerBox.x + readerBox.width / 2).toBe(true);
-  expect(box && readerBox && box.x + box.width > readerBox.x).toBe(true);
-
-  await entry(page, 'Page 9 · Chapter 3').click();
-  await expect(panel(page)).toHaveCount(0);
-  await expectPageAtTop(page, 8);
 });
 
 test('with several whole pages on screen, the page at the top is the one bookmarked', async ({

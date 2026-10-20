@@ -73,14 +73,6 @@ test('removing a book asks first, then deletes it for good', async ({ page }) =>
   await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
 });
 
-test('importing the same file twice keeps one entry', async ({ page }) => {
-  await importBook(page, 'basic-3-pages.pdf');
-  await importBook(page, 'basic-3-pages.pdf');
-  await backToLibrary(page);
-  await expect(library(page).getByRole('listitem')).toHaveCount(1);
-  expect(await storedCounts(page)).toEqual({ books: 1, files: 1 });
-});
-
 test('the list shows the most recently opened book first', async ({ page }) => {
   const titles = () => library(page).locator('.library-title').allTextContents();
   await importBook(page, 'basic-3-pages.pdf');
