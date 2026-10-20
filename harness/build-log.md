@@ -1177,3 +1177,20 @@ Contract evidence from this final canonical run (contract unchanged after approv
   redirect inside the installed app may interrupt the first load. Not investigated (deprioritized).
 - Phase 08 → Complete with the exceptions above (user direction). F-009 kept failing: automated tests pass, but
   the real iPhone fails offline (evidence in features.json).
+
+### 2026-10-19 20:56 EDT | Phase 09a | Claude Code (Opus 5.5) | Started (phase 08 closed); server side done
+- User: phase 08 offline check failed on iPhone; offline deprioritized; "move to phase 9 now (a and b)". Started 09a
+  on branch phase-09a-sync-library-and-annotations (from main bbdd999). Contract approved at planning.
+- Tooling (exact pins, free): wrangler 4.151.2, @cloudflare/workers-types 5.20261019.1 (dev), jose 6.2.12.
+- Probe: `wrangler pages dev dist --d1 DB=… --binding AUTH_MODE=dev` runs a TypeScript Pages Function with local D1
+  and persisted state, no account. Bindings are passed as flags; no wrangler.toml (a wrangler.toml would make
+  Pages take its configuration from the file instead of the dashboard).
+- src/core/sync.ts (shared rules: shouldApply last-write-wins with device tie-break, nextStamp): red (module
+  missing) → 10 tests green.
+- functions/: _lib/store.ts (schema v1, idempotent migrate, per-user atomic seq via INSERT … RETURNING,
+  applyChanges with book-deletion cascade, changesSince with paging and no echo), _lib/auth.ts (jose verify:
+  issuer https://<team>, audience ACCESS_AUD, email claim; dev mode only on localhost), _lib/handler.ts
+  (validation: kinds, ids, stamps, device match, ≤500 changes, ≤64 KB per item → 400), _lib/d1.ts, api/sync.ts.
+  Unit tests run on node:sqlite (functions/_lib/sqlite-test-db.ts). Red (modules missing) → 16 green.
+  tsconfig.functions.json (workers types + node) added to typecheck; Vitest includes functions/**.
+- Smoke in wrangler with local D1: push from A → {"items":[],"cursor":1}; pull from B → A's bookmark; "nope" → 400.
