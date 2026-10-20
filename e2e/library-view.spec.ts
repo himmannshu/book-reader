@@ -1,6 +1,6 @@
 // Phase 11: the library shelf. Covers, reading progress, sort and filter.
 import { expect, test, type Page } from '@playwright/test';
-import { bandColor, expectColorClose, importBook, pageSlot } from './helpers';
+import { bandColor, expectColorClose, importBook, openFixture, pageSlot } from './helpers';
 
 function shelf(page: Page) {
   return page.getByRole('list', { name: 'Your books' });
@@ -227,4 +227,40 @@ test('with 100 books the shelf shows within 1 s and filtering keeps up with typi
   );
   expect(await updated.jsonValue()).toBeLessThan(100);
   await expect(bookItem(page, 'Book 42').getByText('Page 43 of 100 · 43%')).toBeVisible();
+});
+
+/** How many covers are stored, straight from IndexedDB. */
+async function storedCovers(page: Page): Promise<number> {
+  return page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('book-reader');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const count = await new Promise<number>((resolve, reject) => {
+      const request = db.transaction('covers').objectStore('covers').count();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return count;
+  });
+}
+
+test('no cover is drawn while a book is open, even when opening one book after another', async ({
+  page,
+}) => {
+  await importBook(page, 'basic-3-pages.pdf');
+  // Open the next book straight from the reader, as when importing several in a row.
+  await openFixture(page, 'text-4-pages.pdf');
+  await expect(page.getByRole('status')).toHaveText('Saved on this device.');
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  // Longer than the worker's idle delay: nothing may happen while reading.
+  await page.waitForTimeout(2500);
+  expect(await storedCovers(page)).toBe(0);
+
+  await backToLibrary(page);
+  await expect.poll(() => storedCovers(page), { timeout: 15_000 }).toBe(2);
+  await expect(bookItem(page, 'basic-3-pages').locator('img.cover')).toBeVisible();
+  await expect(bookItem(page, 'text-4-pages').locator('img.cover')).toBeVisible();
 });

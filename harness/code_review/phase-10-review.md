@@ -150,3 +150,18 @@ cannot pass, for three reasons:
 
 Overall: **FAIL**. The fix list is B1–B3: get a green full CI run on HEAD, resolve the WebKit 400%
 stall, then the user's device check. N1 is a small change and is worth fixing in the same pass.
+
+## Appendix (author, 2026-10-20 06:50 UTC): blockers addressed
+
+- B1 (CI red): full CI run https://github.com/himmannshu/book-reader/actions/runs/39380276967 on 9b5e7ba →
+  success: unit 298, browser 203 passed + 1 skipped (chromium + webkit), sync 30, perf 8 (PASS; Linux WebKit
+  report-only by the existing policy).
+- B2 (WebKit 400% stall): the test now records frame gaps. CI WebKit at 400%: median 633 ms, max 675 ms per
+  frame, steady, while the same run's WebKit p95 at normal zoom is 541 ms (Chromium: median 17, max 33). Uniformly
+  slow software painting on the Linux runner, not a freeze; the test asserts no gap reaches 5 s and passes. Real
+  iPad/iPhone smoothness at 400% stays in the user's device check.
+- B3 (device check): pending, listed in harness/USER-CHECKLIST.md.
+- Non-blocking: failed position read now logged; custom zoom shown in the menu (unit test). Horizontal position,
+  phone toolbar height, inverted photos in Dark and fit-page redraws on iOS bar changes are deferred to phase 14
+  (context file).
+- Not re-reviewed by a fresh evaluator (cost); the evidence above is from CI.

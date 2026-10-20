@@ -1468,6 +1468,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Deferred to phase 14 (recorded in the context file): saving the horizontal position, phone toolbar height, photo
   inversion in Dark, fit-page redraws on iOS bar changes.
 
+### 2026-10-20 06:50 UTC | Phase 10 | Claude Code (Opus 5.5, cloud session) | Full CI green; phase 10 done except the device check
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39380276967 on 9b5e7ba → success (06:25–06:44Z):
+  unit 298; browser 203 passed, 1 skipped (chromium + webkit); sync 30; perf 8 passed, --- PASS. Perf table:
+  chromium firstPage 444, jump 35, p95 50.1, blank 0, canvas 67.1 (CI budgets ×4: enforced, pass); webkit 1591,
+  983, 541, 85.7%, 67.1 (report-only on Linux CI, as before). 400% frame gaps: chromium median 17 / max 33 ms;
+  webkit median 633 / max 675 ms (steady; no freeze).
+- Contract items 1–12 have evidence (cloud Chromium runs above plus this CI run); item 13 (devices) waits on the
+  user. features.json F-011, F-012 → passing. Review appendix added to harness/code_review/phase-10-review.md.
+
 ### 2026-10-20 06:55 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Built in a worktree on branch phase-11-library-view
 - Plan, contract and context written, approved by the agent under the user's standing instruction.
 - Unit tests first for storage (covers v8, reading-state list, v7 → v8 upgrade; 4 red until the store existed, then
@@ -1494,3 +1503,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
   phase 12 they cannot pass: no Search button). New report-only benchmark searchMs (no budget until the user
   agrees one; budgets.json untouched): 3657 ms, then 2661 ms after asking 4 pages ahead. Unit 329 passed;
   chromium e2e 113 passed + 1 environment failure (installability).
+
+### 2026-10-20 07:40 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL → fixes
+- Evaluator: harness/code_review/phase-11-review.md, FAIL. Blockers: cover work during reading (opening a second
+  book drew the first's cover; a background cover was not cancelled, first page 224 → 388 ms) and two cover jobs at
+  once (queue restarted on shelf changes). Full CI not yet run.
+- Fixes (see the review appendix): CoverWorker; unit tests red then green (5); new e2e red under a mutation that
+  removes the pauses (2 covers while reading), green with the fix. Unit 317 passed; chromium e2e 108 passed + 1
+  environment failure. Merged phase 10's close-out (0343e3d) into this branch.
