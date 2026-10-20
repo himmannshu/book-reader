@@ -1511,3 +1511,25 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Fixes (see the review appendix): CoverWorker; unit tests red then green (5); new e2e red under a mutation that
   removes the pauses (2 covers while reading), green with the fix. Unit 317 passed; chromium e2e 108 passed + 1
   environment failure. Merged phase 10's close-out (0343e3d) into this branch.
+
+### 2026-10-20 08:10 UTC | Phase 14 | Claude Code (Opus 5.5, cloud session) | Built on branch phase-14-ui-ux-design
+- Plan and contract written (phase file created from the template), approved by the agent under the standing
+  instruction. e2e/design.spec.ts written first: 12 red on the old UI (bar heights, touch targets at iPhone 13 and
+  iPad gen 7 emulation, 320/390 px overflow, contrast of control borders in all three themes, pinch, horizontal
+  place, phone search bar).
+- Built: one reader bar (tools portalled into the app header), icon set, Display menu on phones, 44 px touch
+  targets, darker control borders, notice as a toast, phone search bar, saved horizontal place (centreX), page
+  draw failure message (unit test red first), aria-disabled bookmark button with a visible reason.
+- Tests changed by design: comfort.spec "on a phone" opens Display first; ReaderView.test bookmark toggle uses
+  aria-disabled and a tap. Contract amendment 01: ctrl+wheel pinch dropped (non-passive wheel listener would make
+  Chrome scrolling wait for the main thread); Safari gesture pinch kept.
+- Checks (chromium, cloud): unit 334 passed; design 12/12; full e2e 126 passed + 1 environment failure.
+- Perf, alternating phase 13 and phase 14 runs with nothing else running: firstPage p13 384/383/389, p14
+  353/395/391; scroll p95 33.3 in 5 of 6 runs for both on this machine at that time (16.8 in the other). An earlier
+  loaded run (phase 15 tests running alongside) showed 392–506 ms and is not counted.
+
+### 2026-10-20 08:15 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39384034130 on ea94d2f → success (07:03–07:16Z).
+  The later commits on this branch (c552093, bf4b7d0) only repair Markdown merge conflicts (Markdown is outside the
+  format check), so the code is the one CI ran.
+- Contract items 1–11 have evidence; item 12 (devices) waits on the user. features.json F-013 → passing.

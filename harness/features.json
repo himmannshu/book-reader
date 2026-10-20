@@ -96,8 +96,8 @@
       "id": "F-013",
       "phase": "11",
       "description": "The library shows covers and reading progress, with sort and filter",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 e2e/library-view.spec.ts (covers from page 1 incl. background worker, placeholder, progress, sort/filter/remembered sort, 100 books shown < 1 s and filtered < 100 ms, no cover work while reading) passes in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39384034130 (chromium+webkit) on ea94d2f after the review fixes. Real-device check pending."
     },
     {
       "id": "F-014",

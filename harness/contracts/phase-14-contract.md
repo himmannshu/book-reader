@@ -29,4 +29,7 @@ reviewing agent approves it. After approval, only append clearly marked amendmen
 
 ## Amendments
 
-(none)
+- Amendment 01 (2026-10-20, agent under the standing instruction): item 6 now covers Safari gesture
+  events only. Ctrl+wheel (Chrome's trackpad pinch) was dropped because handling it requires a
+  non-passive wheel listener, which makes Chrome's wheel scrolling wait for the main thread
+  (speed is a feature, AGENTS.md). A test checks that ctrl+wheel is not intercepted.
