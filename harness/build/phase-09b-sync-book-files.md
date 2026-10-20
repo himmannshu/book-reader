@@ -1,6 +1,6 @@
 # Phase 09b: Sync book files
 
-- Status: In progress (planned in detail and approved 2026-10-19)
+- Status: Complete (2026-10-20; evidence in harness/build-log.md)
 - Branch: phase-09b-sync-book-files
 - Depends on: 09a
 

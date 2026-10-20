@@ -6,23 +6,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-20
-- Phase 09b In progress on branch phase-09b-sync-book-files, pushed (98f0915). Items 1–12 observed
-  (CI run 39367480019 green; preview deployed; /api/files redirects to Access when logged out).
-  R2 set up by the user. Remaining: item 13 on real devices using the preview
-  https://phase-09b-sync-book-files.book-reader-cpi.pages.dev
-- Phase 09a merged and deployed; still In progress only for its annotation check on two devices.
+- Phases 09a and 09b Complete (user-checked on real devices). 09a is in main; 09b is on branch
+  phase-09b-sync-book-files (pushed at 98f0915; later evidence commits local), not merged.
+- CI takes ~17 of its 20-minute timeout, and the private repo spends ~150 Actions minutes a day
+  at this pace (GitHub Free includes 2000 a month). Proposal to the user: full CI only before
+  merging and on main; quick checks on branch pushes.
 - Phase 08 Complete with exceptions (iPhone offline deferred). Phases 14–16 added for later.
 
 ## In flight
 
-- Waiting on the user: the two-device check on the 09b preview.
+- Waiting on the user: OK to merge 09b into main (production deploy), and a decision on CI.
 
 ## Next action
 
-1. If the preview can't download ("isn't set up here yet"), the Preview FILES binding is missing;
-   after a fix the user redeploys. "Still uploading": the Mac hasn't finished; keep the app open.
-2. After item 13 passes: mark 09b (and 09a, if its annotation check is reported) Complete, then
-   ask before merging into main (production deploy).
+1. With the user's OK: merge 09b into main, run verify, push main, watch CI.
+2. Then phase 10 (reading comfort) planning, when the user asks.
 
 ## Decisions worth remembering
 
@@ -67,18 +65,22 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 00:20 EDT
+Snapshot 2026-10-20 00:25 EDT
 - Branch: phase-09b-sync-book-files
-- HEAD: 98f0915 phase 09b: evidence, F-010 passing locally, handoff
-- Uncommitted files: 2
+- HEAD: 190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
+- Uncommitted files: 6
 - Last verify: PASS at 2026-10-19 23:38 EDT (commit 2c6d7e4)
 - Recent commits:
+    190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
     98f0915 phase 09b: evidence, F-010 passing locally, handoff
     2c6d7e4 phase 09b: R2 dashboard path in the deploy guide
     50d5415 phase 09b: deploy guide for R2 (section 2c); AGENTS notes
     5832abb phase 09b: delete-everywhere e2e checks the cloud file is really gone
-    846429e phase 09b: two-device e2e for book files (local R2); shared device fixture
 - Changed files:
+     M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
+     M harness/build/phase-09a-sync-library-and-annotations.md
+     M harness/build/phase-09b-sync-book-files.md
+     M harness/features.json
 <!-- AUTO:END -->

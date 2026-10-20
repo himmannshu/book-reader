@@ -1362,3 +1362,13 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Item 9, deployed side: logged-out curl to https://phase-09b-sync-book-files.book-reader-cpi.pages.dev —
   GET and HEAD /api/files/<id> and POST /api/files/<id>/uploads → 302 to the Access login.
 - Not yet observed: a signed-in upload/download against real R2 (item 13, the user's two-device check).
+
+### 2026-10-20 00:45 EDT | Phases 09a, 09b | Claude Code (Opus 5.5) | Complete (user-checked on real devices)
+- User report (09b item 13): on the 09b preview, a book imported on the Mac (page left open while it uploaded)
+  opened on the iPhone without importing; it downloaded and showed the Mac's highlights and notes.
+- That also observes 09a item 13's remaining part: annotations made on the Mac appeared on the iPhone. (Item 13
+  says "same book imported on both"; here the iPhone got the same book by download, which is the 09b path. The
+  annotation sync is the same mechanism.) Deletions across devices were reported on 2026-10-19.
+- Every 09a and 09b contract item now has observed evidence → both phases Complete (PLANS.md, phase files).
+  F-010 and F-016 evidence updated with the real-device checks.
+- 09b is not merged into main yet (a push to main deploys production; waiting for the user's OK).
