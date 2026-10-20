@@ -42,6 +42,7 @@ const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
+const APPLE = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
@@ -430,8 +431,9 @@ export function ReaderView({
   // Cmd/Ctrl+F opens the book's search instead of the browser's (which can't see the pages).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== 'f')
-        return;
+      // Cmd on Apple devices (where Ctrl+F moves the cursor in text fields), Ctrl elsewhere.
+      const command = APPLE ? event.metaKey : event.ctrlKey;
+      if (!command || event.altKey || event.key.toLowerCase() !== 'f') return;
       event.preventDefault();
       written.request(() => {
         marked.dismiss();

@@ -1524,3 +1524,10 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Evaluator: harness/code_review/phase-12-review.md, FAIL (escaping "1." showed a backslash; CI red).
 - Fixes: escaping (unit tests red then green), empty chapter headings, export reasons when loading failed, error
   message on a failed export, browser-specific download-name assertion. Unit 325; chromium export + notes 20/20.
+
+### 2026-10-20 09:00 UTC | Phase 13 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL → fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39387033790 → failure, only the WebKit export
+  download-name test inherited from phase 12 (fixed there).
+- Evaluator: harness/code_review/phase-13-review.md, FAIL on CI only; search behaviour all checked and passing.
+- Fixes: benchmark query and result check (searchMs 2672 ms, "1 match on 1 page"), capped page count, Cmd/Ctrl+F
+  per platform. Unit 333; chromium search + export 6/6.

@@ -16,8 +16,10 @@ function statusText(state: SearchState, pageCount: number): string {
     case 'done': {
       if (state.results.length === 0) return 'No matches.';
       const pages = new Set(state.results.map((r) => r.pageIndex)).size;
-      const count = `${state.results.length}${state.truncated ? '+' : ''}`;
-      return `${count} ${state.results.length === 1 ? 'match' : 'matches'} on ${pages} ${pages === 1 ? 'page' : 'pages'}`;
+      // When the list is cut short, both numbers are lower bounds.
+      const more = state.truncated ? '+' : '';
+      const count = `${state.results.length}${more}`;
+      return `${count} ${state.results.length === 1 ? 'match' : 'matches'} on ${pages}${more} ${pages === 1 && !more ? 'page' : 'pages'}`;
     }
   }
 }
