@@ -42,30 +42,32 @@ async function outlineTree(page: Page): Promise<Node[]> {
   });
 }
 
-test('Contents lists the outline in order, with chapters nested in their parts', async ({
-  page,
-}) => {
-  await openFixture(page, 'outline-12-pages.pdf');
-  await page.getByRole('button', { name: 'Contents' }).click();
-  await expect(entry(page, 'Appendix')).toBeVisible();
-  expect(await outlineTree(page)).toEqual([
-    {
-      title: 'Part One',
-      children: [
-        { title: 'Chapter 1', children: [] },
-        { title: 'Chapter 2', children: [] },
-      ],
-    },
-    {
-      title: 'Part Two',
-      children: [
-        { title: 'Chapter 3', children: [] },
-        { title: 'Missing section', children: [] },
-      ],
-    },
-    { title: 'Appendix', children: [] },
-  ]);
-});
+test(
+  'Contents lists the outline in order, with chapters nested in their parts',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await openFixture(page, 'outline-12-pages.pdf');
+    await page.getByRole('button', { name: 'Contents' }).click();
+    await expect(entry(page, 'Appendix')).toBeVisible();
+    expect(await outlineTree(page)).toEqual([
+      {
+        title: 'Part One',
+        children: [
+          { title: 'Chapter 1', children: [] },
+          { title: 'Chapter 2', children: [] },
+        ],
+      },
+      {
+        title: 'Part Two',
+        children: [
+          { title: 'Chapter 3', children: [] },
+          { title: 'Missing section', children: [] },
+        ],
+      },
+      { title: 'Appendix', children: [] },
+    ]);
+  },
+);
 
 test('an entry with a named destination jumps to the right page', async ({ page }) => {
   await openFixture(page, 'outline-12-pages.pdf');
@@ -75,15 +77,19 @@ test('an entry with a named destination jumps to the right page', async ({ page 
   await expectPageAtTop(page, 8);
 });
 
-test('an entry without a usable destination is disabled, without an error', async ({ page }) => {
-  await openFixture(page, 'outline-12-pages.pdf');
-  await page.getByRole('button', { name: 'Contents' }).click();
-  await expect(entry(page, 'Missing section')).toBeDisabled();
-  await expect(entry(page, 'Chapter 3')).toBeEnabled();
-  await expect(page.getByRole('alert')).toHaveCount(0);
-});
+test(
+  'an entry without a usable destination is disabled, without an error',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await openFixture(page, 'outline-12-pages.pdf');
+    await page.getByRole('button', { name: 'Contents' }).click();
+    await expect(entry(page, 'Missing section')).toBeDisabled();
+    await expect(entry(page, 'Chapter 3')).toBeEnabled();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  },
+);
 
-test('a book without an outline says so', async ({ page }) => {
+test('a book without an outline says so', { tag: '@any-engine' }, async ({ page }) => {
   await openFixture(page, 'basic-3-pages.pdf');
   await page.getByRole('button', { name: 'Contents' }).click();
   await expect(contents(page)).toContainText('This book has no table of contents.');

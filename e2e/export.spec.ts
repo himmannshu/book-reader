@@ -79,20 +79,26 @@ test('a book’s highlights and notes download as a Markdown file in book order'
   expect(note).toBeGreaterThan(quote);
 });
 
-test('export is unavailable until the book is saved, and says why', async ({ page }) => {
-  await page.goto('/');
-  // Saving the book is slowed down, so the reader shows before it has a stored id.
-  await page.addInitScript(() => {
-    const original = IDBObjectStore.prototype.put;
-    IDBObjectStore.prototype.put = function (...args: Parameters<typeof original>) {
-      if (this.name === 'bookFiles') throw new DOMException('slow', 'UnknownError');
-      return Reflect.apply(original, this, args);
-    };
-  });
-  await page.reload();
-  await page.getByLabel('Open PDF').setInputFiles('tests/fixtures/text-4-pages.pdf');
-  await expect(page.getByRole('alert')).toBeVisible();
-  await page.getByRole('button', { name: 'Notes' }).click();
-  await expect(page.getByRole('button', { name: 'Export highlights and notes' })).toBeDisabled();
-  await expect(page.getByText('Export works once the book is saved on this device.')).toBeVisible();
-});
+test(
+  'export is unavailable until the book is saved, and says why',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('/');
+    // Saving the book is slowed down, so the reader shows before it has a stored id.
+    await page.addInitScript(() => {
+      const original = IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put = function (...args: Parameters<typeof original>) {
+        if (this.name === 'bookFiles') throw new DOMException('slow', 'UnknownError');
+        return Reflect.apply(original, this, args);
+      };
+    });
+    await page.reload();
+    await page.getByLabel('Open PDF').setInputFiles('tests/fixtures/text-4-pages.pdf');
+    await expect(page.getByRole('alert')).toBeVisible();
+    await page.getByRole('button', { name: 'Notes' }).click();
+    await expect(page.getByRole('button', { name: 'Export highlights and notes' })).toBeDisabled();
+    await expect(
+      page.getByText('Export works once the book is saved on this device.'),
+    ).toBeVisible();
+  },
+);

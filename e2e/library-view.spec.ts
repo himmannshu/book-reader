@@ -123,37 +123,39 @@ test('each book shows its reading progress', async ({ page }) => {
   await expect(item.getByText('Page 151 of 300 · 50%')).toBeVisible();
 });
 
-test('sort and filter change what the shelf shows, and the sort is remembered', async ({
-  page,
-}) => {
-  for (const file of ['outline-12-pages.pdf', 'basic-3-pages.pdf', 'text-4-pages.pdf']) {
-    await importBook(page, file);
-  }
-  await backToLibrary(page);
-  // Recent first by default.
-  await expect
-    .poll(() => titles(page))
-    .toEqual(['text-4-pages', 'basic-3-pages', 'outline-12-pages']);
+test(
+  'sort and filter change what the shelf shows, and the sort is remembered',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    for (const file of ['outline-12-pages.pdf', 'basic-3-pages.pdf', 'text-4-pages.pdf']) {
+      await importBook(page, file);
+    }
+    await backToLibrary(page);
+    // Recent first by default.
+    await expect
+      .poll(() => titles(page))
+      .toEqual(['text-4-pages', 'basic-3-pages', 'outline-12-pages']);
 
-  await page.getByRole('combobox', { name: 'Sort' }).selectOption({ label: 'Title' });
-  await expect
-    .poll(() => titles(page))
-    .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
+    await page.getByRole('combobox', { name: 'Sort' }).selectOption({ label: 'Title' });
+    await expect
+      .poll(() => titles(page))
+      .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
 
-  const filter = page.getByRole('searchbox', { name: 'Filter books' });
-  await filter.fill('OUTLINE');
-  await expect.poll(() => titles(page)).toEqual(['outline-12-pages']);
-  await filter.fill('nothing like this');
-  await expect(page.getByText('No books match “nothing like this”.')).toBeVisible();
-  await filter.fill('');
-  await expect.poll(() => titles(page)).toHaveLength(3);
+    const filter = page.getByRole('searchbox', { name: 'Filter books' });
+    await filter.fill('OUTLINE');
+    await expect.poll(() => titles(page)).toEqual(['outline-12-pages']);
+    await filter.fill('nothing like this');
+    await expect(page.getByText('No books match “nothing like this”.')).toBeVisible();
+    await filter.fill('');
+    await expect.poll(() => titles(page)).toHaveLength(3);
 
-  await page.reload();
-  await expect(page.getByRole('combobox', { name: 'Sort' })).toHaveValue('title');
-  await expect
-    .poll(() => titles(page))
-    .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
-});
+    await page.reload();
+    await expect(page.getByRole('combobox', { name: 'Sort' })).toHaveValue('title');
+    await expect
+      .poll(() => titles(page))
+      .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
+  },
+);
 
 test('with 100 books the shelf shows within 1 s and filtering keeps up with typing', async ({
   page,

@@ -161,7 +161,10 @@ test.describe('toasts', () => {
     const box = await toast.boundingBox();
     const height = page.viewportSize()?.height ?? 0;
     expect(box && height - (box.y + box.height)).toBeLessThanOrEqual(48);
-    await expect(toast).toBeHidden({ timeout: 6000 });
+    // It fades after 4 s (a CSS animation; checked by its timing rather than by waiting 4 s).
+    await expect(toast).toHaveCSS('animation-name', 'toast-leave');
+    await expect(toast).toHaveCSS('animation-delay', '4s');
+    await expect(toast).toHaveCSS('animation-fill-mode', 'forwards');
   });
 
   test('while reading aloud, a toast sits above the player', async ({ page }) => {
@@ -200,7 +203,8 @@ test.describe('toasts', () => {
     await openFixture(page, 'not-a-pdf.pdf');
     const alert = page.getByRole('alert');
     await expect(alert).toHaveText("This file isn't a readable PDF.");
-    await page.waitForTimeout(4500);
+    // No timed fade on a failure (see the message test for the fade itself).
+    await expect(alert).toHaveCSS('animation-name', 'none');
     await expect(alert).toBeVisible();
     await alert.getByRole('button', { name: 'Dismiss' }).click();
     await expect(alert).toHaveCount(0);

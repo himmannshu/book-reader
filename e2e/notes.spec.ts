@@ -245,60 +245,41 @@ test('highlight removal confirms both, rolls back on failure, and leaves other n
   await expect(notesPanel(page)).toContainText('Independent');
 });
 
-test('save/delete failures retain text and saved data and permit retry', async ({ page }) => {
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
-  await page.getByRole('button', { name: 'Add note to this page' }).click();
-  await editor(page).fill('Retained\nΔ 📚');
-  await failNext(page, 'put');
-  await page.getByRole('button', { name: 'Save note' }).click();
-  await expect(notesPanel(page).getByRole('alert')).toContainText("isn't enough storage");
-  await expect(editor(page)).toHaveValue('Retained\nΔ 📚');
-  expect(await stored<Note>(page)).toEqual([]);
-  await save(page, 'Retained\nΔ 📚');
-  await failNext(page, 'delete');
-  await row(page, 'Retained').getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete note' }).click();
-  await expect(notesPanel(page).getByRole('alert')).toContainText("isn't enough storage");
-  await expect(row(page, 'Retained')).toHaveCount(1);
-  expect(await stored<Note>(page)).toHaveLength(1);
-  await row(page, 'Retained').getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.getByRole('alertdialog').getByRole('button', { name: 'Delete note' }).click();
-  await expect(page.locator('.note-row')).toHaveCount(0);
-});
-
-test('changed text is guarded across panel close/switch, note choice, Library and file opening', async ({
-  page,
-}) => {
-  await pageNote(page, 'Saved page');
-  await passageNote(page, 'Saved passage');
-  await row(page, 'Saved page').getByRole('button', { name: 'Edit note' }).click();
-  await editor(page).fill('Draft retained');
-  for (const navigate of [
-    () => page.getByRole('button', { name: 'Notes', exact: true }).click(),
-    () => page.getByRole('button', { name: 'Contents', exact: true }).click(),
-    () => page.keyboard.press('Escape'),
-    () => row(page, 'Saved passage').getByRole('button', { name: 'Edit note' }).click(),
-    () => row(page, 'Saved passage').locator('.note-jump').click(),
-    () => page.getByRole('button', { name: 'Library', exact: true }).click(),
-    () => page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf')),
-  ]) {
-    await navigate();
-    await expect(page.getByRole('alertdialog')).toContainText('Discard changes?');
-    await page.getByRole('button', { name: 'Keep editing' }).click();
-    await expect(editor(page)).toHaveValue('Draft retained');
-  }
-  expect(await stored(page, 'books')).toHaveLength(1);
-  await page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf'));
-  await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Saved on this device.');
-  await expect(page.getByTestId('book-info')).toContainText('basic-3-pages');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
-  await expect(notesPanel(page)).toContainText('No notes yet.');
-  await page.getByRole('button', { name: 'Add note to this page' }).click();
-  await editor(page).fill('New draft');
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(notesPanel(page)).toContainText('No notes yet.');
-});
+test(
+  'changed text is guarded across panel close/switch, note choice, Library and file opening',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await pageNote(page, 'Saved page');
+    await passageNote(page, 'Saved passage');
+    await row(page, 'Saved page').getByRole('button', { name: 'Edit note' }).click();
+    await editor(page).fill('Draft retained');
+    for (const navigate of [
+      () => page.getByRole('button', { name: 'Notes', exact: true }).click(),
+      () => page.getByRole('button', { name: 'Contents', exact: true }).click(),
+      () => page.keyboard.press('Escape'),
+      () => row(page, 'Saved passage').getByRole('button', { name: 'Edit note' }).click(),
+      () => row(page, 'Saved passage').locator('.note-jump').click(),
+      () => page.getByRole('button', { name: 'Library', exact: true }).click(),
+      () => page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf')),
+    ]) {
+      await navigate();
+      await expect(page.getByRole('alertdialog')).toContainText('Discard changes?');
+      await page.getByRole('button', { name: 'Keep editing' }).click();
+      await expect(editor(page)).toHaveValue('Draft retained');
+    }
+    expect(await stored(page, 'books')).toHaveLength(1);
+    await page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf'));
+    await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+    await expect(page.getByRole('status')).toHaveText('Saved on this device.');
+    await expect(page.getByTestId('book-info')).toContainText('basic-3-pages');
+    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+    await expect(notesPanel(page)).toContainText('No notes yet.');
+    await page.getByRole('button', { name: 'Add note to this page' }).click();
+    await editor(page).fill('New draft');
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(notesPanel(page)).toContainText('No notes yet.');
+  },
+);
 
 test('books isolate notes and book removal cascades both target types', async ({ page }) => {
   await passageNote(page, 'Book A passage');
@@ -367,40 +348,6 @@ test('a vector-only page accepts a page note without selectable text', async ({ 
   const [note] = await stored<Note>(page);
   const [mark] = await stored<{ pageIndex: number }>(page, 'bookmarks');
   expect(note?.target).toEqual({ kind: 'page', pageIndex: mark?.pageIndex });
-});
-
-test('a failed notes load disables creation with a readable reason and Retry recovers', async ({
-  page,
-}) => {
-  await pageNote(page, 'Read me again');
-  await page.getByRole('button', { name: 'Library', exact: true }).click();
-  await page.evaluate(() => {
-    const original = IDBIndex.prototype.getAll;
-    IDBIndex.prototype.getAll = function (...args) {
-      if (this.objectStore.name === 'notes') {
-        IDBIndex.prototype.getAll = original;
-        throw new DOMException('Injected read failure', 'UnknownError');
-      }
-      return Reflect.apply(original, this, args);
-    };
-  });
-  await page.getByRole('button', { name: 'text-4-pages', exact: true }).click();
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
-  await expect(notesPanel(page)).toContainText("This book's notes couldn't be read.");
-  await expect(page.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Retry notes' }).click();
-  await expect(row(page, 'Read me again')).toHaveCount(1);
-  await expect(page.getByRole('button', { name: 'Add note to this page' })).toBeEnabled();
-});
-
-test('an unsaved book cannot create notes and shows why', async ({ page }) => {
-  await failNext(page, 'put', 'books');
-  await page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf'));
-  await expect(page.getByTestId('book-info')).toContainText('basic-3-pages');
-  await expect(page.getByRole('alert')).toContainText("isn't enough storage");
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
-  await expect(notesPanel(page)).toContainText('Notes need this book saved on this device.');
-  await expect(page.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
 });
 
 test('page notes share Bookmark current-page selection and jump to a non-first page', async ({
@@ -519,7 +466,7 @@ test('multiline and cross-page passage notes sort by PDF position and jump to th
 });
 
 for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
-  test.describe(`notes touch ${name}`, () => {
+  test.describe(`notes touch ${name}`, { tag: '@touch-device' }, () => {
     const device = devices[name];
     test.use({
       hasTouch: true,

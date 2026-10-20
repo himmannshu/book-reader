@@ -170,25 +170,29 @@ test('the gap above page 1 stays visible after the book finishes loading', async
   expect(gap).toBeGreaterThan(10);
 });
 
-test('opening a book records timing marks for profiling and benchmarks', async ({ page }) => {
-  await openFixture(page, 'basic-3-pages.pdf');
-  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  const marks = await page.evaluate(() =>
-    performance
-      .getEntriesByType('mark')
-      .map((m) => ({ name: m.name, at: m.startTime, detail: (m as PerformanceMark).detail })),
-  );
-  const start = marks.find((m) => m.name === 'book:open-start');
-  const opened = marks.find((m) => m.name === 'book:opened');
-  const firstPage = marks.find(
-    (m) => m.name === 'page:rendered' && (m.detail as { pageIndex?: number })?.pageIndex === 0,
-  );
-  if (!start) throw new Error('missing book:open-start mark');
-  if (!opened) throw new Error('missing book:opened mark');
-  if (!firstPage) throw new Error('missing page:rendered mark for page 1');
-  expect(start.at).toBeLessThanOrEqual(opened.at);
-  expect(opened.at).toBeLessThanOrEqual(firstPage.at);
-});
+test(
+  'opening a book records timing marks for profiling and benchmarks',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await openFixture(page, 'basic-3-pages.pdf');
+    await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+    const marks = await page.evaluate(() =>
+      performance
+        .getEntriesByType('mark')
+        .map((m) => ({ name: m.name, at: m.startTime, detail: (m as PerformanceMark).detail })),
+    );
+    const start = marks.find((m) => m.name === 'book:open-start');
+    const opened = marks.find((m) => m.name === 'book:opened');
+    const firstPage = marks.find(
+      (m) => m.name === 'page:rendered' && (m.detail as { pageIndex?: number })?.pageIndex === 0,
+    );
+    if (!start) throw new Error('missing book:open-start mark');
+    if (!opened) throw new Error('missing book:opened mark');
+    if (!firstPage) throw new Error('missing page:rendered mark for page 1');
+    expect(start.at).toBeLessThanOrEqual(opened.at);
+    expect(opened.at).toBeLessThanOrEqual(firstPage.at);
+  },
+);
 
 test('when more than 8 pages fit on screen, every visible page is drawn', async ({ page }) => {
   // About 13 strip pages fit in a 1200px-tall window.

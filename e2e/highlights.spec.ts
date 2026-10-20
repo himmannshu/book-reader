@@ -322,7 +322,7 @@ for (const change of ['resize', 'focused resize', 'side panel', 'scroll away']) 
 }
 
 for (const deviceName of ['iPhone 13', 'iPad (gen 7)']) {
-  test.describe(`touch on ${deviceName}`, () => {
+  test.describe(`touch on ${deviceName}`, { tag: '@touch-device' }, () => {
     const device = devices[deviceName];
     if (!device) throw new Error(`no device profile ${deviceName}`);
     test.use({
@@ -596,7 +596,7 @@ test.describe('when this browser cannot store books', () => {
     await page.goto('/');
   });
 
-  test('Highlight is disabled and says why', async ({ page }) => {
+  test('Highlight is disabled and says why', { tag: '@any-engine' }, async ({ page }) => {
     await page.getByLabel('Open PDF').setInputFiles(fixturePath(BOOK));
     await textReady(page, 0, 'Charlie three');
     await selectText(page, { page: 0, text: 'Alpha one' });

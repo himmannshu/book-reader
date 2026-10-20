@@ -15,9 +15,12 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
   },
+  // Tags (test-suite trim, 2026-10-20): `@any-engine` tests check nothing engine-specific (pure
+  // UI state, stand-in APIs, computed colours), so they run in Chromium only. `@touch-device`
+  // blocks emulate iPhone and iPad, which run Safari's engine, so they run in WebKit only.
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, grepInvert: /@touch-device/ },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, grepInvert: /@any-engine/ },
   ],
   webServer: {
     command: `npm run build && npm run preview -- --port ${port} --strictPort`,

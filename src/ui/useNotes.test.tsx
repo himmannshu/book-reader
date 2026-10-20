@@ -67,6 +67,61 @@ describe('note drafts', () => {
     expect(result.current.error).toBeNull();
   });
 
+  it('keeps a note after a failed delete and deletes it on retry', async () => {
+    const saved = {
+      id: 'book:page:0',
+      bookId: 'book',
+      target,
+      text: 'Retained',
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    const remove = vi
+      .fn()
+      .mockRejectedValueOnce(new StorageError('quota', 'full'))
+      .mockResolvedValue(undefined);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { result } = setup({ list: async () => [saved], put: async () => {}, remove });
+      await waitFor(() => expect(result.current.items).toHaveLength(1));
+      act(() => result.current.remove(saved));
+      expect(result.current.confirmation?.label).toBe('Delete note');
+      await act(async () => result.current.acceptConfirmation());
+      await waitFor(() => expect(result.current.error).toContain("isn't enough storage"));
+      expect(result.current.items).toHaveLength(1);
+      act(() => result.current.remove(saved));
+      await act(async () => result.current.acceptConfirmation());
+      await waitFor(() => expect(result.current.items).toEqual([]));
+      expect(result.current.error).toBeNull();
+      expect(remove).toHaveBeenCalledTimes(2);
+    } finally {
+      logged.mockRestore();
+    }
+  });
+
+  it('a failed load says so, and Retry reads the notes again', async () => {
+    const saved = {
+      id: 'book:page:0',
+      bookId: 'book',
+      target,
+      text: 'Read me again',
+      createdAt: 1,
+      updatedAt: 1,
+    };
+    const list = vi.fn().mockRejectedValueOnce(new Error('read failed')).mockResolvedValue([saved]);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { result } = setup({ list, put: async () => {}, remove: async () => {} });
+      await waitFor(() => expect(result.current.failed).toBe(true));
+      expect(result.current.unavailableReason).toBe("This book's notes couldn't be read.");
+      act(() => result.current.retry());
+      await waitFor(() => expect(result.current.items).toEqual([saved]));
+      expect(result.current.unavailableReason).toBeNull();
+    } finally {
+      logged.mockRestore();
+    }
+  });
+
   it('cannot write blank text or change notes before loading', async () => {
     const put = vi.fn(async () => {});
     const { result } = setup({ list: async () => [], put, remove: async () => {} });

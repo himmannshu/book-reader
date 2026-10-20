@@ -48,19 +48,21 @@ test.describe('desktop', () => {
     expect(untitled).toEqual([]);
   });
 
-  test('ctrl+wheel is left to the browser, so wheel scrolling never waits for the app', async ({
-    page,
-  }) => {
-    await page.goto('/');
-    await importBook(page, 'basic-3-pages.pdf');
-    // No wheel listener that could block scrolling (it would have to be non-passive).
-    const prevented = await page.getByTestId('reader').evaluate((reader) => {
-      const event = new WheelEvent('wheel', { deltaY: -120, ctrlKey: true, cancelable: true });
-      reader.dispatchEvent(event);
-      return event.defaultPrevented;
-    });
-    expect(prevented).toBe(false);
-  });
+  test(
+    'ctrl+wheel is left to the browser, so wheel scrolling never waits for the app',
+    { tag: '@any-engine' },
+    async ({ page }) => {
+      await page.goto('/');
+      await importBook(page, 'basic-3-pages.pdf');
+      // No wheel listener that could block scrolling (it would have to be non-passive).
+      const prevented = await page.getByTestId('reader').evaluate((reader) => {
+        const event = new WheelEvent('wheel', { deltaY: -120, ctrlKey: true, cancelable: true });
+        reader.dispatchEvent(event);
+        return event.defaultPrevented;
+      });
+      expect(prevented).toBe(false);
+    },
+  );
 
   test('Safari gesture events (pinch) zoom to the nearest level', async ({ page }) => {
     await page.goto('/');
@@ -99,7 +101,7 @@ test.describe('desktop', () => {
 });
 
 for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
-  test.describe(name, () => {
+  test.describe(name, { tag: '@touch-device' }, () => {
     const { defaultBrowserType: _ignored, ...device } = devices[name];
     void _ignored;
     test.use(device);
@@ -208,54 +210,58 @@ function contrast(a: string, b: string): number {
 }
 
 for (const theme of ['light', 'sepia', 'dark']) {
-  test(`text contrast meets WCAG AA in the ${theme} theme`, async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('combobox', { name: 'Theme' }).selectOption(theme);
-    const names = [
-      'surface',
-      'surface-raised',
-      'surface-sunken',
-      'ink',
-      'ink-muted',
-      'accent',
-      'on-accent',
-      'line-strong',
-      'focus-ring',
-      'danger',
-      'danger-soft',
-      'hl-yellow',
-    ];
-    const colours = await page.evaluate((list) => {
-      const probe = document.createElement('span');
-      document.body.append(probe);
-      const resolve = (name: string) => {
-        probe.style.color = `var(--${name})`;
-        return getComputedStyle(probe).color;
-      };
-      const result = Object.fromEntries(list.map((name) => [name, resolve(name)]));
-      probe.remove();
-      return result as Record<string, string>;
-    }, names);
-    const c = (a: string, b: string) => contrast(colours[a] ?? '', colours[b] ?? '');
-    const surfaces = ['surface', 'surface-raised', 'surface-sunken'];
-    const pairs: [string, string, number][] = [
-      ...surfaces.flatMap((bg): [string, string, number][] => [
-        ['ink', bg, 4.5],
-        ['ink-muted', bg, 4.5],
-        ['line-strong', bg, 3],
-        ['focus-ring', bg, 3],
-      ]),
-      ['accent', 'surface', 4.5],
-      ['accent', 'surface-raised', 4.5],
-      ['on-accent', 'accent', 4.5],
-      ['danger', 'danger-soft', 4.5],
-      ['ink', 'danger-soft', 4.5],
-    ];
-    for (const [fg, bg, min] of pairs) {
-      expect(c(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
-    }
-    // The matched words in search results: the translucent highlight over a panel.
-    const mark = over(colours['hl-yellow'] ?? '', colours['surface-raised'] ?? '');
-    expect(contrast(colours.ink ?? '', mark), 'ink on hl-yellow').toBeGreaterThanOrEqual(4.5);
-  });
+  test(
+    `text contrast meets WCAG AA in the ${theme} theme`,
+    { tag: '@any-engine' },
+    async ({ page }) => {
+      await page.goto('/');
+      await page.getByRole('combobox', { name: 'Theme' }).selectOption(theme);
+      const names = [
+        'surface',
+        'surface-raised',
+        'surface-sunken',
+        'ink',
+        'ink-muted',
+        'accent',
+        'on-accent',
+        'line-strong',
+        'focus-ring',
+        'danger',
+        'danger-soft',
+        'hl-yellow',
+      ];
+      const colours = await page.evaluate((list) => {
+        const probe = document.createElement('span');
+        document.body.append(probe);
+        const resolve = (name: string) => {
+          probe.style.color = `var(--${name})`;
+          return getComputedStyle(probe).color;
+        };
+        const result = Object.fromEntries(list.map((name) => [name, resolve(name)]));
+        probe.remove();
+        return result as Record<string, string>;
+      }, names);
+      const c = (a: string, b: string) => contrast(colours[a] ?? '', colours[b] ?? '');
+      const surfaces = ['surface', 'surface-raised', 'surface-sunken'];
+      const pairs: [string, string, number][] = [
+        ...surfaces.flatMap((bg): [string, string, number][] => [
+          ['ink', bg, 4.5],
+          ['ink-muted', bg, 4.5],
+          ['line-strong', bg, 3],
+          ['focus-ring', bg, 3],
+        ]),
+        ['accent', 'surface', 4.5],
+        ['accent', 'surface-raised', 4.5],
+        ['on-accent', 'accent', 4.5],
+        ['danger', 'danger-soft', 4.5],
+        ['ink', 'danger-soft', 4.5],
+      ];
+      for (const [fg, bg, min] of pairs) {
+        expect(c(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
+      }
+      // The matched words in search results: the translucent highlight over a panel.
+      const mark = over(colours['hl-yellow'] ?? '', colours['surface-raised'] ?? '');
+      expect(contrast(colours.ink ?? '', mark), 'ink on hl-yellow').toBeGreaterThanOrEqual(4.5);
+    },
+  );
 }

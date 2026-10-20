@@ -118,7 +118,7 @@ test.describe('with speech', () => {
     await expect(page.locator('.spoken-hit')).toHaveCount(0);
   });
 
-  test('a new speed applies to what is read next', async ({ page }) => {
+  test('a new speed applies to what is read next', { tag: '@any-engine' }, async ({ page }) => {
     await page.getByRole('button', { name: 'Listen', exact: true }).click();
     await expect.poll(async () => (await spoken(page)).length).toBeGreaterThanOrEqual(1);
     await bar(page).getByRole('combobox', { name: 'Speed' }).selectOption('1.5');
@@ -126,7 +126,7 @@ test.describe('with speech', () => {
   });
 });
 
-test('without speech in the browser, Listen says so', async ({ page }) => {
+test('without speech in the browser, Listen says so', { tag: '@any-engine' }, async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'speechSynthesis', { value: undefined, configurable: true });
   });
@@ -136,11 +136,15 @@ test('without speech in the browser, Listen says so', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText("Listening isn't available in this browser.");
 });
 
-test('a book without text says there is nothing to read aloud', async ({ page }) => {
-  await page.addInitScript(fakeSpeech);
-  await page.goto('/');
-  await importBook(page, 'no-text-1-page.pdf');
-  await page.getByRole('button', { name: 'Listen', exact: true }).click();
-  await expect(page.getByRole('alert')).toHaveText('There is no text to read aloud from here.');
-  await expect(bar(page)).toHaveCount(0);
-});
+test(
+  'a book without text says there is nothing to read aloud',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.addInitScript(fakeSpeech);
+    await page.goto('/');
+    await importBook(page, 'no-text-1-page.pdf');
+    await page.getByRole('button', { name: 'Listen', exact: true }).click();
+    await expect(page.getByRole('alert')).toHaveText('There is no text to read aloud from here.');
+    await expect(bar(page)).toHaveCount(0);
+  },
+);

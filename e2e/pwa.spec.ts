@@ -18,37 +18,43 @@ async function loadControlled(page: Page) {
     .toBe(true);
 }
 
-test('the manifest is linked, valid, and its icons load', async ({ page }) => {
-  await page.goto('/');
-  const href = await page.locator('link[rel="manifest"]').getAttribute('href');
-  expect(href).toBeTruthy();
-  const response = await page.request.get(new URL(href ?? '', page.url()).toString());
-  expect(response.ok()).toBe(true);
-  const manifest = (await response.json()) as Record<string, unknown> & { icons: ManifestIcon[] };
+test(
+  'the manifest is linked, valid, and its icons load',
+  { tag: '@any-engine' },
+  async ({ page }) => {
+    await page.goto('/');
+    const href = await page.locator('link[rel="manifest"]').getAttribute('href');
+    expect(href).toBeTruthy();
+    const response = await page.request.get(new URL(href ?? '', page.url()).toString());
+    expect(response.ok()).toBe(true);
+    const manifest = (await response.json()) as Record<string, unknown> & { icons: ManifestIcon[] };
 
-  expect(manifest).toMatchObject({
-    name: 'Book Reader',
-    short_name: 'Reader',
-    start_url: '/',
-    scope: '/',
-    display: 'standalone',
-  });
-  expect(manifest.theme_color).toMatch(/^#[0-9a-f]{6}$/i);
-  expect(manifest.background_color).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(manifest).toMatchObject({
+      name: 'Book Reader',
+      short_name: 'Reader',
+      start_url: '/',
+      scope: '/',
+      display: 'standalone',
+    });
+    expect(manifest.theme_color).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(manifest.background_color).toMatch(/^#[0-9a-f]{6}$/i);
 
-  const sizes = manifest.icons.map((icon) => `${icon.sizes} ${icon.purpose ?? 'any'}`);
-  expect(sizes).toEqual(expect.arrayContaining(['192x192 any', '512x512 any', '512x512 maskable']));
-  for (const icon of manifest.icons) {
-    const image = await page.request.get(new URL(icon.src, page.url()).toString());
-    expect(image.ok(), icon.src).toBe(true);
-    expect(image.headers()['content-type']).toContain('image/png');
-  }
+    const sizes = manifest.icons.map((icon) => `${icon.sizes} ${icon.purpose ?? 'any'}`);
+    expect(sizes).toEqual(
+      expect.arrayContaining(['192x192 any', '512x512 any', '512x512 maskable']),
+    );
+    for (const icon of manifest.icons) {
+      const image = await page.request.get(new URL(icon.src, page.url()).toString());
+      expect(image.ok(), icon.src).toBe(true);
+      expect(image.headers()['content-type']).toContain('image/png');
+    }
 
-  const touchIcon = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
-  expect(touchIcon).toBeTruthy();
-  const touch = await page.request.get(new URL(touchIcon ?? '', page.url()).toString());
-  expect(touch.ok()).toBe(true);
-});
+    const touchIcon = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
+    expect(touchIcon).toBeTruthy();
+    const touch = await page.request.get(new URL(touchIcon ?? '', page.url()).toString());
+    expect(touch.ok()).toBe(true);
+  },
+);
 
 test('Chromium reports the app as installable', async ({
   playwright,
