@@ -1108,3 +1108,13 @@ Contract evidence from this final canonical run (contract unchanged after approv
   the application, policy Emails = the user's address, add *.book-reader-cpi.pages.dev for previews).
 - User authorized pushing the branch: pushed phase-08-installable-and-hosted at bc2b12f (CI + preview deploy).
   Watching CI and probing the preview alias logged-out.
+
+### 2026-10-19 20:07 EDT | Phase 08 | Claude Code (Opus 5.5) | Preview deploy is public; headers work when hosted
+- Preview https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ (branch alias truncated to 28 chars)
+  answered a logged-out GET with HTTP 200 and no redirect: previews are NOT behind Access yet. It serves the phase 08
+  build (title "Book Reader", manifest link /manifest.webmanifest, apple-touch-icon). Exposure: the app code only;
+  books and annotations live in each browser's IndexedDB, never on the server. User told to add
+  *.book-reader-cpi.pages.dev to the Access application (item 11 not yet met for previews).
+- Item 8 (hosted): GET /sw.js on the preview → 200 with "cache-control: no-cache" (from public/_headers).
+- CI run 39345677490 on bc2b12f in progress (the first watch attempt failed only because it looked up the run id
+  before GitHub registered it).
