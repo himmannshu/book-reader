@@ -6,21 +6,21 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-20
-- Phases 09a and 09b Complete (user-checked on real devices). 09a is in main; 09b is on branch
-  phase-09b-sync-book-files (pushed at 98f0915; later evidence commits local), not merged.
-- CI takes ~17 of its 20-minute timeout, and the private repo spends ~150 Actions minutes a day
-  at this pace (GitHub Free includes 2000 a month). Proposal to the user: full CI only before
-  merging and on main; quick checks on branch pushes.
+- Phases 09a and 09b Complete, merged into main (cb6ec8a) and deployed to production. Verify PASS;
+  main CI run 39369974201 green.
+- CI trimmed (user decision): branch pushes run quick checks only; the full suite runs on main,
+  pull requests and on demand. Before merging a phase: `gh workflow run verify.yml --ref <branch>`
+  and record that run. The quick job and the browser-cache hit are not observed yet.
 - Phase 08 Complete with exceptions (iPhone offline deferred). Phases 14–16 added for later.
 
 ## In flight
 
-- Waiting on the user: OK to merge 09b into main (production deploy), and a decision on CI.
+- Nothing. This handoff commit is local (a push to main would run the full CI again).
 
 ## Next action
 
-1. With the user's OK: merge 09b into main, run verify, push main, watch CI.
-2. Then phase 10 (reading comfort) planning, when the user asks.
+1. Phase 10 (reading comfort) planning, when the user asks.
+2. On the next branch push, check that only the `quick` job runs.
 
 ## Decisions worth remembering
 
@@ -65,22 +65,18 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 00:25 EDT
-- Branch: phase-09b-sync-book-files
-- HEAD: 190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
-- Uncommitted files: 6
-- Last verify: PASS at 2026-10-19 23:38 EDT (commit 2c6d7e4)
+Snapshot 2026-10-20 00:48 EDT
+- Branch: main
+- HEAD: cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-20 00:30 EDT (commit cb6ec8a)
 - Recent commits:
-    190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
-    98f0915 phase 09b: evidence, F-010 passing locally, handoff
-    2c6d7e4 phase 09b: R2 dashboard path in the deploy guide
-    50d5415 phase 09b: deploy guide for R2 (section 2c); AGENTS notes
-    5832abb phase 09b: delete-everywhere e2e checks the cloud file is really gone
+    cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
+    d97c64c Merge ci-trim: quick checks on branches, full suite on main and before merging
+    5117709 Merge phase 09b: sync book files
+    138cb22 ci: quick checks on branch pushes, full suite on main/PRs/on demand; 30 min; browser cache
+    b72cdf4 phase 09a, 09b: complete (user-checked on real devices)
 - Changed files:
-     M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/build/phase-09a-sync-library-and-annotations.md
-     M harness/build/phase-09b-sync-book-files.md
-     M harness/features.json
 <!-- AUTO:END -->

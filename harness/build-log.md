@@ -1391,3 +1391,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   kept).
 - Correction: eight entry headings from 2026-10-19 23:05 to 2026-10-20 01:00 had estimated times, some up to 80
   minutes off and out of order. Each now carries the time of the commit it belongs to (git log).
+
+### 2026-10-20 00:50 EDT | Phase 09b | Claude Code (Opus 5.5) | Merged main verified, pushed, deployed
+- `scripts/verify.sh` on merged main (cb6ec8a) → PASS: unit 260, browser 175 + 1 skipped, sync 30, perf 8 (chromium
+  first 177, jump 20, p95 16.8; webkit first 186, jump 51, p95 29; canvas 67.1). Budgets unchanged.
+- Pushed main (a5100f5..cb6ec8a). CI https://github.com/himmannshu/book-reader/actions/runs/39369974201 → success
+  (04:30:53Z–04:47:45Z): job `quick` skipped, job `verify` ran the full suite (verify.sh 939 s; browser cache miss
+  on this first run, browsers installed in 42 s and the cache saved). Cloudflare Pages check on cb6ec8a → success.
+- Production: logged-out GET /api/files/<id> → 302 to the Access login.
+- Not yet observed: the `quick` job (next branch push) and a browser-cache hit (next full run).
