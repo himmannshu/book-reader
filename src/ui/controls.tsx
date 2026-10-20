@@ -33,6 +33,7 @@ export function ToolButton({
   filled = false,
   ref,
   className = '',
+  title,
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   icon: IconName;
@@ -41,7 +42,14 @@ export function ToolButton({
   ref?: Ref<HTMLButtonElement>;
 }) {
   return (
-    <button ref={ref} type="button" className={`tool-button ${className}`} {...props}>
+    // The label is a tooltip too, for when only the icon shows (phase 14 review).
+    <button
+      ref={ref}
+      type="button"
+      className={`tool-button ${className}`}
+      title={title ?? label}
+      {...props}
+    >
       <Icon name={icon} filled={filled} />
       <span className="tool-label">{label}</span>
     </button>
