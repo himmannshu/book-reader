@@ -5,13 +5,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), 2026-10-20, moving this session to a cloud session.
-- Phases 00–09b Complete (08 with the iPhone-offline exception). origin/main = cb6ec8a, deployed
-  to production (verify PASS; CI run 39369974201 green). The two later docs-only commits on local
-  main (42508fe, 1b47217) were not pushed (pushing main deploys production); they reach the cloud
-  through branch phase-10-reading-comfort, cut from them.
-- Roadmap (PLANS.md): 10 Reading comfort, 11 Library view, 12 Export, 13 Search, 14 UI and UX
-  design pass (added 2026-10-20), 15 Voice notes, 16 Listen to a book, 17 Share excerpts.
+- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20 (autonomous run while the user slept).
+- Phases 00–09b Complete. Phases 10–17 built, each on its own stacked branch (10 → 11 → … → 17);
+  every branch contains the ones before it, so `phase-17-share-excerpts` has everything.
+  origin/main is untouched (cb6ec8a); the user merges after checking.
+- Branches: `phase-10-reading-comfort-k8v7pk`, `phase-11-library-view`,
+  `phase-12-export-annotations`, `phase-13-search-in-book`, `phase-14-ui-ux-design`,
+  `phase-15-voice-notes`, `phase-16-listen-to-book`, `phase-17-share-excerpts`.
+- Full CI: 10 green (39380276967), 11 green (39384034130); 12–17: see "In flight".
+- Everything the user must check is in harness/USER-CHECKLIST.md.
 
 ## Standing instructions from the user (2026-10-20; they apply until the user says otherwise)
 
@@ -49,19 +51,21 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 10 on `phase-10-reading-comfort-k8v7pk`: built; evaluator FAIL (CI red, WebKit 400% stall).
-  Fixes pushed (9b5e7ba); a full CI run was started on it. If green and the 400% frame gaps look
-  like slow painting (not a freeze), phase 10 is done apart from the user's device check.
-- Phase 11 on `phase-11-library-view` (worktree /home/user/book-reader-p11, cut from phase 10 and
-  merged with its fixes): built, Chromium checks pass. Next: push, full CI, evaluator.
-- Cloud environment: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm stands
-  in (build log 05:45 UTC). Perf timings here are noisy (first page 340–410 ms on unchanged
-  code against a 250 ms budget); compare before/after only. Budget evidence = full CI runs.
+- Evaluator reviews: 10 (FAIL → fixed, appendix), 11 (FAIL → fixed, appendix). 12–13 review was
+  running at the time of writing; 14–17 not yet reviewed by a fresh evaluator.
+- Full CI: 12 failed once on WebKit only (download names get underscores in Playwright's WebKit;
+  test fixed in f09e4e5, to be passed down the stack). Plan to save Actions minutes: full CI on
+  12 and on 17 (which contains every phase); 13–16 rely on 17's run plus their quick checks.
+- Cloud environment notes: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm
+  stands in (build log 05:45 UTC); perf timings here are noisy (first page 350–420 ms on unchanged
+  code against the Mac's 250 ms budget), so only before/after comparisons were made; budget
+  evidence = full CI runs. Worktrees /home/user/book-reader-p11 … -p17 hold the branches.
 
 ## Next action
 
-1. Phase 10 CI result → close phase 10 (features.json, PLANS.md) or fix.
-2. Phase 11: push, full CI, evaluator; then phase 12 (export) stacked on phase 11.
+1. Pass f09e4e5 down the stack (merge 12 → 13 → … → 17), push, run full CI on 12 and 17.
+2. Fix anything the 12–13 evaluator finds; consider a fresh evaluator for 14–17.
+3. Then the roadmap is built: wait for the user's device checks and merges.
 
 ## Decisions worth remembering
 
