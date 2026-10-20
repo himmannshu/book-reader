@@ -5,18 +5,19 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20 (autonomous run while the user slept).
-- Phases 00–17 Complete. Phases 10–17 were built on stacked branches and merged into main on
-  2026-10-20 by fast-forwarding main to `phase-17-share-excerpts` (the user asked for it).
-- Branches: `phase-10-reading-comfort-k8v7pk`, `phase-11-library-view`,
-  `phase-12-export-annotations`, `phase-13-search-in-book`, `phase-14-ui-ux-design`,
-  `phase-15-voice-notes`, `phase-16-listen-to-book`, `phase-17-share-excerpts`.
-- Full CI: 10 green (39380276967), 11 green (39384034130), 12 green (39391982795), 17 green
-  (39425682679 on 9475607, which contains 13–16 and every review fix). Features F-011 … F-020
-  passing on automated evidence; every phase's device item waits on the user.
+- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20.
+- Phases 00–17 Complete (10–17 merged into main 14de167 on 2026-10-20).
+- Phases 18–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
+  (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
+- Phase 18 (Design foundations): plan and contract approved by the user; built on
+  `phase-18-design-foundations` (cut from main); chromium suite green here; evaluator review running;
+  full CI not yet run.
+- Branch `docs-readme` holds the new README alone; the user merges it later (with a demo GIF).
+- Branch `phase-10-reading-comfort-k8v7pk` is merged and has two stray commits (README, plan) that
+  also live on the branches above; the user decides whether to delete it.
 - Everything the user must check is in harness/USER-CHECKLIST.md.
 
-## Standing instructions from the user (2026-10-20; they apply until the user says otherwise)
+## Standing instructions from the user (2026-10-20; ended with the merge of 10–17)
 
 (Ended with the merge on 2026-10-20; kept for the record.) The user was away and asked the agent to keep building the roadmap, phase after phase, using the
 original direction (GOALS.md, architecture-decisions.md) and its own best judgment wherever input
@@ -52,18 +53,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Nothing running. Evaluator reviews done for 10–17 (each FAIL → fixed; see the appendices in
-  harness/code_review/). Records for 13–17 (features, PLANS, build log) live on the top branch
-  `phase-17-share-excerpts`; lower branches get them when merged in order.
+- Phase 18 evaluator review (fresh context), then the full CI run on the branch.
 - Cloud environment notes: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm
   stands in (build log 05:45 UTC); perf timings here are noisy, so only before/after comparisons
-  were made; budget evidence = full CI runs. Worktrees /home/user/book-reader-p11 … -p17.
+  against main were made (worktree /home/user/book-reader-p17 is at main); budget evidence = full
+  CI runs. The pwa "installable" e2e always fails on this machine.
 
 ## Next action
 
-1. The roadmap in PLANS.md is done. The user has ideas for improvements: wait for them, then
-   plan new phases the usual way (plan, approval, contract).
-2. Problems the user finds in daily use: fix them on a new branch from main.
+1. Phase 18: fix the evaluator's blockers (harness/code_review/phase-18-review.md), run the full CI
+   (`verify.yml` on `phase-18-design-foundations`), record it, add phase 18 to USER-CHECKLIST.
+2. Then stop: phase 19 starts only after the user approves its plan (AGENTS.md; the earlier
+   standing instruction to keep going ended with the merge).
 
 ## Decisions worth remembering
 
