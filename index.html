@@ -11,6 +11,20 @@
     <meta name="apple-mobile-web-app-title" content="Reader" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Book Reader</title>
+    <script>
+      // Applies the saved theme before the stylesheet paints, so a dark reader never flashes light.
+      // Same key and values as src/storage/preferences.ts and THEME_COLORS in src/ui/theme.ts.
+      try {
+        var theme = localStorage.getItem('book-reader:theme');
+        var color = { sepia: '#7a4f24', dark: '#1d1d1f' }[theme];
+        if (color) {
+          document.documentElement.dataset.theme = theme;
+          document.querySelector('meta[name="theme-color"]').content = color;
+        }
+      } catch (error) {
+        // Storage blocked: the app starts in the light theme and says why in the console.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

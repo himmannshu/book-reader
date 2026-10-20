@@ -1,8 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react';
 import { markOpened, markOpenStart } from '../core/perf-marks';
+import { THEMES, validTheme, type ReadingState, type Theme } from '../core/reading-state';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
 import { createIndexedDBStores, indexedDBAvailable } from '../storage/indexeddb-book-store';
+import { createPreferences } from '../storage/preferences';
 import {
   StorageError,
   type BookRecord,
@@ -10,6 +20,8 @@ import {
   type BookmarkStore,
   type HighlightStore,
   type NoteStore,
+  type Preferences,
+  type ReadingStateStore,
 } from '../storage/types';
 import { downloadBook } from '../sync/downloader';
 import { FileError } from '../sync/file-client';
@@ -18,6 +30,7 @@ import { withSyncTrigger } from '../sync/triggering';
 import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
+import { THEME_LABELS, applyTheme } from './theme';
 import { UpdateNotice } from './UpdateNotice';
 import { useSync, type SyncSetup } from './useSync';
 
@@ -28,9 +41,12 @@ interface OpenBook {
   fileName: string;
   /** The stored book's id; null until a newly opened file is saved (and if saving fails). */
   bookId: string | null;
+  /** Where this book was left on this device, if known when it opened. */
+  readingState: ReadingState | null;
 }
 
 const defaultStores = createIndexedDBStores();
+const defaultPreferences = createPreferences();
 /** Sync needs IndexedDB; unit tests (jsdom) have none, so sync is off there unless passed in. */
 const defaultSync: SyncSetup | null = indexedDBAvailable
   ? {
@@ -105,6 +121,8 @@ export function App({
   bookmarks = defaultStores.bookmarks,
   highlights = defaultStores.highlights,
   notes = defaultStores.notes,
+  readingStates = defaultStores.readingStates,
+  preferences = defaultPreferences,
   sync = defaultSync,
 }: {
   engine?: PdfEngine;
@@ -112,6 +130,8 @@ export function App({
   bookmarks?: BookmarkStore;
   highlights?: HighlightStore;
   notes?: NoteStore;
+  readingStates?: ReadingStateStore;
+  preferences?: Preferences;
   sync?: SyncSetup | null;
 }) {
   const reader = useRef<ReaderHandle>(null);
@@ -125,6 +145,15 @@ export function App({
   const download = useRef<AbortController | null>(null);
   /** Bumped when another device changed data, so the open reader reloads its annotations. */
   const [syncVersion, setSyncVersion] = useState(0);
+  const [theme, setTheme] = useState<Theme>(() => preferences.theme());
+
+  // Before paint, so the first frame already has the theme (index.html also sets it at startup).
+  useLayoutEffect(() => applyTheme(theme), [theme]);
+
+  function chooseTheme(next: Theme) {
+    setTheme(next);
+    preferences.setTheme(next);
+  }
 
   // Free the previous document's memory and worker when another book replaces it. Keyed on the
   // document, not the book: the book changes when a newly opened file gets its stored id.
@@ -179,6 +208,16 @@ export function App({
     };
   }, [store]);
 
+  /** Where a stored book was left; reading never fails because this can't be read. */
+  async function readingStateOf(bookId: string): Promise<ReadingState | null> {
+    try {
+      return await readingStates.get(bookId);
+    } catch (err) {
+      logUnexpected(err, "Reading the book's last position failed");
+      return null;
+    }
+  }
+
   /** Opens bytes in the engine and shows the reader. Returns the opened book's id, or null. */
   async function show(
     load: () => Promise<Uint8Array>,
@@ -190,11 +229,16 @@ export function App({
     setError(null);
     setNotice(null);
     try {
-      const doc = await engine.open(await load());
+      // Read in parallel with the file, so resuming costs the first page nothing.
+      const [bytes, readingState] = await Promise.all([
+        load(),
+        bookId === null ? null : readingStateOf(bookId),
+      ]);
+      const doc = await engine.open(bytes);
       markOpened();
       nextBookId.current += 1;
       const id = nextBookId.current;
-      setBook({ id, doc, fileName, bookId });
+      setBook({ id, doc, fileName, bookId, readingState });
       return id;
     } catch (err) {
       logUnexpected(err, 'Opening the PDF failed');
@@ -358,6 +402,23 @@ export function App({
             disabled={busy}
           />
         </label>
+        <label className="theme-picker">
+          Theme
+          <select
+            className="picker"
+            value={theme}
+            onChange={(event) => {
+              const next = event.currentTarget.value;
+              if (validTheme(next)) chooseTheme(next);
+            }}
+          >
+            {THEMES.map((option) => (
+              <option key={option} value={option}>
+                {THEME_LABELS[option]}
+              </option>
+            ))}
+          </select>
+        </label>
         {book && (
           <p className="book-info" data-testid="book-info">
             {book.fileName} · {book.doc.pageCount} {book.doc.pageCount === 1 ? 'page' : 'pages'}
@@ -389,6 +450,8 @@ export function App({
           bookmarks={user.bookmarks}
           highlights={user.highlights}
           notes={user.notes}
+          readingStates={readingStates}
+          initialState={book.readingState}
           syncVersion={syncVersion}
         />
       ) : (

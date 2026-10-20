@@ -190,6 +190,13 @@ export class Viewer {
     this.#relayout();
   }
 
+  /** Puts a saved place at the top of the window. */
+  goTo(position: Anchor): void {
+    if (this.#destroyed || this.#layout.pages.length === 0) return;
+    this.#scroller.scrollTop = scrollTopFor(this.#layout, position);
+    this.#update();
+  }
+
   /** Brings page `index` (0-based, clamped to the book) to the top of the reader. */
   scrollToPage(index: number): void {
     const count = this.#layout.pages.length;

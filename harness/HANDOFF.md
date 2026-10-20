@@ -45,7 +45,8 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 - Phase 10 (Reading comfort) on cloud branch `phase-10-reading-comfort-k8v7pk` (the session's
   assigned name for phase-10-reading-comfort). Plan, contract and context written and
-  self-approved. Building: core → layout → viewer → storage → UI → e2e.
+  self-approved. Core, layout, viewer, storage, UI and e2e/comfort.spec.ts are written; comfort
+  tests pass in Chromium (12/12). Next: full stand-in verify, perf before/after, CI full run, evaluator.
 - Cloud environment: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm stands
   in (build log 05:45 UTC). First-page timing here is ~350–368 ms on unchanged code, so the budget
   evidence must come from the full CI run.

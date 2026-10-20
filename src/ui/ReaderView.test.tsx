@@ -1,14 +1,25 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { Bookmark } from '../core/bookmarks';
+import type { ReadingState } from '../core/reading-state';
 import type { PdfDoc } from '../engine/types';
-import { StorageError, type BookmarkStore, type HighlightStore } from '../storage/types';
+import {
+  StorageError,
+  type BookmarkStore,
+  type HighlightStore,
+  type ReadingStateStore,
+} from '../storage/types';
 import { ReaderView as Reader } from './ReaderView';
 
 const noNotes = { list: async () => [], put: async () => {}, remove: async () => {} };
-function ReaderView(props: Omit<ComponentProps<typeof Reader>, 'notes'>) {
-  return <Reader {...props} notes={noNotes} />;
+const noReadingStates: ReadingStateStore = { get: async () => null, put: async () => {} };
+function ReaderView(
+  props: Omit<ComponentProps<typeof Reader>, 'notes' | 'readingStates'> & {
+    readingStates?: ReadingStateStore;
+  },
+) {
+  return <Reader readingStates={noReadingStates} {...props} notes={noNotes} />;
 }
 
 function memoryBookmarks(initial: Bookmark[] = []): BookmarkStore {
@@ -57,6 +68,7 @@ describe('ReaderView contents', () => {
         bookmarks={memoryBookmarks()}
         highlights={noHighlights}
         notes={{ ...noNotes, list: () => new Promise(() => {}) }}
+        readingStates={noReadingStates}
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Notes' }));
@@ -174,5 +186,53 @@ describe('ReaderView bookmarks', () => {
     expect(screen.getByRole('button', { name: 'Bookmark page' })).toBeDisabled();
     expect(errors).toHaveBeenCalled();
     errors.mockRestore();
+  });
+});
+
+describe('ReaderView resuming a book opened with Open PDF', () => {
+  const saved: ReadingState = {
+    bookId: 'book',
+    position: { pageIndex: 1, fraction: 0.5, pixelsAbove: 0 },
+    zoom: 150,
+    savedAt: 1,
+  };
+
+  /** A store whose saved state arrives only when the test says. */
+  function lateStore() {
+    let resolve!: (state: ReadingState | null) => void;
+    const store: ReadingStateStore = {
+      get: () => new Promise((r) => (resolve = r)),
+      put: async () => {},
+    };
+    return { store, arrive: (state: ReadingState | null) => resolve(state) };
+  }
+
+  function renderUnsaved(store: ReadingStateStore) {
+    const { doc } = fakeDoc();
+    const props = {
+      doc,
+      bookmarks: memoryBookmarks(),
+      highlights: noHighlights,
+      readingStates: store,
+    };
+    const view = render(<ReaderView {...props} bookId={null} />);
+    return { rerenderSaved: () => view.rerender(<ReaderView {...props} bookId="book" />) };
+  }
+
+  it('goes to the saved place and zoom once the book is known', async () => {
+    const { store, arrive } = lateStore();
+    const { rerenderSaved } = renderUnsaved(store);
+    rerenderSaved();
+    await act(async () => arrive(saved));
+    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('150');
+  });
+
+  it('stays put when the reader already scrolled', async () => {
+    const { store, arrive } = lateStore();
+    const { rerenderSaved } = renderUnsaved(store);
+    fireEvent.scroll(screen.getByTestId('reader'));
+    rerenderSaved();
+    await act(async () => arrive(saved));
+    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('fit-width');
   });
 });

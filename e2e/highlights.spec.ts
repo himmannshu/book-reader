@@ -426,6 +426,28 @@ test('highlights stay aligned with their text after the window is resized', asyn
   expectAligned(await highlightBoxes(page), await textBoxes(page, words));
 });
 
+test('highlights stay aligned with their text at 50%, 200% and fit page', async ({ page }) => {
+  await openBook(page);
+  const words = { page: 0, text: 'Charlie three: highlights' };
+  await highlight(page, words);
+
+  const zoom = page.getByRole('combobox', { name: 'Zoom' });
+  const shownWidth = async () => Math.round((await pageSlot(page, 0).boundingBox())?.width ?? 0);
+  const readerHeight = await page.getByTestId('reader').evaluate((e) => e.clientHeight);
+  for (const [value, width] of [
+    ['50', 612 * 0.5 * (96 / 72)],
+    ['200', 612 * 2 * (96 / 72)],
+    // The whole page fits the window's height, minus 24 px margins above and below.
+    ['fit-page', (readerHeight - 48) * (612 / 792)],
+  ] as const) {
+    await zoom.selectOption(value);
+    await expect.poll(shownWidth, value).toBe(Math.round(width));
+    await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+    await textReady(page, 0, 'Charlie three');
+    expectAligned(await highlightBoxes(page), await textBoxes(page, words));
+  }
+});
+
 test('highlights are still there after a reload', async ({ page }) => {
   await openBook(page);
   const words = { page: 0, text: 'a second line, with different' };

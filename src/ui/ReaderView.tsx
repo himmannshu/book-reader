@@ -1,9 +1,27 @@
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type Ref,
+} from 'react';
 import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import type { Note, NoteTarget } from '../core/notes';
+import {
+  MAX_ZOOM,
+  MIN_ZOOM,
+  ZOOM_LEVELS,
+  zoomIn,
+  zoomLabel,
+  zoomOut,
+  type ReadingState,
+  type ZoomSetting,
+} from '../core/reading-state';
 import type { OutlineItem, PdfDoc } from '../engine/types';
-import type { BookmarkStore, HighlightStore, NoteStore } from '../storage/types';
+import type { BookmarkStore, HighlightStore, NoteStore, ReadingStateStore } from '../storage/types';
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
@@ -20,6 +38,9 @@ const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
+/** Scrolling must pause this long before the reading place is saved. */
+const SAVE_DELAY_MS = 600;
+const ZOOM_CHOICES: readonly ZoomSetting[] = ['fit-width', 'fit-page', ...ZOOM_LEVELS];
 
 type Panel = 'contents' | 'bookmarks' | 'notes';
 
@@ -38,6 +59,10 @@ interface ReaderViewProps {
   bookmarks: BookmarkStore;
   highlights: HighlightStore;
   notes: NoteStore;
+  /** Where each book was left on this device. */
+  readingStates: ReadingStateStore;
+  /** Where this book was left, to open there (null: from the start, or found once it is saved). */
+  initialState?: ReadingState | null;
   ref?: Ref<ReaderHandle>;
   /** Bumped when another device changed data; reloads bookmarks, highlights and notes. */
   syncVersion?: number;
@@ -54,6 +79,8 @@ export function ReaderView({
   bookmarks,
   highlights,
   notes,
+  readingStates,
+  initialState = null,
   ref,
   syncVersion = 0,
   now = Date.now,
@@ -67,6 +94,17 @@ export function ReaderView({
   const notesButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
+  /** Fixed at mount: the reader is keyed by book, so a new book gets a new ReaderView. */
+  const opening = useRef(initialState);
+  /** True once the reader scrolled or zoomed; a late-found saved place then no longer applies. */
+  const moved = useRef(false);
+  /** Saves the reading place now (set by the viewer effect). */
+  const saveNow = useRef<() => void>(() => undefined);
+  const saving = useRef({ bookId, readingStates, now });
+  useEffect(() => {
+    saving.current = { bookId, readingStates, now };
+  }, [bookId, readingStates, now]);
 
   // Loaded once per book, the first time it's needed, so it never delays the first page.
   const outlineRef = useRef<{ doc: PdfDoc; promise: Promise<OutlineItem[]> } | null>(null);
@@ -92,15 +130,119 @@ export function ReaderView({
     const viewer = new Viewer(scroller, doc, {
       ...defaultViewerOptions,
       onPageChange: setCurrentPage,
+      zoom: opening.current?.zoom,
+      initialPosition: opening.current?.position,
     });
     viewerRef.current = viewer;
     // Focus the pages so arrow keys, Page Down and Space scroll the book right away.
     scroller.focus({ preventScroll: true });
+
+    // Save the reading place once scrolling pauses, and always when the page is hidden or closed
+    // and on leaving (a scroll just before may not have reported yet). The scroll listener only
+    // notes the time: WebKit has little scroll headroom.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let lastScroll = 0;
+    let dirty = false;
+    const save = () => {
+      clearTimeout(timer);
+      timer = undefined;
+      const { bookId: id, readingStates: store, now: clock } = saving.current;
+      if (!dirty || id === null) return;
+      dirty = false;
+      const state = { bookId: id, position: viewer.position, zoom: viewer.zoom, savedAt: clock() };
+      store.put(state).catch((error: unknown) => {
+        // Reading goes on; the next pause tries again.
+        dirty = true;
+        console.error('Could not save the reading position', error);
+      });
+    };
+    const check = () => {
+      const idle = performance.now() - lastScroll;
+      if (idle >= SAVE_DELAY_MS) save();
+      else timer = setTimeout(check, SAVE_DELAY_MS - idle);
+    };
+    const onScroll = () => {
+      lastScroll = performance.now();
+      dirty = true;
+      moved.current = true;
+      timer ??= setTimeout(check, SAVE_DELAY_MS);
+    };
+    const saveAlways = () => {
+      dirty = true;
+      save();
+    };
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') saveAlways();
+    };
+    saveNow.current = saveAlways;
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', saveAlways);
     return () => {
+      // Saving on leaving happens in the layout effect below, while the pages are still attached.
+      clearTimeout(timer);
+      saveNow.current = () => undefined;
+      scroller.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', saveAlways);
       viewer.destroy();
       viewerRef.current = null;
     };
   }, [doc]);
+
+  // Leaving the reader saves the place. A layout effect's cleanup runs before React detaches the
+  // pages; a detached scroller reads as scrolled to the top.
+  useLayoutEffect(() => () => saveNow.current(), []);
+
+  // A book opened with Open PDF gets its stored id only once saved. If it was read here before,
+  // go to where it was left, unless the reader has already moved.
+  const startedUnsaved = useRef(bookId === null);
+  useEffect(() => {
+    if (bookId === null || !startedUnsaved.current) return;
+    startedUnsaved.current = false;
+    let cancelled = false;
+    readingStates.get(bookId).then(
+      (state) => {
+        const viewer = viewerRef.current;
+        if (cancelled || !state || !viewer || moved.current) return;
+        viewer.setZoom(state.zoom);
+        setZoom(state.zoom);
+        viewer.goTo(state.position);
+      },
+      (error: unknown) => {
+        if (!cancelled) console.error("Could not read the book's last position", error);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [bookId, readingStates]);
+
+  function changeZoom(next: ZoomSetting) {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    moved.current = true;
+    viewer.setZoom(next);
+    setZoom(next);
+    saveNow.current();
+  }
+
+  function stepZoom(direction: 'in' | 'out') {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const level = direction === 'in' ? zoomIn(viewer.zoomPercent) : zoomOut(viewer.zoomPercent);
+    if (level !== null) changeZoom(level);
+  }
+
+  /** + (or =), - and 0 zoom while the pages have focus. Cmd/Ctrl + and - stay the browser's. */
+  function onPagesKeyDown(event: ReactKeyboardEvent) {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key === '+' || event.key === '=') stepZoom('in');
+    else if (event.key === '-') stepZoom('out');
+    else if (event.key === '0') changeZoom('fit-width');
+    else return;
+    event.preventDefault();
+  }
 
   // Read after the viewer starts; the first page never waits for it.
   useEffect(() => {
@@ -345,6 +487,41 @@ export function ReaderView({
         >
           Notes
         </button>
+        <div className="zoom-controls">
+          <button
+            type="button"
+            className="button secondary"
+            aria-label="Zoom out"
+            disabled={zoom === MIN_ZOOM}
+            onClick={() => stepZoom('out')}
+          >
+            −
+          </button>
+          <select
+            className="picker"
+            aria-label="Zoom"
+            value={String(zoom)}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              changeZoom(value === 'fit-width' || value === 'fit-page' ? value : Number(value));
+            }}
+          >
+            {ZOOM_CHOICES.map((choice) => (
+              <option key={choice} value={String(choice)}>
+                {zoomLabel(choice)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="button secondary"
+            aria-label="Zoom in"
+            disabled={zoom === MAX_ZOOM}
+            onClick={() => stepZoom('in')}
+          >
+            +
+          </button>
+        </div>
       </div>
       {annotationError && (
         <p className="error" role="alert">
@@ -381,6 +558,7 @@ export function ReaderView({
           role="region"
           aria-label="Book pages"
           onClick={marked.onPagesClick}
+          onKeyDown={onPagesKeyDown}
         />
         <SelectionActions
           action={marked.action}
