@@ -5,8 +5,12 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20. The user is moving the work to a
-  local session on their own computer.
+- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-20.
+- Local baseline: verify on main (fea67a5) failed 9 WebKit tests on macOS (first WebKit run on a
+  Mac). Fixed on branch `mac-webkit-baseline` (6a30927, not pushed): verify PASS there, WebKit and
+  perf included. Causes: harness/context/mac-webkit-baseline-context.md. One real app change:
+  `.picker` drawn with `appearance: none` (Mac Safari drew selects at 27 px). Merging it to main
+  is the user's call (pushing main deploys).
 - Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
   main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
 - Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
@@ -58,12 +62,14 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## Next action
 
-1. Phase 19 (Reader chrome): write harness/build/phase-19-reader-chrome.md and its contract, post
-   the plan to the user and wait for approval before code (AGENTS.md). Cut `phase-19-reader-chrome`
-   from main. Design references: harness/context/design-system/components/ReaderToolbar.md,
-   ReadingSettings.md, PagePill.md, SegmentedControl.md, and the README's "Screens, composed".
+1. Phase 19 (Reader chrome): plan posted to the user for approval (no code yet). Cut
+   `phase-19-reader-chrome` from `mac-webkit-baseline` (so local verify starts green), then write
+   harness/build/phase-19-reader-chrome.md and its contract. Design references:
+   harness/context/design-system/components/ReaderToolbar.md, ReadingSettings.md, PagePill.md,
+   SegmentedControl.md, and the README's "Screens, composed".
 2. Watch: the WebKit notes keyboard-focus test ("keyboard newline, save, cancel/delete confirmation
-   and jump keep usable focus") was flaky once in CI.
+   and jump keep usable focus") was flaky once in CI. Locally, library-view's "100 books" filter
+   check (< 100 ms) went over in 2 of 3 full WebKit runs under load (14–25 ms alone); unchanged.
 
 ## Decisions worth remembering
 
@@ -108,17 +114,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 01:07 EDT
-- Branch: phase-10-reading-comfort
-- HEAD: 1b47217 planning: UI/UX design pass as phase 14; standing instructions for autonomous work
+Snapshot 2026-10-20 16:54 EDT
+- Branch: mac-webkit-baseline
+- HEAD: 6a30927 tests: verify passes on macOS WebKit; Mac Safari pickers drawn at full height
 - Uncommitted files: 1
-- Last verify: PASS at 2026-10-20 00:30 EDT (commit cb6ec8a)
+- Last verify: PASS at 2026-10-20 16:53 EDT (commit fea67a5)
 - Recent commits:
-    1b47217 planning: UI/UX design pass as phase 14; standing instructions for autonomous work
-    42508fe phase 09b: merged main verified and deployed; handoff
-    cb6ec8a phase 09b: merged into main; build-log times corrected to commit times
-    d97c64c Merge ci-trim: quick checks on branches, full suite on main and before merging
-    5117709 Merge phase 09b: sync book files
+    6a30927 tests: verify passes on macOS WebKit; Mac Safari pickers drawn at full height
+    fea67a5 phase 18: complete; test-suite trim CI green (12 min wall); handoff for the local session
+    5952687 tests: one loadControlled helper that waits for an activated service worker (WebKit could hang on serviceWorker.ready)
+    5f13b3a tests: per-engine CI jobs; notes on the trim in AGENTS.md, context and build log
+    58c85cf Merge branch 'phase-18-design-foundations' into test-suite-trim
 - Changed files:
      M harness/HANDOFF.md
 <!-- AUTO:END -->
