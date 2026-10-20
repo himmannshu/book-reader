@@ -7,7 +7,7 @@ const port = 4173;
 export default defineConfig({
   testDir: './e2e',
   // Benchmarks have their own config (playwright.perf.config.ts).
-  testIgnore: '**/perf/**',
+  testIgnore: ['**/perf/**', '**/sync/**'],
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',

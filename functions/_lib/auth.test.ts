@@ -84,6 +84,26 @@ describe('identify', () => {
     expect(await status(identify(request(await token({ email: 'a@b.c' })), {}, jwks))).toBe(500);
   });
 
+  it('dev mode lets local tests choose a user per request, still only on localhost', async () => {
+    const dev = { AUTH_MODE: 'dev', DEV_USER: 'dev@local' };
+    const local = new Request('http://localhost:8788/api/sync', {
+      headers: { 'x-dev-user': 'Test-1@Local' },
+    });
+    expect(await identify(local, dev)).toBe('test-1@local');
+    const remote = new Request('https://book-reader-cpi.pages.dev/api/sync', {
+      headers: { 'x-dev-user': 'someone@else' },
+    });
+    expect(await status(identify(remote, dev))).toBe(401);
+  });
+
+  it('ignores the dev user header outside dev mode', async () => {
+    const jwt = await token({ email: 'me@example.com' });
+    const req = new Request('https://book-reader-cpi.pages.dev/api/sync', {
+      headers: { 'cf-access-jwt-assertion': jwt, 'x-dev-user': 'attacker@example.com' },
+    });
+    expect(await identify(req, env, jwks)).toBe('me@example.com');
+  });
+
   it('dev mode works only on localhost', async () => {
     const dev = { AUTH_MODE: 'dev', DEV_USER: 'dev@local' };
     expect(await identify(request(undefined, 'http://localhost:8788/api/sync'), dev)).toBe(

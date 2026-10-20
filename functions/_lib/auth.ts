@@ -45,7 +45,9 @@ export async function identify(
     if (!LOCAL_HOSTS.has(new URL(request.url).hostname)) {
       throw new AuthError(401, 'Not signed in');
     }
-    return (env.DEV_USER ?? 'dev@localhost').toLowerCase();
+    // Local tests give each test its own user, so tests never see each other's data.
+    const user = request.headers.get('x-dev-user') ?? env.DEV_USER ?? 'dev@localhost';
+    return user.toLowerCase();
   }
   const domain = env.ACCESS_TEAM_DOMAIN?.replace(/^https?:\/\//, '').replace(/\/+$/, '');
   if (!domain || !env.ACCESS_AUD) throw new AuthError(500, 'Sync is not configured');
