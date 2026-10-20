@@ -6,9 +6,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), cloud session, 2026-10-20 (autonomous run while the user slept).
-- Phases 00–09b Complete. Phases 10–17 built, each on its own stacked branch (10 → 11 → … → 17);
-  every branch contains the ones before it, so `phase-17-share-excerpts` has everything.
-  origin/main is untouched (cb6ec8a); the user merges after checking.
+- Phases 00–17 Complete. Phases 10–17 were built on stacked branches and merged into main on
+  2026-10-20 by fast-forwarding main to `phase-17-share-excerpts` (the user asked for it).
 - Branches: `phase-10-reading-comfort-k8v7pk`, `phase-11-library-view`,
   `phase-12-export-annotations`, `phase-13-search-in-book`, `phase-14-ui-ux-design`,
   `phase-15-voice-notes`, `phase-16-listen-to-book`, `phase-17-share-excerpts`.
@@ -19,7 +18,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Standing instructions from the user (2026-10-20; they apply until the user says otherwise)
 
-The user is away and asked the agent to keep building the roadmap, phase after phase, using the
+(Ended with the merge on 2026-10-20; kept for the record.) The user was away and asked the agent to keep building the roadmap, phase after phase, using the
 original direction (GOALS.md, architecture-decisions.md) and its own best judgment wherever input
 would normally be needed. These override AGENTS.md's "wait for approval" and "do not start the
 next phase" for this run only. Everything else in AGENTS.md still holds.
@@ -62,10 +61,9 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## Next action
 
-1. The roadmap (phases 10–17) is built. Wait for the user: device checks in
-   harness/USER-CHECKLIST.md, then merges into main in order (10 first; or 17 alone, which holds all).
-2. Fix whatever the device checks find, on the phase's branch, and pass it up the stack.
-3. Do not start new phases: PLANS.md has none beyond 17.
+1. The roadmap in PLANS.md is done. The user has ideas for improvements: wait for them, then
+   plan new phases the usual way (plan, approval, contract).
+2. Problems the user finds in daily use: fix them on a new branch from main.
 
 ## Decisions worth remembering
 

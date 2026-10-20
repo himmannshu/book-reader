@@ -32,14 +32,14 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 08 | Installable and hosted | The app installs to Dock and Home Screen, opens offline, and is hosted behind a personal login | 03 | Complete |
 | 09a | Sync library and annotations | Bookmarks, highlights and notes match across devices that have the same book; books added on one device are listed on the other; deletions reach every device | 05, 06, 07, 08 | Complete |
 | 09b | Sync book files | A book added on one device can be opened on another without importing it again | 09a | Complete |
-| 10 | Reading comfort | Dark and sepia themes, zoom and fit modes, and each book reopens where I left off | 01 | In progress (built, CI green; waiting on the user's device check) |
-| 11 | Library view | A shelf with covers and reading progress, with sort and filter | 03 | In progress (built, CI green; waiting on the user's device check) |
-| 12 | Export highlights and notes | A book's highlights and notes export to a Markdown file | 07 | In progress (built, CI green; waiting on the user's check) |
-| 13 | Search inside a book | Full-text search in the open book, with results that jump to each match | 02 | In progress (built, CI green; waiting on the user's device check) |
-| 14 | UI and UX design pass | The app looks and feels like a calm, polished reader on Mac, iPad and iPhone: a consistent visual design (type, spacing, color, icons) across library, reader and panels, touch-friendly controls, and the rough edges found in reviews fixed | 10, 11 | In progress (built, CI green; waiting on the user's device check) |
-| 15 | Voice notes | Record a spoken note on a page or highlight, play it back from the notes panel; it survives a reload | 07 | In progress (built, CI green; waiting on the user's device check) |
-| 16 | Listen to a book | The book is read aloud from where I am, the spoken text is followed on the page, and I can pause and resume | 01 | In progress (built, CI green; waiting on the user's device check) |
-| 17 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | In progress (built, CI green; waiting on the user's device check) |
+| 10 | Reading comfort | Dark and sepia themes, zoom and fit modes, and each book reopens where I left off | 01 | Complete (merged 2026-10-20; device checks continue in use) |
+| 11 | Library view | A shelf with covers and reading progress, with sort and filter | 03 | Complete (merged 2026-10-20; device checks continue in use) |
+| 12 | Export highlights and notes | A book's highlights and notes export to a Markdown file | 07 | Complete (merged 2026-10-20; device checks continue in use) |
+| 13 | Search inside a book | Full-text search in the open book, with results that jump to each match | 02 | Complete (merged 2026-10-20; device checks continue in use) |
+| 14 | UI and UX design pass | The app looks and feels like a calm, polished reader on Mac, iPad and iPhone: a consistent visual design (type, spacing, color, icons) across library, reader and panels, touch-friendly controls, and the rough edges found in reviews fixed | 10, 11 | Complete (merged 2026-10-20; device checks continue in use) |
+| 15 | Voice notes | Record a spoken note on a page or highlight, play it back from the notes panel; it survives a reload | 07 | Complete (merged 2026-10-20; device checks continue in use) |
+| 16 | Listen to a book | The book is read aloud from where I am, the spoken text is followed on the page, and I can pause and resume | 01 | Complete (merged 2026-10-20; device checks continue in use) |
+| 17 | Share excerpts | Share a highlighted passage (with the book title) to social media or another app | 06 | Complete (merged 2026-10-20; device checks continue in use) |
 
 Status values: Not started, In progress, Blocked, Complete. Only harness/build-log.md can
 justify a change to Complete.

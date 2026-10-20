@@ -1591,3 +1591,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - F-015, F-017, F-018, F-019, F-020 → passing (automated evidence); each contract's device item waits on the user
   (harness/USER-CHECKLIST.md). PLANS rows 13–17 updated. Records kept on this top branch; the lower branches
   receive them when merged in order.
+
+### 2026-10-20 16:40 UTC | Phases 10–17 | Claude Code (Opus 5.5, cloud session) | Merged into main
+- The user checked the phase 17 preview ("looked good") and asked for the merge. Before it: main unchanged since
+  cb6ec8a and an ancestor of phase 17 (fast-forward); every phase branch 10–16 contained in phase 17; since the
+  green full run (39425682679 on 9475607) only harness files changed; quick CI on 77c4266 green (39429904081);
+  no changes under functions/, public/ or package files against main (no server or D1 change; IndexedDB
+  upgrades v6 → v9 run on the device and are covered by the upgrade unit tests).
+- main fast-forwarded to phase 17 (the user chose this over a PR): one production deploy.
+- Remaining USER-CHECKLIST items are now checked in daily use; problems found go to new work.
