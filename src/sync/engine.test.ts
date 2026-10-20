@@ -55,8 +55,12 @@ function fakeServer() {
   return { client, requests };
 }
 
-function device(server: SyncClient, onStatus: (s: SyncStatus) => void = () => {}) {
-  let clock = 1_000;
+function device(
+  server: SyncClient,
+  onStatus: (s: SyncStatus) => void = () => {},
+  startClock = 1_000,
+) {
+  let clock = startClock;
   const stores = createIndexedDBStores({
     factory: new IDBFactory(),
     now: () => (clock += 10),
@@ -131,7 +135,8 @@ describe('SyncEngine', () => {
   it('keeps the later of two edits on both devices', async () => {
     const { client } = fakeServer();
     const a = device(client);
-    const b = device(client);
+    // B's clock runs ahead, so its edit is genuinely later (equal stamps would tie on random ids).
+    const b = device(client, () => {}, 1_000_000);
     const book = await a.books.add(pdf, 'x.pdf');
     await b.books.add(pdf, 'x.pdf');
     await a.bookmarks.put(mark(book.id, 'from A'));
