@@ -20,11 +20,14 @@ export interface Confirmation {
 
 export function useNotes({
   bookId,
+  syncVersion = 0,
   store,
   highlights,
   now,
 }: {
   bookId: string | null;
+  /** Bumped when another device changed data; reloads the notes. */
+  syncVersion?: number;
   store: NoteStore;
   highlights: readonly Highlight[];
   now(): number;
@@ -68,7 +71,7 @@ export function useNotes({
     return () => {
       cancelled = true;
     };
-  }, [bookId, store, reload]);
+  }, [bookId, store, reload, syncVersion]);
 
   /** The one guard used by note/panel navigation and the app's Library/file-open actions. */
   function request(proceed: () => void) {

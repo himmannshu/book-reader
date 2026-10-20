@@ -506,7 +506,7 @@ test('removing a book deletes its highlights', async ({ page }) => {
   await page.getByRole('button', { name: 'Library', exact: true }).click();
   const item = page.getByRole('list', { name: 'Your books' }).getByRole('listitem');
   await item.getByRole('button', { name: 'Remove text-4-pages' }).click();
-  await item.getByRole('button', { name: 'Yes, remove' }).click();
+  await item.getByRole('button', { name: 'Delete everywhere' }).click();
   await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
   expect(await stored(page)).toHaveLength(0);
 });

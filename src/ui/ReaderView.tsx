@@ -39,6 +39,8 @@ interface ReaderViewProps {
   highlights: HighlightStore;
   notes: NoteStore;
   ref?: Ref<ReaderHandle>;
+  /** Bumped when another device changed data; reloads bookmarks, highlights and notes. */
+  syncVersion?: number;
   now?: () => number;
   newId?: () => string;
 }
@@ -53,6 +55,7 @@ export function ReaderView({
   highlights,
   notes,
   ref,
+  syncVersion = 0,
   now = Date.now,
   newId = randomId,
 }: ReaderViewProps) {
@@ -116,7 +119,7 @@ export function ReaderView({
     return () => {
       cancelled = true;
     };
-  }, [bookId, bookmarks]);
+  }, [bookId, bookmarks, syncVersion]);
 
   function loadOutline(): Promise<OutlineItem[]> {
     if (outlineRef.current?.doc !== doc) {
@@ -221,6 +224,7 @@ export function ReaderView({
 
   const marked = useHighlights({
     bookId,
+    syncVersion,
     store: highlights,
     viewer: viewerRef,
     scroller: scrollerRef,
@@ -230,7 +234,7 @@ export function ReaderView({
     onError: setAnnotationError,
   });
   const highlightList = marked.items ?? NO_HIGHLIGHTS;
-  const written = useNotes({ bookId, store: notes, highlights: highlightList, now });
+  const written = useNotes({ bookId, syncVersion, store: notes, highlights: highlightList, now });
   useImperativeHandle(ref, () => ({ requestNavigation: written.request }), [written.request]);
 
   function openNote(target: NoteTarget) {

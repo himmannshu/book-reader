@@ -20,6 +20,9 @@ import {
   type SyncStore,
 } from './types';
 
+/** False where the browser (or the unit-test environment) has no IndexedDB. */
+export const indexedDBAvailable = typeof globalThis.indexedDB !== 'undefined';
+
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
 export const DB_VERSION = 5;
