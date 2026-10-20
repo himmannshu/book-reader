@@ -147,6 +147,13 @@
       "description": "A highlighted passage can be shared to another app with the book title",
       "status": "passing",
       "evidence": "2026-10-20 src/core/share.test.ts (text with title, length cut, emoji-safe) and e2e/share.spec.ts (stand-in share sheet; clipboard fallback) pass in chromium (cloud) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39425682679 (chromium+webkit) on 9475607. Real share sheet check pending (USER-CHECKLIST)."
+    },
+    {
+      "id": "F-021",
+      "phase": "19",
+      "description": "The reader has the designed toolbar (title and chapter, tools in order, compact on phones, fading while scrolling), a Reading settings popover for theme, zoom and fit, and a page pill",
+      "status": "failing",
+      "evidence": ""
     }
   ]
 }
