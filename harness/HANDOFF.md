@@ -5,23 +5,22 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 09a merged into main (a5100f5) and deployed to production; verify PASS, CI green. Still
-  In progress: item 13's annotation part (same PDF imported on two devices shows the other's
-  bookmarks/highlights/notes) is not yet reported. Listing and deletion across devices were.
-- One Access application covers production and previews (audience tag starts 498b4e00), so
-  ACCESS_AUD must be that value in both environments.
-- Phase 09b: planning now (branch phase-09b-sync-book-files from main).
+- Last agent: Claude Code (Opus 5.5), 2026-10-20
+- Phases 09a and 09b Complete (user-checked on real devices). 09a is in main; 09b is on branch
+  phase-09b-sync-book-files (pushed at 98f0915; later evidence commits local), not merged.
+- CI takes ~17 of its 20-minute timeout, and the private repo spends ~150 Actions minutes a day
+  at this pace (GitHub Free includes 2000 a month). Proposal to the user: full CI only before
+  merging and on main; quick checks on branch pushes.
 - Phase 08 Complete with exceptions (iPhone offline deferred). Phases 14–16 added for later.
 
 ## In flight
 
-- Planning 09b; waiting on the user's approval of the plan and contract.
+- Waiting on the user: OK to merge 09b into main (production deploy), and a decision on CI.
 
 ## Next action
 
-1. Get 09b plan and contract approved, then build on phase-09b-sync-book-files.
-2. When the user reports the annotation check, mark 09a Complete (PLANS, phase file, log).
+1. With the user's OK: merge 09b into main, run verify, push main, watch CI.
+2. Then phase 10 (reading comfort) planning, when the user asks.
 
 ## Decisions worth remembering
 
@@ -66,19 +65,22 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 23:03 EDT
-- Branch: main
-- HEAD: a5100f5 Merge phase 09a: sync library and annotations
-- Uncommitted files: 3
-- Last verify: PASS at 2026-10-19 22:46 EDT (commit a5100f5)
+Snapshot 2026-10-20 00:25 EDT
+- Branch: phase-09b-sync-book-files
+- HEAD: 190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
+- Uncommitted files: 6
+- Last verify: PASS at 2026-10-19 23:38 EDT (commit 2c6d7e4)
 - Recent commits:
-    a5100f5 Merge phase 09a: sync library and annotations
-    c13b15a phase 09a: CI green on the pushed branch; preview behind Access; handoff
-    27f0197 planning: add voice notes, listen to a book, share excerpts as later phases
-    591048d phase 09a: refresh handoff snapshot
-    2089d47 phase 09a: F-016 passing locally; handoff
+    190f661 phase 09b: CI green on the pushed branch; preview file API behind Access
+    98f0915 phase 09b: evidence, F-010 passing locally, handoff
+    2c6d7e4 phase 09b: R2 dashboard path in the deploy guide
+    50d5415 phase 09b: deploy guide for R2 (section 2c); AGENTS notes
+    5832abb phase 09b: delete-everywhere e2e checks the cloud file is really gone
 - Changed files:
      M PLANS.md
      M harness/HANDOFF.md
      M harness/build-log.md
+     M harness/build/phase-09a-sync-library-and-annotations.md
+     M harness/build/phase-09b-sync-book-files.md
+     M harness/features.json
 <!-- AUTO:END -->

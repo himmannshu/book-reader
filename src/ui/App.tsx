@@ -11,7 +11,9 @@ import {
   type HighlightStore,
   type NoteStore,
 } from '../storage/types';
-import { httpSyncClient } from '../sync/http-client';
+import { downloadBook } from '../sync/downloader';
+import { FileError } from '../sync/file-client';
+import { httpFileClient, httpSyncClient } from '../sync/http-client';
 import { withSyncTrigger } from '../sync/triggering';
 import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
@@ -31,8 +33,35 @@ interface OpenBook {
 const defaultStores = createIndexedDBStores();
 /** Sync needs IndexedDB; unit tests (jsdom) have none, so sync is off there unless passed in. */
 const defaultSync: SyncSetup | null = indexedDBAvailable
-  ? { store: defaultStores.sync, client: httpSyncClient() }
+  ? {
+      store: defaultStores.sync,
+      client: httpSyncClient(),
+      files: { store: defaultStores.files, books: defaultStores.books, client: httpFileClient() },
+    }
   : null;
+
+/** What to tell the reader when a book from another device can't be downloaded. */
+function downloadMessage(error: unknown): string {
+  if (error instanceof FileError) {
+    switch (error.kind) {
+      case 'offline':
+        return 'Connect to the internet to download this book.';
+      case 'not-uploaded':
+        return 'This book is still uploading from your other device. Try again in a little while.';
+      case 'damaged':
+        return 'The download was damaged. Try again.';
+      case 'signed-out':
+        return 'Sign in again to download this book: reload the page.';
+      case 'deleted':
+        return 'This book was deleted on another device.';
+      case 'unavailable':
+        return "Downloading books isn't set up here yet. Open its PDF on this device to read it.";
+      default:
+        break;
+    }
+  }
+  return "This book couldn't be downloaded. Try again.";
+}
 
 function openMessage(error: unknown): string {
   if (error instanceof StorageError) return storageMessage(error);
@@ -92,6 +121,8 @@ export function App({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState<{ bookId: string; percent: number } | null>(null);
+  const download = useRef<AbortController | null>(null);
   /** Bumped when another device changed data, so the open reader reloads its annotations. */
   const [syncVersion, setSyncVersion] = useState(0);
 
@@ -108,7 +139,12 @@ export function App({
     setSyncVersion((version) => version + 1);
     store.list().then(setBooks, (err: unknown) => logUnexpected(err, 'Listing books failed'));
   }, [store]);
-  const { status: syncStatus, engine: syncEngine } = useSync(sync, onRemoteChanges);
+  const {
+    status: syncStatus,
+    uploads,
+    engine: syncEngine,
+    canDownload,
+  } = useSync(sync, onRemoteChanges);
   // Every local write schedules a sync; the UI below only ever uses these wrapped stores.
   const user = useMemo(
     () =>
@@ -205,7 +241,58 @@ export function App({
     }
   }
 
+  /** A book from another device: download its file, keep it here, then open it (phase 09b). */
+  async function downloadAndOpen(record: BookRecord) {
+    const files = sync?.files;
+    if (!files || download.current) return;
+    const controller = new AbortController();
+    download.current = controller;
+    setError(null);
+    setNotice(null);
+    setDownloading({ bookId: record.id, percent: 0 });
+    let bytes: Uint8Array;
+    try {
+      bytes = await downloadBook(record.id, files.client, {
+        signal: controller.signal,
+        onProgress: (received, total) =>
+          setDownloading({ bookId: record.id, percent: Math.floor((received / total) * 100) }),
+      });
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        if (!(err instanceof FileError) || err.kind === 'failed') {
+          console.error('Downloading the book failed', err);
+        }
+        setError(downloadMessage(err));
+      }
+      return;
+    } finally {
+      download.current = null;
+      setDownloading(null);
+    }
+    let saveError: unknown = null;
+    try {
+      await user.books.putFile(record.id, bytes);
+    } catch (err) {
+      // Still readable now, just not kept (for example, storage is full).
+      saveError = err;
+      logUnexpected(err, 'Saving the downloaded book failed');
+    }
+    const opened = await show(async () => bytes, record.fileName, record.id);
+    if (saveError !== null) setError(storageMessage(saveError));
+    if (opened === null) return;
+    try {
+      await user.books.markOpened(record.id);
+    } catch (err) {
+      logUnexpected(err, 'Updating the library failed');
+    }
+    await refreshBooks();
+  }
+
   async function onOpenFromLibrary(record: BookRecord) {
+    if (record.hasFile === false) {
+      await downloadAndOpen(record);
+      return;
+    }
     const opened = await show(() => user.books.getBytes(record.id), record.fileName, record.id);
     if (opened === null) return;
     try {
@@ -281,7 +368,11 @@ export function App({
             {notice}
           </p>
         )}
-        <SyncStatusLine status={syncStatus} onSyncNow={() => void syncEngine?.syncNow()} />
+        <SyncStatusLine
+          status={syncStatus}
+          uploads={uploads}
+          onSyncNow={() => void syncEngine?.syncNow()}
+        />
       </header>
       <UpdateNotice />
       {error && (
@@ -307,6 +398,9 @@ export function App({
           onOpen={(record) => void onOpenFromLibrary(record)}
           onRemoveFromDevice={(record) => void onRemoveFromDevice(record)}
           onDeleteEverywhere={(record) => void onDeleteEverywhere(record)}
+          canDownload={canDownload}
+          downloading={downloading}
+          onCancelDownload={() => download.current?.abort()}
         />
       )}
     </div>

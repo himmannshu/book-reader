@@ -34,6 +34,11 @@ export interface BookStore {
   remove(id: string): Promise<void>;
   /** Frees the file on this device only; the book and its annotations stay, here and elsewhere. */
   removeFromDevice(id: string): Promise<void>;
+  /**
+   * Saves a downloaded file for a book already in the library (phase 09b). The caller has checked
+   * that its SHA-256 is the book id. Fails with not-found if the book isn't in the library.
+   */
+  putFile(id: string, bytes: Uint8Array): Promise<void>;
 }
 
 /** Items that belong to one stored book, such as its bookmarks or highlights. */
@@ -62,6 +67,26 @@ export interface SyncStore {
   markSynced(items: readonly SyncItem[]): Promise<void>;
   /** Applies changes from other devices with last write wins; never marks them pending. */
   applyRemote(items: readonly SyncItem[]): Promise<{ applied: number }>;
+}
+
+/** Progress of copying one book's file to the cloud (phase 09b). */
+export interface UploadRecord {
+  bookId: string;
+  /** done: the cloud has it; full: the cloud was full last time we tried. */
+  state: 'uploading' | 'done' | 'full';
+  uploadId?: string;
+  /** Bytes per part, as the server chose when the upload started. */
+  partSize?: number;
+  /** Parts the server has accepted, so an interrupted upload resumes from the next one. */
+  parts: { partNumber: number; etag: string }[];
+}
+
+/** Local bookkeeping for book files in the cloud. Only the uploader uses it. */
+export interface FileTransferStore {
+  /** Books whose file is on this device and not known to be in the cloud, oldest first. */
+  pendingUploads(): Promise<{ book: BookRecord; upload?: UploadRecord }[]>;
+  /** Saves upload progress; ignored if the book is no longer in the library. */
+  saveUpload(record: UploadRecord): Promise<void>;
 }
 
 export type StorageErrorKind = 'quota' | 'unavailable' | 'not-found' | 'unknown';

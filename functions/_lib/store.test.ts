@@ -105,4 +105,23 @@ describe('sync store', () => {
     await applyChanges(db, 'me@example.com', [item()]);
     expect((await changesSince(db, 'me@example.com', 0, 'x')).items).toHaveLength(1);
   });
+
+  it('upgrades a version 1 database (09a) to version 2, keeping its data', async () => {
+    const db = memoryDb();
+    // The 09a schema, as deployed.
+    await db.exec(
+      'CREATE TABLE schema_version (version INTEGER NOT NULL);' +
+        'CREATE TABLE sync_seq (user TEXT PRIMARY KEY, seq INTEGER NOT NULL);' +
+        'CREATE TABLE sync_items (user TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL, ' +
+        'book_id TEXT NOT NULL, data TEXT, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL, ' +
+        'device TEXT NOT NULL, seq INTEGER NOT NULL, PRIMARY KEY (user, kind, id));' +
+        'INSERT INTO schema_version (version) VALUES (1);' +
+        "INSERT INTO sync_seq VALUES ('me@example.com', 1);" +
+        "INSERT INTO sync_items VALUES ('me@example.com', 'bookmark', 'bm-1', 'book-1', '{}', 100, 0, 'device-a', 1);",
+    );
+    await migrate(db);
+    expect(await db.all('SELECT version FROM schema_version')).toEqual([{ version: 2 }]);
+    expect(await db.all('SELECT COUNT(*) AS n FROM files')).toEqual([{ n: 0 }]);
+    expect((await changesSince(db, 'me@example.com', 0, 'x')).items).toHaveLength(1);
+  });
 });

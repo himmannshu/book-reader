@@ -14,10 +14,12 @@ import {
   type BookRecord,
   type BookStore,
   type BookmarkStore,
+  type FileTransferStore,
   type HighlightStore,
   type NoteStore,
   type PerBookStore,
   type SyncStore,
+  type UploadRecord,
 } from './types';
 
 /** False where the browser (or the unit-test environment) has no IndexedDB. */
@@ -25,7 +27,7 @@ export const indexedDBAvailable = typeof globalThis.indexedDB !== 'undefined';
 
 export const DB_NAME = 'book-reader';
 /** Bump with a migration in `upgrade` whenever the stores or record shape change. */
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 const BOOKS = 'books';
 const FILES = 'bookFiles';
 const BOOKMARKS = 'bookmarks';
@@ -33,12 +35,13 @@ const HIGHLIGHTS = 'highlights';
 const NOTES = 'notes';
 const SYNC_META = 'syncMeta';
 const SYNC_STATE = 'syncState';
+const UPLOADS = 'uploads';
 /** Stores of items that belong to a book; each has an index on `bookId`. */
 const PER_BOOK = [BOOKMARKS, HIGHLIGHTS, NOTES];
 const BY_BOOK = 'bookId';
 const BY_HIGHLIGHT = 'highlightId';
 const BY_PENDING = 'pending';
-const ALL_STORES = [BOOKS, FILES, ...PER_BOOK, SYNC_META, SYNC_STATE];
+const ALL_STORES = [BOOKS, FILES, ...PER_BOOK, SYNC_META, SYNC_STATE, UPLOADS];
 
 const STORE_OF: Record<SyncKind, string> = {
   book: BOOKS,
@@ -190,6 +193,10 @@ function upgrade(db: IDBDatabase, oldVersion: number, tx: IDBTransaction): void 
     db.createObjectStore(SYNC_STATE);
     if (oldVersion > 0) seedSyncMeta(tx);
   }
+  if (oldVersion < 6) {
+    // Phase 09b: upload progress per book. Books stored before have no row, so they upload.
+    db.createObjectStore(UPLOADS, { keyPath: 'bookId' });
+  }
 }
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
@@ -213,6 +220,7 @@ export interface IndexedDBStores {
   highlights: HighlightStore;
   notes: NoteStore;
   sync: SyncStore;
+  files: FileTransferStore;
 }
 
 /** All stores share one database connection. */
@@ -399,9 +407,10 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       guard(async () => {
         const me = await deviceId();
         const database = await db();
-        await atomic(database, [BOOKS, FILES, ...PER_BOOK, SYNC_META], async (tx) => {
+        await atomic(database, [BOOKS, FILES, ...PER_BOOK, SYNC_META, UPLOADS], async (tx) => {
           tx.objectStore(BOOKS).delete(id);
           tx.objectStore(FILES).delete(id);
+          tx.objectStore(UPLOADS).delete(id);
           await deleteAnnotationsOf(tx, id, me);
           await stamp(tx, me, 'book', id, id, true);
         });
@@ -413,6 +422,26 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
         const tx = database.transaction(FILES, 'readwrite');
         tx.objectStore(FILES).delete(id);
         await done(tx);
+      }),
+
+    putFile: (id, bytes) =>
+      guard(async () => {
+        // Copy into an ArrayBuffer of its own: IndexedDB stores the whole underlying buffer.
+        const buffer = bytes.slice().buffer;
+        const database = await db();
+        await atomic(database, [BOOKS, FILES, UPLOADS], async (tx) => {
+          if ((await request(tx.objectStore(BOOKS).getKey(id))) === undefined) {
+            throw new StorageError('not-found', `No book ${id}`);
+          }
+          tx.objectStore(FILES).put(buffer, id);
+          // It came from the cloud, so the cloud has it.
+          const record: UploadRecord = { bookId: id, state: 'done', parts: [] };
+          tx.objectStore(UPLOADS).put(record);
+        });
+        if (!askedForPersistence) {
+          askedForPersistence = true;
+          void requestPersistence().catch(() => false);
+        }
       }),
   };
 
@@ -579,6 +608,7 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
               store.delete(item.id);
               if (item.kind === 'book') {
                 tx.objectStore(FILES).delete(item.id);
+                tx.objectStore(UPLOADS).delete(item.id);
                 await deleteAnnotationsOf(tx, item.id, undefined);
               }
             } else if (typeof item.data === 'object' && item.data !== null) {
@@ -605,8 +635,42 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       }),
   };
 
+  const files: FileTransferStore = {
+    pendingUploads: () =>
+      guard(async () => {
+        const database = await db();
+        const tx = database.transaction([BOOKS, FILES, UPLOADS]);
+        const [all, fileKeys, uploads] = await Promise.all([
+          request(tx.objectStore(BOOKS).getAll()) as Promise<BookRecord[]>,
+          request(tx.objectStore(FILES).getAllKeys()),
+          request(tx.objectStore(UPLOADS).getAll()) as Promise<UploadRecord[]>,
+        ]);
+        const withFile = new Set(fileKeys);
+        const byBook = new Map(uploads.map((u) => [u.bookId, u]));
+        return all
+          .filter((book) => withFile.has(book.id) && byBook.get(book.id)?.state !== 'done')
+          .sort((a, b) => a.addedAt - b.addedAt)
+          .map((book) => {
+            const upload = byBook.get(book.id);
+            return upload
+              ? { book: { ...book, hasFile: true }, upload }
+              : { book: { ...book, hasFile: true } };
+          });
+      }),
+
+    saveUpload: (record) =>
+      guard(async () => {
+        const database = await db();
+        await atomic(database, [BOOKS, UPLOADS], async (tx) => {
+          if ((await request(tx.objectStore(BOOKS).getKey(record.bookId))) === undefined) return;
+          tx.objectStore(UPLOADS).put(record);
+        });
+      }),
+  };
+
   return {
     books,
+    files,
     bookmarks: perBook<Bookmark>(BOOKMARKS, 'bookmark', sortByPage),
     highlights: {
       ...highlights,

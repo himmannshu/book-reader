@@ -75,8 +75,8 @@
       "id": "F-010",
       "phase": "09",
       "description": "A book and its annotations added on one device appear on another device",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 local: e2e/sync/files.spec.ts (two devices, wrangler pages dev + local D1 and R2) passes in chromium+webkit, 3 repeats: a book imported on A opens on B without importing it, with A's bookmark and highlight; 20 MB book in 3 parts arrives byte-identical. Mutation checks fail as expected. 2026-10-20 real devices (user, preview): a book imported on the Mac opened on the iPhone without importing, downloaded with its highlights and notes."
     },
     {
       "id": "F-011",
@@ -118,7 +118,7 @@
       "phase": "09a",
       "description": "Bookmarks, highlights and notes made on one device appear on another device that has the same book, and deletions reach it too",
       "status": "passing",
-      "evidence": "2026-10-19 local: e2e/sync/sync.spec.ts (two devices, wrangler pages dev + local D1) passes in chromium+webkit: bookmarks, highlights and notes reach device B; deletions reach B; later edit wins. Mutation checks fail as expected. Not yet checked on real devices (contract item 13)."
+      "evidence": "2026-10-19 local: e2e/sync/sync.spec.ts (two devices, wrangler pages dev + local D1) passes in chromium+webkit: bookmarks, highlights and notes reach device B; deletions reach B; later edit wins. Mutation checks fail as expected. 2026-10-20 real devices (user): the Mac's highlights and notes appeared on the iPhone (09b preview check); deletions reached the other device (09a preview check, 2026-10-19)."
     }
   ]
 }

@@ -2,8 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 const port = 8788;
 
-// Two-device sync tests (phase 09a). The built app and the sync API (functions/) run together in
-// `wrangler pages dev` with a local D1 database; no Cloudflare account or network is needed.
+// Two-device sync tests (phases 09a, 09b). The built app and the APIs (functions/) run together in
+// `wrangler pages dev` with a local D1 database and R2 bucket; no Cloudflare account or network is
+// needed.
 // AUTH_MODE=dev only works on localhost; each test picks its own user with an x-dev-user header.
 export default defineConfig({
   testDir: './e2e/sync',
@@ -23,7 +24,8 @@ export default defineConfig({
   webServer: {
     command:
       `rm -rf .wrangler/sync-e2e && npm run build && wrangler pages dev dist --port ${port} ` +
-      '--compatibility-date 2026-10-01 --d1 DB=sync-e2e --binding AUTH_MODE=dev ' +
+      '--compatibility-date 2026-10-01 --d1 DB=sync-e2e --r2 FILES=sync-e2e-files ' +
+      '--binding AUTH_MODE=dev ' +
       '--persist-to .wrangler/sync-e2e',
     url: `http://localhost:${port}`,
     reuseExistingServer: false,

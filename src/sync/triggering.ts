@@ -44,6 +44,7 @@ export function withSyncTrigger(stores: UserStores, changed: () => void): UserSt
       markOpened: after((id: string) => books.markOpened(id), changed),
       remove: after((id: string) => books.remove(id), changed),
       removeFromDevice: (id) => books.removeFromDevice(id),
+      putFile: (id, bytes) => books.putFile(id, bytes),
     },
     bookmarks: perBook(stores.bookmarks, changed),
     highlights: perBook(stores.highlights, changed),

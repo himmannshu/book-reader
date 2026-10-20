@@ -1,6 +1,6 @@
 # Phase 09a: Sync library and annotations
 
-- Status: Not started (planned 2026-10-19; build only after phase 08 is complete, per the user)
+- Status: Complete (2026-10-20; evidence in harness/build-log.md)
 - Branch: phase-09a-sync-library-and-annotations
 - Depends on: 05, 06, 07, 08
 

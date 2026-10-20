@@ -2,7 +2,8 @@
 import type { JWTVerifyGetKey } from 'jose';
 import type { SyncItem, SyncKind } from '../../src/core/sync';
 import { AuthError, identify, type AuthEnv } from './auth';
-import { applyChanges, changesSince, migrate, type SqlDb } from './store';
+import { forgetFiles, type FileBucket } from './files';
+import { applyChanges, changesSince, ensureMigrated, type SqlDb } from './store';
 
 const KINDS: ReadonlySet<SyncKind> = new Set(['book', 'bookmark', 'highlight', 'note']);
 const MAX_CHANGES = 500;
@@ -60,20 +61,6 @@ function parseRequest(raw: unknown): SyncRequest {
   return { deviceId, since: r.since, changes: r.changes.map((c) => parseChange(c, deviceId)) };
 }
 
-const migrated = new WeakMap<SqlDb, Promise<void>>();
-
-function ensureMigrated(db: SqlDb): Promise<void> {
-  let done = migrated.get(db);
-  if (!done) {
-    done = migrate(db).catch((error: unknown) => {
-      migrated.delete(db);
-      throw error;
-    });
-    migrated.set(db, done);
-  }
-  return done;
-}
-
 function json(body: unknown, status = 200): Response {
   return Response.json(body, { status, headers: { 'cache-control': 'no-store' } });
 }
@@ -83,6 +70,8 @@ export async function handleSync(
   env: AuthEnv,
   db: SqlDb,
   getKey?: JWTVerifyGetKey,
+  /** Where book files live (phase 09b); a book deleted everywhere loses its file too. */
+  bucket?: FileBucket | null,
 ): Promise<Response> {
   try {
     const user = await identify(request, env, getKey);
@@ -93,7 +82,8 @@ export async function handleSync(
       throw error instanceof BadRequest ? error : new BadRequest('body is not JSON');
     }
     await ensureMigrated(db);
-    await applyChanges(db, user, body.changes);
+    const { deletedBooks } = await applyChanges(db, user, body.changes);
+    if (deletedBooks.length > 0) await forgetFiles(db, bucket ?? null, user, deletedBooks);
     const pulled = await changesSince(db, user, body.since, body.deviceId);
     return json(pulled);
   } catch (error) {

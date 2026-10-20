@@ -1280,3 +1280,95 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Access application covers both; ACCESS_AUD must be that tag in BOTH environments.
 - Phase 09a stays In progress until the user reports the annotation part of item 13 (can be checked on
   production now).
+
+### 2026-10-19 23:25 EDT | Phase 09b | Claude Code (Opus 5.5) | Planned and approved
+- User decisions: download on open; cap cloud storage at 9 GB. Plan approved by the user (plan mode).
+- Wrote harness/build/phase-09b-sync-book-files.md (detail) and harness/contracts/phase-09b-contract.md
+  (13 items, approved). PLANS.md: 09a and 09b In progress (09a's row was stale at "Not started").
+- F-010 ("A book and its annotations added on one device appear on another device") is this phase's feature;
+  its `phase` field still says "09" (left as is: only status and evidence change in features.json).
+- Facts used (Cloudflare docs): R2 multipart parts ≥ 5 MiB, equal size except the last, ≤ 10,000 parts;
+  request bodies ≤ 100 MB → fixed 8 MiB parts. Free Workers CPU is tight → no hashing on the server.
+
+### 2026-10-19 23:40 EDT | Phase 09b | Claude Code (Opus 5.5) | Probe; server file API green
+- Probe (scratch project, `wrangler pages dev --r2`): multipart with an 8 MiB streamed part (Content-Length set) +
+  a 3 MB last part → complete size 11388608; ranged GET 206 and full GET byte-identical (cmp). A 4 MB non-last
+  part → complete fails "smaller than the minimum allowed object size (10011)"; a single small part (4 B, 4 MB)
+  completes. A chunked body (no length) → "Provided readable stream must have a known length". So: fixed 8 MiB
+  parts, and the server answers 411 without Content-Length.
+- Server: functions/_lib/files.ts (create / part / complete / ranged GET; cap; 409 not-synced, 410 deleted; R2 key
+  per sha256(user)), r2.ts adapter, memory-bucket.ts (test only), route functions/api/files/[[path]].ts; D1 schema
+  v2 (`files` table); applyChanges returns deleted books and the sync handler deletes their files.
+- Tests first: files.test.ts (12) failed (no module), then pass; store.test.ts adds the v1 → v2 upgrade. Vitest
+  deep equality on 16 MB arrays ran Node out of memory; tests compare bytes with Buffer.compare instead.
+  `npx vitest run functions` → 31 passed; typecheck and eslint clean.
+
+### 2026-10-20 00:05 EDT | Phase 09b | Claude Code (Opus 5.5) | Local storage v6 and the HTTP file client
+- Tests first: src/storage/file-transfer-store.test.ts (8) failed (`s.files` undefined), then pass. IndexedDB v6
+  adds `uploads` (keyPath bookId); `files.pendingUploads()` / `saveUpload()`; `books.putFile()` saves a downloaded
+  file for a known book and marks it done; delete everywhere (local or remote) clears the upload row. v5 → v6
+  upgrade keeps books, bookmarks, deviceId, cursor and pending changes, and queues local files for upload.
+- src/sync/file-client.ts (FileClient, FileError kinds) and `httpFileClient` in http-client.ts (still the only
+  fetch). http-file-client.test.ts (7) failed (not a function), then pass: error mapping (404 not-uploaded /
+  no-such-upload / missing API, 409, 410, 503, 507, 401, redirect, 500, bad JSON), ranges checked against
+  Content-Range, AbortError passes through.
+- Full unit run green; lint and typecheck clean.
+
+### 2026-10-20 00:55 EDT | Phase 09b | Claude Code (Opus 5.5) | Uploader, downloader, UI, e2e; verify PASS
+- Uploader (src/sync/uploader.ts) and downloader (src/sync/downloader.ts), with unit tests (8 + 5; the test files
+  were written before the code, though I ran them only after both existed). Unit mutation checks, each reverted:
+  uploader ignoring saved parts → resume test failed; no SHA-256 check → damaged test failed; storage-full not
+  recorded → full test failed.
+- UI: useSync runs the uploader after each successful sync; Library rows for books on other devices open with
+  "Downloading… N%" and Cancel; readable messages (offline, still uploading, damaged, signed out, deleted, not set
+  up); a failed save after download still opens the book with the storage message; the status line shows
+  "Uploading N book(s) (P%)" and "Cloud storage is full (9 GB)…". Library and status-line unit tests (6) failed
+  first, then pass.
+- Server: dev-mode-only `x-dev-files-cap` header (localhost only, like x-dev-user) so one e2e user can have a tiny
+  cap; unit test shows production mode ignores it.
+- E2E e2e/sync/files.spec.ts (8 tests) over `wrangler pages dev --r2 FILES=…`; the device fixture and helpers moved
+  from sync.spec.ts to e2e/sync/devices.ts. The 09a test "a book added on one device is listed on the other" no
+  longer expects the cloud-only row to be unopenable (09b makes it openable); it still checks the listing and that
+  importing brings annotations. Big PDFs (20 MB) are written by hand at test time into the OS temp dir
+  (Playwright's loader can't import pdf-lib: "Unexpected module status 3"). `npx tsx` was used once to check the
+  generator; it downloaded tsx into npm's cache only (no project change).
+- A first full sync run failed one test in chromium (resume): the sync scheduled 2 s after import resumed and
+  finished the upload before the test waited for the "complete" request. The helper now polls HEAD /api/files/<id>
+  for 200. Then `--repeat-each=3 files.spec.ts` → 48 passed.
+- E2E mutation checks (chromium, each reverted): no hash check → damaged test failed; download not kept → reload
+  test failed; uploader ignoring saved parts → resume test failed; server keeping deleted books' files → first
+  survived (GET already answered 404 for a deleted book), so the test now re-imports the book with uploads held
+  back and checks HEAD is 404; then the mutation failed it.
+- Docs: docs/deploy.md section 2c (R2 buckets `book-reader-files` / `-preview`, binding `FILES`; dashboard path
+  Storage & databases → R2 → Overview → Create bucket, per Cloudflare docs); section 2b now says one Access
+  application can cover both environments. AGENTS.md notes R2 and the files API.
+- `scripts/verify.sh` → PASS: unit 260, browser 175 + 1 skipped, sync 30, perf 8 (chromium first 176, jump 24,
+  p95 16.7; webkit first 150, jump 55, p95 31; canvas 67.1). Budgets unchanged.
+- Contract 09b evidence (local): 1 files.spec "opens on another without importing" (+ progress shown in the 20 MB
+  test); 2 "bigger than one part" (parts 1,2,3; stored SHA-256 = id) + files.test.ts; 3 "resumes from the next part"
+  (PUTs 1,2,2,3) + uploader.test.ts (resume after reload, expired upload); 4 "damaged download" + downloader.test.ts;
+  5 "offline, or before the upload has finished"; 6 "Delete everywhere removes the file" + files.test.ts (410 on
+  complete after delete); 7 "Remove from this device … downloads again"; 8 "cloud is full" + files/uploader unit;
+  9 files.test.ts (401 without token, per-user keys) — deployed curl pending; 10 file-transfer-store.test.ts (v5 →
+  v6); 11 perf above (the perf suite doesn't run uploads; uploads start only after a sync and never block opening);
+  12 local PASS — CI pending (needs a push); 13 pending (user, after R2 setup and deploy).
+- F-010 → passing (local evidence; real devices pending).
+
+### 2026-10-20 00:22 EDT | Phase 09b | Claude Code (Opus 5.5) | Pushed; CI green; preview file API behind Access
+- The user reported R2 set up (buckets book-reader-files / book-reader-files-preview, FILES binding for Production
+  and Preview) and asked to push. Pushed phase-09b-sync-book-files at 98f0915.
+- CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39367480019 → success
+  (04:02:52Z–04:19:32Z UTC). Cloudflare Pages check on 98f0915 → success.
+- Item 9, deployed side: logged-out curl to https://phase-09b-sync-book-files.book-reader-cpi.pages.dev —
+  GET and HEAD /api/files/<id> and POST /api/files/<id>/uploads → 302 to the Access login.
+- Not yet observed: a signed-in upload/download against real R2 (item 13, the user's two-device check).
+
+### 2026-10-20 00:45 EDT | Phases 09a, 09b | Claude Code (Opus 5.5) | Complete (user-checked on real devices)
+- User report (09b item 13): on the 09b preview, a book imported on the Mac (page left open while it uploaded)
+  opened on the iPhone without importing; it downloaded and showed the Mac's highlights and notes.
+- That also observes 09a item 13's remaining part: annotations made on the Mac appeared on the iPhone. (Item 13
+  says "same book imported on both"; here the iPhone got the same book by download, which is the 09b path. The
+  annotation sync is the same mechanism.) Deletions across devices were reported on 2026-10-19.
+- Every 09a and 09b contract item now has observed evidence → both phases Complete (PLANS.md, phase files).
+  F-010 and F-016 evidence updated with the real-device checks.
+- 09b is not merged into main yet (a push to main deploys production; waiting for the user's OK).

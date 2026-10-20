@@ -1,11 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { SyncStatus } from '../sync/engine';
+import type { UploadStatus } from '../sync/uploader';
 import { SyncStatusLine } from './SyncStatusLine';
 
-function show(status: SyncStatus) {
+function show(status: SyncStatus, uploads?: UploadStatus) {
   const onSyncNow = vi.fn();
-  const view = render(<SyncStatusLine status={status} onSyncNow={onSyncNow} />);
+  const view = render(<SyncStatusLine status={status} uploads={uploads} onSyncNow={onSyncNow} />);
   return { onSyncNow, ...view };
 }
 
@@ -39,5 +40,15 @@ describe('SyncStatusLine', () => {
   it('shows nothing where sync is not set up', () => {
     const { container } = show({ state: 'unavailable' });
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it.each([
+    [{ state: 'uploading', books: 1, percent: 35 }, 'Uploading 1 book (35%)'],
+    [{ state: 'uploading', books: 3, percent: 0 }, 'Uploading 3 books (0%)'],
+    [{ state: 'full' }, 'Cloud storage is full (9 GB). New books stay on this device only.'],
+    [{ state: 'idle' }, ''],
+  ] as [UploadStatus, string][])('shows uploads %j as "%s"', (uploads, text) => {
+    show({ state: 'synced', at: 0 }, uploads);
+    expect(screen.getByTestId('upload-status')).toHaveTextContent(text);
   });
 });
