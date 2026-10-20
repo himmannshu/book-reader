@@ -67,15 +67,15 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-19 20:51 EDT
-- Branch: main
-- HEAD: e67f148 phase 08: iPhone offline failed; deferred by the user (contract Amendment 1); phase closed with exceptions
+Snapshot 2026-10-19 21:36 EDT
+- Branch: phase-09a-sync-library-and-annotations
+- HEAD: 2089d47 phase 09a: F-016 passing locally; handoff
 - Uncommitted files: 0
-- Last verify: PASS at 2026-10-19 20:22 EDT (commit e9a9c00)
+- Last verify: PASS at 2026-10-19 21:34 EDT (commit 6899844)
 - Recent commits:
-    e67f148 phase 08: iPhone offline failed; deferred by the user (contract Amendment 1); phase closed with exceptions
-    95c252d phase 08: record green CI on main
-    c97a653 phase 09 planning: refresh handoff snapshot
-    85cfca5 phase 09: split into 09a/09b; 09a plan and contract (planning docs only)
-    82c7860 phase 08: refresh handoff snapshot
+    2089d47 phase 09a: F-016 passing locally; handoff
+    cd04837 phase 09a: two-device e2e covers highlights too (contract item 1)
+    541e72d phase 09a: sync in verify; deploy guide for D1; AGENTS, context and build log
+    6899844 phase 09a: sync e2e: order the conflict so the older edit arrives last; isolate the back-online trigger
+    6974988 phase 09a: two-device sync e2e against wrangler pages dev with local D1; per-test dev user; devices closed after each test
 <!-- AUTO:END -->
