@@ -3,26 +3,51 @@ import { describe, expect, it, vi } from 'vitest';
 import type { BookRecord } from '../storage/types';
 import { Library } from './Library';
 
-const book = (id: string, hasFile: boolean): BookRecord => ({
+const book = (id: string, hasFile: boolean, byteSize = 1): BookRecord => ({
   id,
   fileName: `${id}.pdf`,
   title: id,
-  byteSize: 1,
+  byteSize,
   addedAt: 1,
   lastOpenedAt: 1,
   hasFile,
 });
 
-function setup(books: BookRecord[]) {
-  const handlers = { onOpen: vi.fn(), onRemoveFromDevice: vi.fn(), onDeleteEverywhere: vi.fn() };
-  render(<Library books={books} busy={false} {...handlers} />);
-  return handlers;
+function setup(books: BookRecord[], extra: Partial<Parameters<typeof Library>[0]> = {}) {
+  const handlers = {
+    onOpen: vi.fn(),
+    onRemoveFromDevice: vi.fn(),
+    onDeleteEverywhere: vi.fn(),
+    onCancelDownload: vi.fn(),
+  };
+  const view = render(<Library books={books} busy={false} {...handlers} {...extra} />);
+  return { ...handlers, ...view };
 }
 
 const row = (title: string) =>
   screen.getAllByRole('listitem').find((li) => li.textContent?.includes(title)) as HTMLElement;
 
 describe('Library', () => {
+  it('where books can be downloaded, a book from another device opens from the list (phase 09b)', () => {
+    const { onOpen } = setup([book('elsewhere', false, 12_400_000)], { canDownload: true });
+    const item = row('elsewhere');
+    expect(item).toHaveTextContent('On your other devices · 12.4 MB · downloads when you open it');
+    fireEvent.click(within(item).getByRole('button', { name: 'elsewhere' }));
+    expect(onOpen).toHaveBeenCalledWith(expect.objectContaining({ id: 'elsewhere' }));
+  });
+
+  it('shows download progress with Cancel, and nothing else can be opened meanwhile', () => {
+    const { onCancelDownload } = setup([book('elsewhere', false, 2_000_000), book('local', true)], {
+      canDownload: true,
+      downloading: { bookId: 'elsewhere', percent: 45 },
+    });
+    expect(row('elsewhere')).toHaveTextContent('Downloading… 45%');
+    expect(within(row('local')).getByRole('button', { name: 'local' })).toBeDisabled();
+    expect(within(row('elsewhere')).queryByRole('button', { name: 'Remove elsewhere' })).toBeNull();
+    fireEvent.click(within(row('elsewhere')).getByRole('button', { name: 'Cancel download' }));
+    expect(onCancelDownload).toHaveBeenCalled();
+  });
+
   it('lists a book from another device without opening it, and says how to read it', () => {
     const { onOpen } = setup([book('elsewhere', false)]);
     const item = row('elsewhere');

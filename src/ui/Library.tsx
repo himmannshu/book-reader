@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatSize } from '../core/library';
 import type { BookRecord } from '../storage/types';
 
 interface LibraryProps {
@@ -9,6 +10,11 @@ interface LibraryProps {
   onRemoveFromDevice(book: BookRecord): void;
   /** Deletes the book and its annotations on every device. */
   onDeleteEverywhere(book: BookRecord): void;
+  /** Whether books from other devices can be downloaded here (phase 09b). */
+  canDownload?: boolean;
+  /** The book being downloaded, if any. */
+  downloading?: { bookId: string; percent: number } | null;
+  onCancelDownload?(): void;
 }
 
 /**
@@ -21,6 +27,9 @@ export function Library({
   onOpen,
   onRemoveFromDevice,
   onDeleteEverywhere,
+  canDownload = false,
+  downloading = null,
+  onCancelDownload,
 }: LibraryProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -34,17 +43,28 @@ export function Library({
       <ul aria-label="Your books">
         {books.map((book) => {
           const here = book.hasFile !== false;
+          const openable = here || canDownload;
+          const progress = downloading?.bookId === book.id ? downloading : null;
           return (
             <li key={book.id} className={here ? 'library-item' : 'library-item elsewhere'}>
-              {here ? (
-                <button
-                  type="button"
-                  className="library-title"
-                  disabled={busy}
-                  onClick={() => onOpen(book)}
-                >
-                  {book.title}
-                </button>
+              {openable ? (
+                <span className="library-title-group">
+                  <button
+                    type="button"
+                    className="library-title"
+                    disabled={busy || downloading !== null}
+                    onClick={() => onOpen(book)}
+                  >
+                    {book.title}
+                  </button>
+                  {!here && (
+                    <span className="library-note" aria-live="polite">
+                      {progress
+                        ? `Downloading… ${progress.percent}%`
+                        : `On your other devices · ${formatSize(book.byteSize)} · downloads when you open it`}
+                    </span>
+                  )}
+                </span>
               ) : (
                 <span className="library-title">
                   {book.title}
@@ -53,7 +73,11 @@ export function Library({
                   </span>
                 </span>
               )}
-              {confirmingId === book.id ? (
+              {progress ? (
+                <button type="button" onClick={() => onCancelDownload?.()}>
+                  Cancel download
+                </button>
+              ) : confirmingId === book.id ? (
                 <span className="library-confirm">
                   Remove this book?
                   {here && (
