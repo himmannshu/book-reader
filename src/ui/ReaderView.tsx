@@ -447,22 +447,29 @@ export function ReaderView({
   const exportUnavailableReason =
     bookId === null
       ? 'Export works once the book is saved on this device.'
-      : marked.items === null || written.items === null
-        ? 'Loading highlights and notes…'
-        : null;
+      : written.failed || (marked.items === null && marked.unavailableReason !== null)
+        ? "Export needs this book's highlights and notes, which couldn't be read. Try again later."
+        : marked.items === null || written.items === null
+          ? 'Loading highlights and notes…'
+          : null;
 
   async function exportAnnotations() {
     if (exportUnavailableReason !== null) return;
     // Without a readable table of contents the export is grouped by page only (and logged).
     const entries = await loadOutline().catch((): OutlineItem[] => []);
-    const markdown = exportMarkdown({
-      title,
-      highlights: highlightList,
-      notes: written.items ?? [],
-      outline: entries,
-      exportedAt: new Date(now()),
-    });
-    downloadText(exportFileName(title), markdown, 'text/markdown');
+    try {
+      const markdown = exportMarkdown({
+        title,
+        highlights: highlightList,
+        notes: written.items ?? [],
+        outline: entries,
+        exportedAt: new Date(now()),
+      });
+      downloadText(exportFileName(title), markdown, 'text/markdown');
+    } catch (error) {
+      console.error('Exporting failed', error);
+      setAnnotationError("The highlights and notes couldn't be exported. Try again.");
+    }
   }
 
   function openNote(target: NoteTarget) {

@@ -13,9 +13,16 @@ export interface ExportInput {
   exportedAt: Date;
 }
 
-/** Escapes characters Markdown would read as formatting, so text reads exactly as written. */
+/**
+ * Escapes what Markdown would read as formatting, so text reads exactly as written: inline marks
+ * and entities anywhere, and at the start a list number ("1." becomes "1\\."), a list or rule dash,
+ * or a plus. A backslash before a digit would show, so numbers are escaped after their digits.
+ */
 function escape(text: string): string {
-  return text.replace(/[\\`*_{}[\]<>#|~]/g, '\\$&').replace(/^([-+]|\d+\.)(\s)/, '\\$1$2');
+  return text
+    .replace(/[\\`*_{}[\]<>#|~&]/g, '\\$&')
+    .replace(/^(\d+)([.)])/, '$1\\$2')
+    .replace(/^([-+=])/, '\\$1');
 }
 
 /** A note's own text, kept as typed (it may use Markdown); line breaks stay line breaks. */
@@ -77,7 +84,8 @@ export function exportMarkdown({
   let chapter: OutlineEntry | undefined;
   for (const pageIndex of pages) {
     const here = chapterAt(pageIndex, outline);
-    if (here && here !== chapter) lines.push(`## ${escape(here.title.trim())}`, '');
+    const heading = here?.title.trim();
+    if (here && here !== chapter && heading) lines.push(`## ${escape(heading)}`, '');
     chapter = here;
     lines.push(`### Page ${pageIndex + 1}`, '');
     for (const note of pageNotes.get(pageIndex) ?? []) {

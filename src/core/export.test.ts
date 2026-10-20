@@ -108,6 +108,39 @@ describe('exportMarkdown', () => {
     expect(markdown).toContain('> \\# Not a heading, \\*not\\* emphasis, 2 \\< 3 \\| x\\_y');
   });
 
+  it('escapes what would start a list, a rule or an entity, without showing a stray backslash', () => {
+    const quotes = ['1. Introduction', '2) Second', '- dash', '+ plus', '---', 'Tom &amp; Jerry'];
+    const markdown = exportMarkdown({
+      title: '1. A title',
+      outline: [],
+      exportedAt,
+      highlights: quotes.map((quote, i) => highlight(`h${i}`, 0, i * 10, quote)),
+      notes: [],
+    });
+    expect(markdown).toContain('# 1\\. A title');
+    for (const line of [
+      '> 1\\. Introduction',
+      '> 2\\) Second',
+      '> \\- dash',
+      '> \\+ plus',
+      '> \\---',
+      '> Tom \\&amp; Jerry',
+    ]) {
+      expect(markdown).toContain(line);
+    }
+  });
+
+  it('leaves out a chapter heading whose title is empty', () => {
+    const markdown = exportMarkdown({
+      title: 'B',
+      outline: [entry('   ', 0)],
+      exportedAt,
+      highlights: [highlight('h', 0, 10, 'Text.')],
+      notes: [],
+    });
+    expect(markdown).not.toMatch(/^## *$/m);
+  });
+
   it('says so when there is nothing to export', () => {
     const markdown = exportMarkdown({
       title: 'Empty',
