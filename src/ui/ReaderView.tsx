@@ -55,6 +55,7 @@ const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
 const DISPLAY_ID = 'display-menu';
+const APPLE = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 const NO_VOICE_NOTES: VoiceNoteStore = {
   list: async () => [],
@@ -539,8 +540,9 @@ export function ReaderView({
   // Cmd/Ctrl+F opens the book's search instead of the browser's (which can't see the pages).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.key.toLowerCase() !== 'f')
-        return;
+      // Cmd on Apple devices (where Ctrl+F moves the cursor in text fields), Ctrl elsewhere.
+      const command = APPLE ? event.metaKey : event.ctrlKey;
+      if (!command || event.altKey || event.key.toLowerCase() !== 'f') return;
       event.preventDefault();
       written.request(() => {
         marked.dismiss();
@@ -556,22 +558,29 @@ export function ReaderView({
   const exportUnavailableReason =
     bookId === null
       ? 'Export works once the book is saved on this device.'
-      : marked.items === null || written.items === null
-        ? 'Loading highlights and notes…'
-        : null;
+      : written.failed || (marked.items === null && marked.unavailableReason !== null)
+        ? "Export needs this book's highlights and notes, which couldn't be read. Try again later."
+        : marked.items === null || written.items === null
+          ? 'Loading highlights and notes…'
+          : null;
 
   async function exportAnnotations() {
     if (exportUnavailableReason !== null) return;
     // Without a readable table of contents the export is grouped by page only (and logged).
     const entries = await loadOutline().catch((): OutlineItem[] => []);
-    const markdown = exportMarkdown({
-      title,
-      highlights: highlightList,
-      notes: written.items ?? [],
-      outline: entries,
-      exportedAt: new Date(now()),
-    });
-    downloadText(exportFileName(title), markdown, 'text/markdown');
+    try {
+      const markdown = exportMarkdown({
+        title,
+        highlights: highlightList,
+        notes: written.items ?? [],
+        outline: entries,
+        exportedAt: new Date(now()),
+      });
+      downloadText(exportFileName(title), markdown, 'text/markdown');
+    } catch (error) {
+      console.error('Exporting failed', error);
+      setAnnotationError("The highlights and notes couldn't be exported. Try again.");
+    }
   }
 
   function openNote(target: NoteTarget) {

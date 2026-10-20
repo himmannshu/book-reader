@@ -39,6 +39,7 @@ async function highlightWords(page: Page, pageIndex: number, text: string) {
 
 test('a book’s highlights and notes download as a Markdown file in book order', async ({
   page,
+  browserName,
 }) => {
   await page.goto('/');
   await importBook(page, 'text-4-pages.pdf');
@@ -60,7 +61,11 @@ test('a book’s highlights and notes download as a Markdown file in book order'
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Export highlights and notes' }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe('text-4-pages - highlights and notes.md');
+  // Playwright's WebKit build turns spaces in download names into underscores; Safari keeps them.
+  const name = 'text-4-pages - highlights and notes.md';
+  expect(download.suggestedFilename()).toBe(
+    browserName === 'webkit' ? name.replace(/ /g, '_') : name,
+  );
   const path = await download.path();
   const markdown = await readFile(path, 'utf8');
   expect(markdown).toMatch(/^# text-4-pages\n/);
