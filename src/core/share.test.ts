@@ -14,6 +14,17 @@ describe('excerptText', () => {
     );
   });
 
+  it('never cuts a character in half when a long passage has no spaces', () => {
+    // One letter first, so a cut by code units would land inside an emoji.
+    const quote = 'a' + '😀'.repeat(1200);
+    const shared = excerptText({ quote, title: 'T', pageIndex: 0 }).split('\n')[0] ?? '';
+    // No lone surrogate halves: every code unit pair is a whole emoji.
+    expect(shared).not.toMatch(
+      /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/,
+    );
+    expect(shared.endsWith('…”')).toBe(true);
+  });
+
   it('shortens a very long passage at a word, with an ellipsis', () => {
     const quote = Array.from({ length: 400 }, (_, i) => `w${i}`).join(' ');
     const text = excerptText({ quote, title: 'T', pageIndex: 0 });

@@ -14,7 +14,14 @@ export function excerptText({ quote, title, pageIndex }: Excerpt): string {
   let text = quote.replace(/\s+/g, ' ').trim();
   if (text.length > MAX_EXCERPT) {
     const cut = text.lastIndexOf(' ', MAX_EXCERPT);
-    text = `${text.slice(0, cut > 0 ? cut : MAX_EXCERPT).trimEnd()}…`;
+    // Without a space to cut at, cut by whole characters (an emoji is two code units).
+    const kept =
+      cut > 0
+        ? text.slice(0, cut)
+        : Array.from(text)
+            .slice(0, MAX_EXCERPT / 2)
+            .join('');
+    text = `${kept.trimEnd()}…`;
   }
   const book = title.trim();
   const source = book ? `${book}, page ${pageIndex + 1}` : `page ${pageIndex + 1}`;

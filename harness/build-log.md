@@ -1570,3 +1570,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   with the end of the book), 274 passed, 3 skipped.
 - Evaluator: harness/code_review/phase-16-review.md, FAIL (that test; unstable player buttons; toast over the
   player). Fixes: see the review appendix. Unit 358; chromium e2e 137 passed + 1 environment failure.
+
+### 2026-10-20 13:20 UTC | Phase 17 | Claude Code (Opus 5.5, cloud session) | Built; evaluator FAIL (CI) → fixes
+- Built (earlier today, worktree /home/user/book-reader-p17): share text in src/core (unit tests), share helper
+  with clipboard fallback, Share on a highlight; e2e/share.spec.ts (stand-in share sheet and clipboard) 3/3;
+  chromium e2e 138 passed + 1 environment failure.
+- Perf, alternating phase 14 and phase 17 runs: firstPage p14 492/402/390, p17 372/396/406; jump 48/40/51 vs
+  56/37/36; scroll p95 33.3 in all six (this machine at that time). No regression.
+- Evaluator: harness/code_review/phase-17-review.md, FAIL on CI only (the phase 16 test); one small bug (emoji cut
+  in half in a long passage without spaces), fixed with a unit test red first.
