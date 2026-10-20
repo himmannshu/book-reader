@@ -1118,3 +1118,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Item 8 (hosted): GET /sw.js on the preview → 200 with "cache-control: no-cache" (from public/_headers).
 - CI run 39345677490 on bc2b12f in progress (the first watch attempt failed only because it looked up the run id
   before GitHub registered it).
+
+### 2026-10-19 20:10 EDT | Phase 08 | Claude Code (Opus 5.5) | Deploy guide corrected (One-time PIN location)
+- User could not find One-time PIN. Web search of current Cloudflare docs: the provider is under Zero Trust →
+  Integrations → Identity providers (my guide said Settings → Authentication). Previews are protected through the
+  Pages project's Settings → Access policy. docs/deploy.md section 2 rewritten accordingly. No Cloudflare settings
+  changed by the agent.

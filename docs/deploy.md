@@ -39,25 +39,31 @@ Dashboard menu names change from time to time. The settings below are what matte
 
 ## 2. Put it behind your login (Cloudflare Access)
 
-1. In the dashboard open **Zero Trust**. The first time, pick a team name and the **Free** plan.
-2. Under **Settings → Authentication → Login methods**, make sure **One-time PIN** is enabled.
-3. Under **Access → Applications → Add an application → Self-hosted**:
-   - **Application name:** Book Reader
+The login has two parts: production (`<project>.pages.dev`) and previews
+(`*.<project>.pages.dev`). Both must end up behind the emailed code.
+
+1. **Turn on the email code:** **Zero Trust** → **Integrations** → **Identity providers** →
+   **Add new** → **One-time PIN** → Save. It needs no configuration. The first time you open Zero
+   Trust, pick a team name and the **Free** plan.
+2. **Protect previews:** **Workers & Pages** → your project → **Settings** → **Access policy** →
+   **Enable**. Cloudflare creates an Access application for `*.<project>.pages.dev`.
+3. **Protect production:** if production isn't protected yet, go to **Zero Trust** → **Access** →
+   **Applications** → **Add an application** → **Self-hosted**, with the domain
+   `<project>.pages.dev`.
+4. **For each Book Reader application** (Zero Trust → Access → Applications):
+   - **Login methods:** One-time PIN allowed. Either leave "Accept all available identity
+     providers" on, or tick One-time PIN.
+   - **Policy:** action **Allow**, include **Emails** → `vghimanshu2@gmail.com`. Replace any rule
+     like "Cloudflare account members".
    - **Session duration:** a long one, for example 1 month. When it runs out, you'll need to log
      in again before the app can fetch updates. Reading offline keeps working meanwhile.
-   - **Application domains:** add two:
-     - `<project>.pages.dev` (production)
-     - `*.<project>.pages.dev` (every preview deployment)
-   - **Identity providers:** One-time PIN.
-4. Add a **policy**: action **Allow**, include **Emails** → `vghimanshu2@gmail.com`.
-5. Save.
 
-**Check it:** open `https://<project>.pages.dev` in a private window. You should see the Cloudflare
-Access page asking for your email. Enter it, type the code from your inbox, and the reader opens.
+**Check it:** open the production URL and a preview URL in a private window. Both should show the
+Cloudflare Access page with **"Get a login code emailed to you"**. Enter your email, type the
+code from your inbox, and the reader opens.
 
-Optional extra: in the Pages project under **Settings → General**, you can also enable the
-built-in access policy for preview deployments. The Zero Trust application above already covers
-them.
+If the login page only says "Sign in with: Cloudflare", the application still uses Cloudflare
+account sign-in. Recheck its login methods in step 4.
 
 ## 3. Install the app
 
