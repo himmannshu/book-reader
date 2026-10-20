@@ -33,7 +33,7 @@ import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
 import { THEME_LABELS, applyTheme } from './theme';
-import { drawCover, startCoverQueue } from './covers';
+import { CoverWorker, drawCover, type DrawnCover } from './covers';
 import { UpdateNotice } from './UpdateNotice';
 import { useSync, type SyncSetup } from './useSync';
 
@@ -168,8 +168,6 @@ export function App({
   }>({ covers: new Map(), states: new Map() });
   /** Books that have a cover, for the code that decides whether to draw one. */
   const coverIds = useRef(new Set<string>());
-  /** Books whose cover could not be drawn this session; not tried again until a reload. */
-  const coverFailed = useRef(new Set<string>());
 
   const loadShelf = useCallback(
     () =>
@@ -198,14 +196,44 @@ export function App({
     void loadShelf();
   }, [loadShelf]);
 
-  /** Draws and keeps a cover for a book from its open document. */
+  /** Draws and keeps a cover for a book from its open document, and shows it on the shelf. */
   const saveCover = useCallback(
-    async (bookId: string, from: PdfDoc) => {
-      const cover = await drawCover(from);
+    async (bookId: string, from: PdfDoc, signal: AbortSignal) => {
+      const cover: DrawnCover = await drawCover(from, signal);
       await covers.put({ bookId, ...cover });
+      coverIds.current.add(bookId);
+      const url = URL.createObjectURL(new Blob([cover.bytes], { type: cover.type }));
+      setShelf((previous) => {
+        const old = previous.covers.get(bookId);
+        if (old) URL.revokeObjectURL(old);
+        return { ...previous, covers: new Map(previous.covers).set(bookId, url) };
+      });
     },
     [covers],
   );
+
+  // One worker makes missing covers while the Library shows, one book at a time; opening a book
+  // pauses it and cancels the cover in progress (phase 11 review B1, B2).
+  const coverWorker = useMemo(
+    () =>
+      new CoverWorker(
+        async (bookId, signal) => {
+          const bytes = await store.getBytes(bookId);
+          signal.throwIfAborted();
+          const opened = await engine.open(bytes);
+          try {
+            await saveCover(bookId, opened, signal);
+          } finally {
+            await opened.destroy();
+          }
+        },
+        { onError: (err) => logUnexpected(err, 'Drawing a cover failed') },
+      ),
+    [engine, store, saveCover],
+  );
+  useEffect(() => () => coverWorker.pause(), [coverWorker]);
+  /** Set while going back to the Library, so the closing book may draw its cover. */
+  const leavingToLibrary = useRef(false);
 
   // Free the previous document's memory and worker when another book replaces it. Keyed on the
   // document, not the book: the book changes when a newly opened file gets its stored id.
@@ -222,16 +250,23 @@ export function App({
       if (!doc) return;
       const bookId = docs.get(doc);
       docs.delete(doc);
-      if (!bookId || coverIds.current.has(bookId)) {
+      const leaving = leavingToLibrary.current;
+      leavingToLibrary.current = false;
+      // Only when going back to the Library: if another book is opening, its first page must not
+      // wait, so the background worker makes this cover later instead.
+      if (!bookId || coverIds.current.has(bookId) || !leaving) {
         void doc.destroy();
         return;
       }
-      saveCover(bookId, doc)
-        .then(loadShelf)
-        .catch((err: unknown) => console.error('Drawing the cover failed', err))
-        .finally(() => void doc.destroy());
+      coverWorker.run(bookId, async (signal) => {
+        try {
+          await saveCover(bookId, doc, signal);
+        } finally {
+          await doc.destroy();
+        }
+      });
     };
-  }, [doc, saveCover, loadShelf]);
+  }, [doc, saveCover, coverWorker]);
 
   // Reload covers and progress whenever the Library shows: this runs after the reader has
   // unmounted, so after it saved its place.
@@ -240,33 +275,18 @@ export function App({
     if (showingLibrary) void loadShelf();
   }, [showingLibrary, loadShelf]);
 
-  // While the Library shows, books with a file here but no cover get one, one book at a time.
+  // Books with a file here but no cover get one while the Library shows and nothing is opening.
   useEffect(() => {
-    if (!showingLibrary) return;
-    const missing = books
-      .filter((record) => record.hasFile !== false)
-      .map((record) => record.id)
-      .filter((id) => !shelf.covers.has(id) && !coverFailed.current.has(id));
-    const queue = startCoverQueue(
-      missing,
-      async (bookId) => {
-        try {
-          const opened = await engine.open(await store.getBytes(bookId));
-          try {
-            await saveCover(bookId, opened);
-          } finally {
-            await opened.destroy();
-          }
-        } catch (err) {
-          coverFailed.current.add(bookId);
-          throw err;
-        }
-        await loadShelf();
-      },
-      { onError: (err) => logUnexpected(err, 'Drawing a cover failed') },
+    if (showingLibrary && !busy) coverWorker.resume();
+    else coverWorker.pause();
+  }, [showingLibrary, busy, coverWorker]);
+  useEffect(() => {
+    coverWorker.want(
+      books
+        .filter((record) => record.hasFile !== false && !shelf.covers.has(record.id))
+        .map((record) => record.id),
     );
-    return () => queue.stop();
-  }, [showingLibrary, books, shelf, engine, store, saveCover, loadShelf]);
+  }, [books, shelf.covers, coverWorker]);
 
   const onRemoteChanges = useCallback(() => {
     setSyncVersion((version) => version + 1);
@@ -331,6 +351,8 @@ export function App({
     bookId: string | null,
   ): Promise<number | null> {
     markOpenStart();
+    // Nothing else may use the PDF engine while a book opens.
+    coverWorker.pause();
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -483,6 +505,7 @@ export function App({
 
   function backToLibrary() {
     requestNavigation(() => {
+      leavingToLibrary.current = true;
       setBook(null);
       setNotice(null);
       void refreshBooks();

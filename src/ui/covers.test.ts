@@ -1,85 +1,113 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { startCoverQueue } from './covers';
+import { CoverWorker } from './covers';
 
-describe('startCoverQueue', () => {
+/** A cover job the test finishes by hand; records which books ran and their abort signals. */
+function jobs() {
+  const runs: { bookId: string; signal: AbortSignal; finish(): void; fail(e: Error): void }[] = [];
+  const make = (bookId: string, signal: AbortSignal) =>
+    new Promise<void>((resolve, reject) => {
+      runs.push({ bookId, signal, finish: resolve, fail: reject });
+      signal.addEventListener('abort', () => reject(new DOMException('stop', 'AbortError')));
+    });
+  return { runs, make };
+}
+
+describe('CoverWorker', () => {
   afterEach(() => vi.useRealTimers());
 
-  it('waits for the idle delay, then makes covers one at a time', async () => {
+  it('starts after the idle delay, then makes covers one after another without waiting', async () => {
     vi.useFakeTimers();
-    const running: string[] = [];
-    let busy = 0;
-    let maxBusy = 0;
-    const finish: (() => void)[] = [];
-    startCoverQueue(
-      ['a', 'b', 'c'],
-      (id) => {
-        running.push(id);
-        busy++;
-        maxBusy = Math.max(maxBusy, busy);
-        return new Promise<void>((resolve) =>
-          finish.push(() => {
-            busy--;
-            resolve();
-          }),
-        );
-      },
-      { delayMs: 1000 },
-    );
+    const { runs, make } = jobs();
+    const worker = new CoverWorker(make, { delayMs: 1000 });
+    worker.want(['a', 'b']);
+    worker.resume();
     await vi.advanceTimersByTimeAsync(999);
-    expect(running).toEqual([]);
+    expect(runs).toHaveLength(0);
     await vi.advanceTimersByTimeAsync(1);
-    expect(running).toEqual(['a']);
+    expect(runs.map((r) => r.bookId)).toEqual(['a']);
+    runs[0]?.finish();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(runs.map((r) => r.bookId)).toEqual(['a', 'b']);
+  });
+
+  it('never runs two jobs at once, nor the same book twice', async () => {
+    vi.useFakeTimers();
+    const { runs, make } = jobs();
+    const worker = new CoverWorker(make, { delayMs: 0 });
+    worker.resume();
+    worker.want(['a', 'b']);
+    await vi.advanceTimersByTimeAsync(1);
+    // The shelf changes while "a" is being drawn: asking again must not start anything new.
+    worker.want(['a', 'b', 'c']);
+    worker.want(['a']);
     await vi.advanceTimersByTimeAsync(5000);
-    expect(running).toEqual(['a']);
-    finish.shift()?.();
+    expect(runs.map((r) => r.bookId)).toEqual(['a']);
+    runs[0]?.finish();
     await vi.advanceTimersByTimeAsync(1);
-    expect(running).toEqual(['a', 'b']);
-    finish.shift()?.();
+    runs[1]?.finish();
     await vi.advanceTimersByTimeAsync(1);
-    finish.shift()?.();
+    runs[2]?.finish();
     await vi.advanceTimersByTimeAsync(1);
-    expect(running).toEqual(['a', 'b', 'c']);
-    expect(maxBusy).toBe(1);
+    worker.want(['a', 'b', 'c']);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(runs.map((r) => r.bookId)).toEqual(['a', 'b', 'c']);
   });
 
-  it('stops after the book in progress, and before starting if stopped early', async () => {
+  it('pausing (a book is opening) cancels the job in progress, which runs again on resume', async () => {
     vi.useFakeTimers();
-    const made: string[] = [];
-    const early = startCoverQueue(['x'], async (id) => void made.push(id), { delayMs: 10 });
-    early.stop();
+    const { runs, make } = jobs();
+    const worker = new CoverWorker(make, { delayMs: 100 });
+    worker.want(['a']);
+    worker.resume();
     await vi.advanceTimersByTimeAsync(100);
-    expect(made).toEqual([]);
-
-    let release = () => {};
-    const queue = startCoverQueue(
-      ['a', 'b'],
-      (id) => {
-        made.push(id);
-        return new Promise<void>((resolve) => (release = resolve));
-      },
-      { delayMs: 10 },
-    );
-    await vi.advanceTimersByTimeAsync(10);
-    queue.stop();
-    release();
+    expect(runs).toHaveLength(1);
+    worker.pause();
+    expect(runs[0]?.signal.aborted).toBe(true);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(runs).toHaveLength(1);
+    worker.resume();
     await vi.advanceTimersByTimeAsync(100);
-    expect(made).toEqual(['a']);
+    expect(runs.map((r) => r.bookId)).toEqual(['a', 'a']);
   });
 
-  it('reports a failed cover and goes on with the next book', async () => {
+  it('does not try a failed book again, and reports why', async () => {
     vi.useFakeTimers();
+    const { runs, make } = jobs();
     const onError = vi.fn();
-    const made: string[] = [];
-    startCoverQueue(
-      ['bad', 'good'],
-      async (id) => {
-        if (id === 'bad') throw new Error('broken PDF');
-        made.push(id);
-      },
-      { delayMs: 0, onError },
-    );
-    await vi.advanceTimersByTimeAsync(10);
+    const worker = new CoverWorker(make, { delayMs: 0, onError });
+    worker.resume();
+    worker.want(['bad', 'good']);
+    await vi.advanceTimersByTimeAsync(1);
+    runs[0]?.fail(new Error('broken PDF'));
+    await vi.advanceTimersByTimeAsync(1);
+    runs[1]?.finish();
+    await vi.advanceTimersByTimeAsync(1);
+    worker.want(['bad', 'good']);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(runs.map((r) => r.bookId)).toEqual(['bad', 'good']);
     expect(onError).toHaveBeenCalledTimes(1);
-    expect(made).toEqual(['good']);
+  });
+
+  it('runs a given job (the cover drawn as the reader closes) as the one job in progress', async () => {
+    vi.useFakeTimers();
+    const { runs, make } = jobs();
+    const worker = new CoverWorker(make, { delayMs: 0 });
+    let closing!: () => void;
+    let closingSignal: AbortSignal | undefined;
+    worker.run('x', (signal) => {
+      closingSignal = signal;
+      return new Promise<void>((resolve) => (closing = resolve));
+    });
+    worker.resume();
+    worker.want(['x', 'y']);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(runs).toHaveLength(0);
+    // Opening a book cancels it too.
+    worker.pause();
+    expect(closingSignal?.aborted).toBe(true);
+    closing();
+    worker.resume();
+    await vi.advanceTimersByTimeAsync(10);
+    expect(runs.map((r) => r.bookId)).toEqual(['x']);
   });
 });
