@@ -155,19 +155,6 @@ export function NotesPanel({
           quote={quoteFor(notes.editor.target)}
         />
       )}
-      {onExport && (
-        <>
-          <button
-            type="button"
-            className="panel-entry"
-            disabled={exportUnavailableReason !== null}
-            onClick={onExport}
-          >
-            Export highlights and notes
-          </button>
-          {exportUnavailableReason && <p className="panel-note">{exportUnavailableReason}</p>}
-        </>
-      )}
       {notes.items?.length === 0 && <p className="panel-note">No notes yet.</p>}
       {notes.items && notes.items.length > 0 && (
         <ul aria-label="Book notes">
@@ -208,6 +195,20 @@ export function NotesPanel({
             </li>
           ))}
         </ul>
+      )}
+      {/* Last, so arrow keys go from Add note straight to the notes. */}
+      {onExport && (
+        <>
+          <button
+            type="button"
+            className="panel-entry"
+            disabled={exportUnavailableReason !== null}
+            onClick={onExport}
+          >
+            Export highlights and notes
+          </button>
+          {exportUnavailableReason && <p className="panel-note">{exportUnavailableReason}</p>}
+        </>
       )}
     </nav>
   );
