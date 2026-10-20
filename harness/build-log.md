@@ -1194,3 +1194,24 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Unit tests run on node:sqlite (functions/_lib/sqlite-test-db.ts). Red (modules missing) → 16 green.
   tsconfig.functions.json (workers types + node) added to typecheck; Vitest includes functions/**.
 - Smoke in wrangler with local D1: push from A → {"items":[],"cursor":1}; pull from B → A's bookmark; "nope" → 400.
+
+### 2026-10-19 21:03 EDT | Phase 09a | Claude Code (Opus 5.5) | Local schema v5, sync engine, HTTP client, fetch boundary
+- Local store (src/storage/indexeddb-book-store.ts), schema v5: syncMeta (per item: stamp, deleted, device, pending)
+  written in the same transaction as every local write; syncState (deviceId, cursor); v4→v5 seeds syncMeta from
+  existing rows (stamps from lastOpenedAt/createdAt/updatedAt, all pending); books list with computed hasFile;
+  removeFromDevice (file only); add restores a missing file; applyRemote (last write wins, book deletion cascades,
+  never marks pending); markSynced (only unchanged items). Red: 14 tests failed (incl. updated schema test) → green;
+  three older upgrade tests now expect the computed hasFile: true (interface change).
+- src/sync/engine.ts: single-flight sync (push batch, apply remote, mark synced, advance cursor; up to 50 rounds),
+  statuses (syncing, synced, offline, signed-out, unavailable, failed), onRemoteChanges(bookIds). Tests use two real
+  local stores and an in-memory server with the same rules. Red (module missing) → 8 green.
+- Mistake: commit 5e85771 went in with one failing test because my command piped vitest into grep (grep's exit
+  code gated the commit). The test ("keeps the later of two edits") tied on equal clocks and was decided by random
+  device ids; fixed by giving device B a later clock (5892b62), 5/5 runs green. Commits are now gated on vitest's
+  own exit code.
+- src/sync/http-client.ts (fetch with redirect:'manual': network error → offline; Access redirect/401/403 →
+  signed-out; 404/405 → unavailable; other errors or malformed replies → failed). Red → 6 green.
+- Lint boundary (item 10): probe calling fetch/window.fetch in src/ui → exit 0 before, exit 1 after (2 errors);
+  clean → 0; indexedDB still banned in src/ui (1); fetch banned in src/storage (1). Rule restructured because ESLint
+  replaces rule options per file instead of merging them.
+- Unit total: 195 passed.
