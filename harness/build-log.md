@@ -1280,3 +1280,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   Access application covers both; ACCESS_AUD must be that tag in BOTH environments.
 - Phase 09a stays In progress until the user reports the annotation part of item 13 (can be checked on
   production now).
+
+### 2026-10-19 23:25 EDT | Phase 09b | Claude Code (Opus 5.5) | Planned and approved
+- User decisions: download on open; cap cloud storage at 9 GB. Plan approved by the user (plan mode).
+- Wrote harness/build/phase-09b-sync-book-files.md (detail) and harness/contracts/phase-09b-contract.md
+  (13 items, approved). PLANS.md: 09a and 09b In progress (09a's row was stale at "Not started").
+- F-010 ("A book and its annotations added on one device appear on another device") is this phase's feature;
+  its `phase` field still says "09" (left as is: only status and evidence change in features.json).
+- Facts used (Cloudflare docs): R2 multipart parts ≥ 5 MiB, equal size except the last, ≤ 10,000 parts;
+  request bodies ≤ 100 MB → fixed 8 MiB parts. Free Workers CPU is tight → no hashing on the server.
