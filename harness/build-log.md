@@ -1302,3 +1302,14 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Tests first: files.test.ts (12) failed (no module), then pass; store.test.ts adds the v1 → v2 upgrade. Vitest
   deep equality on 16 MB arrays ran Node out of memory; tests compare bytes with Buffer.compare instead.
   `npx vitest run functions` → 31 passed; typecheck and eslint clean.
+
+### 2026-10-20 00:05 EDT | Phase 09b | Claude Code (Opus 5.5) | Local storage v6 and the HTTP file client
+- Tests first: src/storage/file-transfer-store.test.ts (8) failed (`s.files` undefined), then pass. IndexedDB v6
+  adds `uploads` (keyPath bookId); `files.pendingUploads()` / `saveUpload()`; `books.putFile()` saves a downloaded
+  file for a known book and marks it done; delete everywhere (local or remote) clears the upload row. v5 → v6
+  upgrade keeps books, bookmarks, deviceId, cursor and pending changes, and queues local files for upload.
+- src/sync/file-client.ts (FileClient, FileError kinds) and `httpFileClient` in http-client.ts (still the only
+  fetch). http-file-client.test.ts (7) failed (not a function), then pass: error mapping (404 not-uploaded /
+  no-such-upload / missing API, 409, 410, 503, 507, 401, redirect, 500, bad JSON), ranges checked against
+  Content-Range, AbortError passes through.
+- Full unit run green; lint and typecheck clean.

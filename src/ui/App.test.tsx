@@ -29,6 +29,7 @@ function memoryStore(books: BookRecord[] = []): BookStore {
     markOpened: () => Promise.resolve(),
     remove: () => Promise.resolve(),
     removeFromDevice: () => Promise.resolve(),
+    putFile: () => Promise.resolve(),
   };
 }
 

@@ -17,6 +17,7 @@ function fakeBooks(): BookStore {
     markOpened: vi.fn(async () => {}),
     remove: vi.fn(async () => {}),
     removeFromDevice: vi.fn(async () => {}),
+    putFile: vi.fn(async () => {}),
   };
 }
 
