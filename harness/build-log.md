@@ -1505,3 +1505,10 @@ Contract evidence from this final canonical run (contract unchanged after approv
   The later commits on this branch (c552093, bf4b7d0) only repair Markdown merge conflicts (Markdown is outside the
   format check), so the code is the one CI ran.
 - Contract items 1–11 have evidence; item 12 (devices) waits on the user. features.json F-013 → passing.
+
+### 2026-10-20 08:50 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Evaluator FAIL → fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39387029990 → failure: 220 passed, 1 skipped,
+  1 failed (WebKit export: Playwright's WebKit names the download with underscores).
+- Evaluator: harness/code_review/phase-12-review.md, FAIL (escaping "1." showed a backslash; CI red).
+- Fixes: escaping (unit tests red then green), empty chapter headings, export reasons when loading failed, error
+  message on a failed export, browser-specific download-name assertion. Unit 325; chromium export + notes 20/20.
