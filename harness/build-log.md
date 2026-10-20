@@ -1527,3 +1527,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Perf, alternating phase 13 and phase 14 runs with nothing else running: firstPage p13 384/383/389, p14
   353/395/391; scroll p95 33.3 in 5 of 6 runs for both on this machine at that time (16.8 in the other). An earlier
   loaded run (phase 15 tests running alongside) showed 392–506 ms and is not counted.
+
+### 2026-10-20 08:15 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39384034130 on ea94d2f → success (07:03–07:16Z).
+  The later commits on this branch (c552093, bf4b7d0) only repair Markdown merge conflicts (Markdown is outside the
+  format check), so the code is the one CI ran.
+- Contract items 1–11 have evidence; item 12 (devices) waits on the user. features.json F-013 → passing.
