@@ -2,6 +2,7 @@
 // installed app's status bar follows `theme-color` (phase 10). index.html does the same at startup.
 import type { Theme } from '../core/reading-state';
 
+/** Keep in step with the boot script in index.html. */
 export const THEME_COLORS: Record<Theme, string> = {
   light: '#3d5a80',
   sepia: '#7a4f24',

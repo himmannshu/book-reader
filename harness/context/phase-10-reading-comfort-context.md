@@ -20,8 +20,17 @@ be revisited.
   (`visibilitychange`, `pagehide`), on leaving the reader, and after a zoom change. The scroll
   listener only records a timestamp and arms one timer, so idle scrolling stays cheap (WebKit's
   scroll budget has little headroom).
+- **Saving on leaving must happen in a layout-effect cleanup.** React runs passive-effect
+  cleanups after it has detached the DOM, and a detached scroller reads `scrollTop` 0, so a save
+  there overwrote the place with the top of the book. Leaving and hiding always save (a scroll
+  set just before may not have fired its event yet); the pause timer is cleared on unmount.
 - **Opening the same file with Open PDF resumes** too, as long as the reader has not scrolled or
   zoomed since the book opened (the stored id is known only after the file is hashed and saved).
+- **Boot script:** index.html has a small inline script that reads the saved theme from
+  `localStorage` and sets `data-theme` and `theme-color` before the stylesheet paints. It is the
+  one read of app storage outside src/storage, and it duplicates the key name (comments point
+  both ways). The app has no Content-Security-Policy, so inline scripts run. Lint now also keeps
+  `localStorage` out of src/ outside src/storage.
 - **Theme is app-wide** (Light, Sepia, Dark; default Light), kept in `localStorage` through
   src/storage/preferences.ts, because it must be read synchronously before the first render to
   avoid a flash. A missing or blocked `localStorage` falls back to Light for the session.

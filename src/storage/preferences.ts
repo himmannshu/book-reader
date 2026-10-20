@@ -3,6 +3,7 @@
 import { validTheme, type Theme } from '../core/reading-state';
 import type { Preferences } from './types';
 
+/** Also read by the boot script in index.html, before the app loads. */
 const THEME_KEY = 'book-reader:theme';
 
 /** `storage` returns the Storage to use; it may throw where storage is blocked. */

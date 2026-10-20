@@ -375,3 +375,27 @@ test.describe('memory when zoomed in', () => {
     expect(all.reduce((sum, pixels) => sum + pixels * 4, 0)).toBeLessThanOrEqual(96_000_000);
   });
 });
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the theme and zoom controls fit without sideways scrolling', async ({ page }) => {
+    const noSidewaysScroll = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      );
+    await expect(themeSelect(page)).toBeInViewport();
+    expect(await noSidewaysScroll()).toBe(true);
+
+    await importBook(page, 'basic-3-pages.pdf');
+    for (const control of [
+      themeSelect(page),
+      zoomSelect(page),
+      page.getByRole('button', { name: 'Zoom in' }),
+      page.getByRole('button', { name: 'Zoom out' }),
+    ]) {
+      await expect(control).toBeInViewport();
+    }
+    expect(await noSidewaysScroll()).toBe(true);
+  });
+});
