@@ -1,6 +1,6 @@
 # Phase 11: Library view
 
-- Status: In progress
+- Status: In progress (built, CI green; waiting on the user's device check)
 - Branch: phase-11-library-view
 - Depends on: 03
 

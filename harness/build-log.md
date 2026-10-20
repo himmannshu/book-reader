@@ -1499,3 +1499,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Fixes (see the review appendix): CoverWorker; unit tests red then green (5); new e2e red under a mutation that
   removes the pauses (2 covers while reading), green with the fix. Unit 317 passed; chromium e2e 108 passed + 1
   environment failure. Merged phase 10's close-out (0343e3d) into this branch.
+
+### 2026-10-20 08:15 UTC | Phase 11 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39384034130 on ea94d2f → success (07:03–07:16Z).
+  The later commits on this branch (c552093, bf4b7d0) only repair Markdown merge conflicts (Markdown is outside the
+  format check), so the code is the one CI ran.
+- Contract items 1–11 have evidence; item 12 (devices) waits on the user. features.json F-013 → passing.
