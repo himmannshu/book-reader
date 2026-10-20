@@ -6,28 +6,25 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 08 (installable and hosted) In progress on branch phase-08-installable-and-hosted (not pushed).
-  Items 1–9 observed locally (verify PASS 142/175+1 skipped/8). Waiting on the user's Cloudflare setup.
-- Phases 00–07 Complete and on main.
-
-## Done (phase 08)
-
-- PWA: vite-plugin-pwa (prompt mode), manifest, generated icons, iOS meta tags, UpdateNotice,
-  public/_headers; offline shell and offline book opening tested in both browsers; installability
-  tested in full Chromium (the default headless shell can't evaluate it).
-- docs/deploy.md (user's Cloudflare steps); AGENTS.md: every push is also a deploy.
+- Phase 08 In progress, merged into main (e9a9c00) and deployed to production:
+  https://book-reader-cpi.pages.dev (behind Cloudflare Access, email one-time code; previews too).
+  Items 1–11 observed; CI on main (for e9a9c00) being watched at hand-off.
+- Remaining: item 12 (user installs on iPhone/iPad + Mac, imports a book in the installed app,
+  opens it offline), item 6's real-world part (after a second deploy the installed app shows
+  "A new version is ready."), item 13 (guide usable: the user finished setup after one correction).
 
 ## In flight
 
-- User to follow docs/deploy.md steps 1–2 (Pages project with Git integration; Access with one-time PIN).
+- The user is installing the app and testing offline (docs/deploy.md sections 3–4).
 
 ## Next action
 
-1. When the user reports the Pages project URL: with their OK, push the branch (CI run + preview
-   deploy). Check item 11 with `curl -sI https://<branch>.<project>.pages.dev` (expect a redirect to
-   <team>.cloudflareaccess.com), record the CI run (item 10).
-2. With their OK, merge into main and push (production deploy). Check production with curl the same way.
-3. User installs on iPhone/iPad and Mac and checks offline reading (item 12, docs/deploy.md 3–4).
+1. Record the CI result on main (run for e9a9c00).
+2. When the user reports item 12: with their OK, push the pending harness commits to main. That is a
+   docs-only second deploy, which should make the installed app show the update notice (item 6).
+   Then mark phase 08 Complete.
+3. Then ask what's next (phase 09 cloud library, open review findings, issue #2 contents generation,
+   printed page-number labels).
 
 ## Decisions worth remembering
 

@@ -1133,3 +1133,16 @@ Contract evidence from this final canonical run (contract unchanged after approv
   book-reader - Cloudflare Pages | Email | Send login code" (One-time PIN), no longer "Sign in with: Cloudflare".
 - Item 11 observed for production and previews (the user's own email-code login is theirs to confirm in item 12).
 - CI run 39345677490 on bc2b12f still in progress at the verify step.
+
+### 2026-10-19 20:23 EDT | Phase 08 | Claude Code (Opus 5.5) | Merged into main; production deployed
+- User asked: once CI is green, merge into main, rerun verify, push main (production deploy).
+- Item 10 (branch): GitHub Actions run 39345677490 on bc2b12f → completed, success.
+  https://github.com/himmannshu/book-reader/actions/runs/39345677490
+  (Commits after bc2b12f on the branch changed only docs/deploy.md and harness/build-log.md.)
+- Merged refs/heads/phase-08-installable-and-hosted into main with a merge commit (e9a9c00); main was an ancestor.
+- `scripts/verify.sh` on merged main → PASS: unit 142, browser 175 + 1 skipped, perf 8 (Chromium first 172, jump 18,
+  p95 16.7; WebKit first 189, jump 81, p95 32; canvas 67.1). Budgets unchanged.
+- Pushed main (user-authorized; production deploy). Cloudflare's GitHub check on e9a9c00: "Cloudflare Pages: completed
+  success". Production still behind Access after the deploy: / and /manifest.webmanifest → 302 to the Access login.
+- CI on main for e9a9c00 being watched. Remaining: item 12 (user install + offline), item 6's real-world part (a second
+  deploy shows the update notice), item 13 (guide usable; the user completed setup with one correction).
