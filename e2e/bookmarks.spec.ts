@@ -51,7 +51,8 @@ async function reloadAndReopen(page: Page, title: string) {
     .getByRole('list', { name: 'Your books' })
     .getByRole('button', { name: title, exact: true })
     .click();
-  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  // The book reopens where it was left (phase 10), so wait for whichever page is shown.
+  await expect(page.locator('[data-page-index][data-state="rendered"]').first()).toBeVisible();
   await expect(toggle(page)).toBeEnabled();
 }
 

@@ -1424,3 +1424,24 @@ Contract evidence from this final canonical run (contract unchanged after approv
   not changed. Here perf is only compared before/after on this machine; the budget evidence is the full CI run.
 - Not available here: WebKit (all suites), the installability check, Mac-comparable timings.
 - Phase 10 contract and context written, approved by the agent under the user's standing instruction.
+
+### 2026-10-20 06:05 UTC | Phase 10 | Claude Code (Opus 5.5, cloud session) | Built; stand-in verify (Chromium) and perf before/after
+- Correction to the 05:45 entry: the local Chromium first-page budget is 250 ms (e2e/perf/budgets.json), not 350.
+  The baseline here (350, 351, 368 ms) already fails it by about 100 ms on unchanged code; budgets unchanged.
+- Red first: layout tests (7 failing, including the phase 02 F1 redraw check), core zoom tests, viewer position
+  and zoom tests, storage tests (reading state, v6 → v7 upgrade, preferences), e2e/comfort.spec.ts (12 failing in
+  Chromium) and the highlight alignment-at-zoom test. Mutation: dropping the "already moved" guard in ReaderView
+  turns "stays put when the reader already scrolled" red.
+- Found while building: saving on unmount from a passive effect cleanup stored scrollTop 0 (React detaches the DOM
+  first). Fixed with a layout-effect cleanup; leaving and hiding always save.
+- Existing tests that assumed a reopened book starts at page 1 (now it resumes): sync files.spec "Remove from this
+  device…" now expects page 3 at the top (stronger); bookmarks and notes reopen helpers wait for whichever page
+  is drawn. The bookmarks one failed once (reload racing the save), then passed 3×3 repeats with the fix.
+- Phone width (390 px): the new Theme control pushed the toolbar past the edge; the toolbar now wraps (new test).
+- Stand-in verify on 39980d4 + test fixes: lint, format, typecheck PASS; unit 297 passed; browser (chromium) 100
+  passed + new tests, 1 failed = the installability check (environment, same as baseline); bookmarks/notes/
+  highlights 165/165 over 3 repeats; sync (chromium) 15 passed.
+- Perf (chromium) after, six runs: firstPage 340, 343, 355, 364, 353, 340 (baseline 350, 351, 368); jump 29–46
+  (baseline 29–42); p95 16.8 in 5 of 6 runs and 33.3 once (baseline 16.8 ×3); canvas 67.1 MB (unchanged); blank
+  0%. No regression seen on this machine; the budget evidence is the full CI run.
+- Full CI run started: https://github.com/himmannshu/book-reader/actions/runs/39376651997 (on 39980d4).

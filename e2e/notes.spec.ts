@@ -128,7 +128,8 @@ async function failNext(page: Page, method: 'put' | 'delete' | 'getAll', store =
 async function reopen(page: Page) {
   await page.reload();
   await page.getByRole('button', { name: 'text-4-pages', exact: true }).click();
-  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  // The book reopens where it was left (phase 10), so wait for whichever page is shown.
+  await expect(page.locator('[data-page-index][data-state="rendered"]').first()).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
