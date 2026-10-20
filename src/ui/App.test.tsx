@@ -28,6 +28,7 @@ function memoryStore(books: BookRecord[] = []): BookStore {
     getBytes: () => Promise.resolve(new TextEncoder().encode('%PDF')),
     markOpened: () => Promise.resolve(),
     remove: () => Promise.resolve(),
+    removeFromDevice: () => Promise.resolve(),
   };
 }
 

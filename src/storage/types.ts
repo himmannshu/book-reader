@@ -1,6 +1,7 @@
 import type { Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import type { Note } from '../core/notes';
+import type { SyncItem } from '../core/sync';
 
 // The storage interface for books and their annotations (bookmarks, highlights). UI and viewer code depend only on these types; the
 // IndexedDB adapter (and later the cloud adapter, phase 09) sits behind them.
@@ -14,6 +15,11 @@ export interface BookRecord {
   /** Milliseconds since the epoch. */
   addedAt: number;
   lastOpenedAt: number;
+  /**
+   * Whether the PDF itself is on this device. False for a book known from another device (phase 09)
+   * or removed from this device only. Computed when listing; never synced.
+   */
+  hasFile?: boolean;
 }
 
 export interface BookStore {
@@ -24,8 +30,10 @@ export interface BookStore {
   /** The book's bytes, fresh for each call (PDF.js may take ownership of the buffer). */
   getBytes(id: string): Promise<Uint8Array>;
   markOpened(id: string): Promise<void>;
-  /** Deletes the book, its file, and its bookmarks and highlights. */
+  /** Deletes the book, its file and its annotations here, and (through sync) on every device. */
   remove(id: string): Promise<void>;
+  /** Frees the file on this device only; the book and its annotations stay, here and elsewhere. */
+  removeFromDevice(id: string): Promise<void>;
 }
 
 /** Items that belong to one stored book, such as its bookmarks or highlights. */
@@ -40,6 +48,21 @@ export interface PerBookStore<T extends { id: string; bookId: string }> {
 export type BookmarkStore = PerBookStore<Bookmark>;
 export type HighlightStore = PerBookStore<Highlight>;
 export type NoteStore = PerBookStore<Note>;
+
+/** Local bookkeeping for sync (phase 09a). Only the sync engine uses it. */
+export interface SyncStore {
+  /** This device's random, stable id. */
+  deviceId(): Promise<string>;
+  /** The server cursor after the last successful pull (0 before the first sync). */
+  cursor(): Promise<number>;
+  setCursor(cursor: number): Promise<void>;
+  /** Local changes not yet accepted by the server, oldest first. */
+  pending(): Promise<SyncItem[]>;
+  /** Clears the pending flag for items that have not changed again since they were sent. */
+  markSynced(items: readonly SyncItem[]): Promise<void>;
+  /** Applies changes from other devices with last write wins; never marks them pending. */
+  applyRemote(items: readonly SyncItem[]): Promise<{ applied: number }>;
+}
 
 export type StorageErrorKind = 'quota' | 'unavailable' | 'not-found' | 'unknown';
 

@@ -138,7 +138,7 @@ describe('note persistence', () => {
     old.close();
     const stores = createIndexedDBStores({ factory });
     expect(await stores.notes.list('old')).toEqual([]);
-    expect(await stores.books.list()).toEqual([record]);
+    expect(await stores.books.list()).toEqual([{ ...record, hasFile: true }]);
     expect(new TextDecoder().decode(await stores.books.getBytes('old'))).toBe('%PDF');
     expect(await stores.bookmarks.list('old')).toEqual([mark]);
     expect(await stores.highlights.list('old')).toEqual([highlight('old')]);
