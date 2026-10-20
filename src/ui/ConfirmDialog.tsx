@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import type { Confirmation } from './useNotes';
+import { Button } from './controls';
 
 /** A small keyboard/touch confirmation shared by draft and annotation deletion actions. */
 export function ConfirmDialog({
@@ -53,19 +54,18 @@ export function ConfirmDialog({
         <h2 id={title}>{question.title}</h2>
         <p id={description}>{question.message}</p>
         <div className="note-buttons">
-          <button
-            type="button"
-            className="button"
+          <Button
+            variant="primary"
             onClick={() => {
               if (previous.current?.isConnected) previous.current.focus();
               onConfirm();
             }}
           >
             {question.label}
-          </button>
-          <button ref={cancel} type="button" className="button secondary" onClick={dismiss}>
+          </Button>
+          <Button ref={cancel} onClick={dismiss}>
             {question.cancelLabel ?? 'Cancel'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

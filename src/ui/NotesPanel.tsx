@@ -3,6 +3,7 @@ import type { Highlight } from '../core/highlights';
 import { validNoteText, type Note, type NoteTarget } from '../core/notes';
 import type { useNotes } from './useNotes';
 import { PANEL_ENTRY, usePanelKeys } from './usePanelKeys';
+import { Button, EmptyState } from './controls';
 
 function NoteEditor({
   notes,
@@ -52,32 +53,25 @@ function NoteEditor({
         rows={6}
       />
       <div className="note-buttons">
-        <button
+        <Button
+          variant="primary"
           type="submit"
-          className="button"
           disabled={notes.changing || !validNoteText(editor.text)}
         >
           Save note
-        </button>
-        <button
-          type="button"
-          className="button secondary"
-          disabled={notes.changing}
-          onClick={notes.cancel}
-        >
+        </Button>
+        <Button disabled={notes.changing} onClick={notes.cancel}>
           Cancel
-        </button>
+        </Button>
         {editor.original && (
-          <button
-            type="button"
-            className="button secondary"
+          <Button
             disabled={notes.changing}
             onClick={() => {
               if (editor.original) notes.remove(editor.original);
             }}
           >
             Delete note
-          </button>
+          </Button>
         )}
       </div>
     </form>
@@ -133,11 +127,7 @@ export function NotesPanel({
     >
       <h2>Notes</h2>
       {notes.unavailableReason && <p className="panel-note">{notes.unavailableReason}</p>}
-      {notes.failed && (
-        <button type="button" className="button secondary" onClick={notes.retry}>
-          Retry notes
-        </button>
-      )}
+      {notes.failed && <Button onClick={notes.retry}>Retry notes</Button>}
       <button
         type="button"
         className="panel-entry"
@@ -158,7 +148,11 @@ export function NotesPanel({
           quote={quoteFor(notes.editor.target)}
         />
       )}
-      {notes.items?.length === 0 && <p className="panel-note">No notes yet.</p>}
+      {notes.items?.length === 0 && (
+        <EmptyState icon="note" compact>
+          No notes yet.
+        </EmptyState>
+      )}
       {notes.items && notes.items.length > 0 && (
         <ul aria-label="Book notes">
           {notes.items.map((note) => (

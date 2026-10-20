@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Colours match src/ui/app.css (--accent and --bg).
-const THEME = '#3d5a80';
-const BACKGROUND = '#f4f1ea';
+// The Light theme's `surface` colour from the design (src/ui/tokens.css).
+const THEME = '#faf7f2';
+const BACKGROUND = '#faf7f2';
 
 export default defineConfig({
   plugins: [
@@ -38,8 +38,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Everything the app needs to open a stored book offline, including the PDF.js worker.
-        globPatterns: ['**/*.{js,mjs,css,html,png,svg,webmanifest}'],
+        // Everything the app needs to open a stored book offline, including the PDF.js worker and
+        // the fonts (phase 18).
+        globPatterns: ['**/*.{js,mjs,css,html,png,svg,webmanifest,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,

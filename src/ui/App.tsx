@@ -35,7 +35,7 @@ import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
 import { applyTheme } from './theme';
-import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
+import { NARROW_QUERY, ThemePicker, Toast, ToolButton, useMediaQuery } from './controls';
 import { Icon } from './icons';
 import { CoverWorker, drawCover, type DrawnCover } from './covers';
 import { UpdateNotice } from './UpdateNotice';
@@ -536,8 +536,13 @@ export function App({
         {/* The open reader puts its tools here, so the reader has one bar (phase 14). */}
         <div ref={setToolsSlot} className="toolbar-tools" />
         {(!book || !narrow) && <ThemePicker theme={theme} onChange={chooseTheme} />}
-        <label className={book ? 'tool-button open-button' : 'button open-button'} title="Open PDF">
-          <Icon name="open" />
+        <label
+          className={
+            book ? 'tool-button open-button' : 'br-btn br-btn--primary br-btn--md open-button'
+          }
+          title="Open PDF"
+        >
+          <Icon name="import" />
           <span className="tool-label">Open PDF</span>
           <input
             className="visually-hidden"
@@ -553,16 +558,12 @@ export function App({
           onSyncNow={() => void syncEngine?.syncNow()}
         />
       </header>
-      {notice && (
-        <p className="notice" role="status">
-          {notice}
-        </p>
-      )}
+      {notice && <Toast tone="positive">{notice}</Toast>}
       <UpdateNotice />
       {error && (
-        <p className="error" role="alert">
+        <Toast tone="danger" onDismiss={() => setError(null)}>
           {error}
-        </p>
+        </Toast>
       )}
       {book ? (
         <ReaderView

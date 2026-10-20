@@ -1,5 +1,6 @@
 import type { SyncStatus } from '../sync/engine';
 import type { UploadStatus } from '../sync/uploader';
+import { Button } from './controls';
 
 const TEXT: Record<Exclude<SyncStatus['state'], 'unavailable'>, string> = {
   idle: '',
@@ -48,14 +49,9 @@ export function SyncStatusLine({
       <span data-testid="upload-status" className="upload-status" aria-live="polite">
         {uploadText(uploads)}
       </span>
-      <button
-        type="button"
-        className="button secondary"
-        disabled={status.state === 'syncing'}
-        onClick={onSyncNow}
-      >
+      <Button disabled={status.state === 'syncing'} onClick={onSyncNow}>
         {failed ? 'Retry' : 'Sync now'}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Bookmark } from '../core/bookmarks';
 import { PANEL_ENTRY, usePanelKeys } from './usePanelKeys';
+import { EmptyState } from './controls';
 
 export const UNSAVED_REASON = 'Bookmarks need this book saved on this device.';
 
@@ -54,7 +55,9 @@ export function BookmarksPanel({ id, bookmarks, onChoose, onRemove }: BookmarksP
       )}
       {items &&
         (items.length === 0 ? (
-          <p className="panel-note">No bookmarks yet.</p>
+          <EmptyState icon="bookmark" compact>
+            No bookmarks yet.
+          </EmptyState>
         ) : (
           <ul>
             {items.map((bookmark, index) => (

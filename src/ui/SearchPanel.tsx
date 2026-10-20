@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH, searchable } from '../core/search';
 import type { SearchResult, SearchState } from './useSearch';
+import { Button } from './controls';
 
 /** Typing pauses this long before a search starts. */
 const TYPING_DELAY_MS = 300;
@@ -96,13 +97,9 @@ export function SearchPanel({
       </p>
       {results.length > 0 && (
         <div className="search-steps">
-          <button type="button" className="button secondary" onClick={() => step(-1)}>
-            Previous match
-          </button>
+          <Button onClick={() => step(-1)}>Previous match</Button>
           <span>{current === null ? '' : `${current + 1} of ${results.length}`}</span>
-          <button type="button" className="button secondary" onClick={() => step(1)}>
-            Next match
-          </button>
+          <Button onClick={() => step(1)}>Next match</Button>
         </div>
       )}
       {results.length > 0 && searchable(state.query) && (

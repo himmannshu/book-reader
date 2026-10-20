@@ -1,4 +1,5 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { Button } from './controls';
 
 export type RegisterHook = typeof useRegisterSW;
 
@@ -20,12 +21,10 @@ export function UpdateNotice({ useRegister = useRegisterSW }: { useRegister?: Re
   return (
     <div className="update-notice" role="status">
       <span>A new version is ready.</span>
-      <button type="button" className="button" onClick={() => void updateServiceWorker(true)}>
+      <Button variant="primary" onClick={() => void updateServiceWorker(true)}>
         Reload
-      </button>
-      <button type="button" className="button secondary" onClick={() => setNeedRefresh(false)}>
-        Later
-      </button>
+      </Button>
+      <Button onClick={() => setNeedRefresh(false)}>Later</Button>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   type ShelfSort,
 } from '../core/shelf';
 import type { BookRecord } from '../storage/types';
+import { Button, EmptyState, ProgressBar } from './controls';
 
 const SORT_LABELS: Record<ShelfSort, string> = {
   recent: 'Recent',
@@ -69,7 +70,11 @@ export function Library({
   );
 
   if (books.length === 0) {
-    return <p className="empty-state">No books yet. Open a PDF to start.</p>;
+    return (
+      <EmptyState icon="library" title="Your library is empty">
+        No books yet. Open a PDF to start.
+      </EmptyState>
+    );
   }
 
   return (
@@ -102,7 +107,11 @@ export function Library({
           </select>
         </label>
       </div>
-      {shown.length === 0 && <p className="panel-note">No books match “{filter.trim()}”.</p>}
+      {shown.length === 0 && (
+        <EmptyState icon="search" compact>
+          No books match “{filter.trim()}”.
+        </EmptyState>
+      )}
       <ul aria-label="Your books" className="shelf">
         {shown.map((book) => {
           const here = book.hasFile !== false;
@@ -121,16 +130,7 @@ export function Library({
             <span className="library-progress">
               {read ? (
                 <>
-                  <span
-                    className="progress-bar"
-                    role="progressbar"
-                    aria-label={`Progress in ${book.title}`}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={read.percent}
-                  >
-                    <span style={{ width: `${read.percent}%` }} />
-                  </span>
+                  <ProgressBar value={read.percent / 100} label={`Progress in ${book.title}`} />
                   {`Page ${read.page} of ${read.pageCount} · ${read.percent}%`}
                 </>
               ) : (
@@ -170,46 +170,47 @@ export function Library({
                 </span>
               )}
               {progress ? (
-                <button type="button" onClick={() => onCancelDownload?.()}>
+                <Button size="sm" onClick={() => onCancelDownload?.()}>
                   Cancel download
-                </button>
+                </Button>
               ) : confirmingId === book.id ? (
                 <span className="library-confirm">
                   Remove this book?
                   {here && (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
                       onClick={() => {
                         setConfirmingId(null);
                         onRemoveFromDevice(book);
                       }}
                     >
                       Remove from this device
-                    </button>
+                    </Button>
                   )}
-                  <button
-                    type="button"
-                    className="danger"
+                  <Button
+                    variant="danger"
+                    size="sm"
                     onClick={() => {
                       setConfirmingId(null);
                       onDeleteEverywhere(book);
                     }}
                   >
                     Delete everywhere
-                  </button>
-                  <button type="button" onClick={() => setConfirmingId(null)}>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setConfirmingId(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </span>
               ) : (
-                <button
-                  type="button"
+                <Button
+                  size="sm"
+                  variant="ghost"
                   aria-label={`Remove ${book.title}`}
                   disabled={busy}
                   onClick={() => setConfirmingId(book.id)}
                 >
                   Remove
-                </button>
+                </Button>
               )}
             </li>
           );

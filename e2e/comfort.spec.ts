@@ -185,14 +185,17 @@ test.describe('themes', () => {
     const dark = await shownPagePixel(page, 0);
     expect(Math.max(...dark), `dark page ${dark}`).toBeLessThan(60);
     expect(await bodyColor(page)).not.toBe(lightBody);
-    expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBe('#1d1d1f');
+    expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBe('#1a1815');
 
     await themeSelect(page).selectOption({ label: 'Sepia' });
-    const [r = 0, g = 0, b = 0] = await shownPagePixel(page, 0);
-    // Warm paper: red over green over blue, clearly not white or grey.
-    expect(r, `sepia ${[r, g, b]}`).toBeGreaterThan(g);
-    expect(g).toBeGreaterThan(b);
-    expect(r - b).toBeGreaterThan(30);
+    const sepia = await shownPagePixel(page, 0);
+    // The design's page-tint (#f0dcae at 30%) multiplied over white paper: warm, not white or grey
+    // (phase 18; the tint was a stronger #f3e2bf before).
+    const tint = [0xf0, 0xdc, 0xae].map((c) => Math.round(255 * 0.7 + c * 0.3));
+    sepia.forEach((value, i) =>
+      expect(Math.abs(value - (tint[i] ?? 0)), `sepia ${sepia}`).toBeLessThanOrEqual(4),
+    );
+    expect(sepia[0] ?? 0).toBeGreaterThan(sepia[2] ?? 0);
 
     await themeSelect(page).selectOption({ label: 'Dark' });
     await page.reload();

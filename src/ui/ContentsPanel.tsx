@@ -1,5 +1,6 @@
 import type { OutlineItem } from '../engine/types';
 import { usePanelKeys } from './usePanelKeys';
+import { EmptyState } from './controls';
 
 export type OutlineState =
   { status: 'loading' } | { status: 'failed' } | { status: 'ready'; items: OutlineItem[] };
@@ -58,7 +59,9 @@ export function ContentsPanel({ id, outline, onChoose }: ContentsPanelProps) {
       )}
       {outline.status === 'ready' &&
         (outline.items.length === 0 ? (
-          <p className="panel-note">This book has no table of contents.</p>
+          <EmptyState icon="contents" compact>
+            This book has no table of contents.
+          </EmptyState>
         ) : (
           <OutlineList items={outline.items} onChoose={onChoose} />
         ))}

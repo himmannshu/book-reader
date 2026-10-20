@@ -1,84 +1,23 @@
 :root {
-  --bg: #f4f1ea;
-  --surface: #fffdf8;
-  --text: #2b2a27;
-  --muted: #6b675e;
-  --accent: #3d5a80;
-  --on-accent: white;
-  --error-bg: #fbe9e7;
-  --error-text: #8a1c0f;
-  --reader-bg: #e6e1d6;
-  --border: #ddd6c8;
-  --border-soft: #eee8dc;
-  /* Phase 14: control borders need 3:1 against the surface (WCAG non-text contrast). */
-  --control-border: #8c8577;
-  --field-bg: white;
-  --page-shadow: 0 1px 4px rgb(0 0 0 / 18%);
-  --accent-soft: rgb(61 90 128 / 14%);
-  --mark-bg: #ffd8a8;
-  /* Design tokens (phase 14). */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --radius-s: 6px;
-  --radius-m: 10px;
-  --text-s: 0.85rem;
-  --text-m: 0.95rem;
+  /* Sizes the design leaves to the app (phase 14); colours and the rest come from tokens.css. */
+  --text-s: 13px;
+  --text-m: 15px;
   /* Height of buttons and fields; 44 px on touch screens and phones. */
-  --control-h: 36px;
-  color-scheme: light;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  --control-h: 40px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ink);
+  background: var(--surface-raised);
 }
 
 * {
   box-sizing: border-box;
 }
 
-/* Themes (phase 10). index.html sets data-theme before this stylesheet paints. */
-:root[data-theme='sepia'] {
-  --bg: #efe4cc;
-  --surface: #f8efdb;
-  --text: #3b2f22;
-  --muted: #6e5d47;
-  --accent: #7a4f24;
-  --error-bg: #f6dcd2;
-  --reader-bg: #e3d5b8;
-  --border: #d8c7a5;
-  --border-soft: #e9dcc0;
-  --control-border: #8c7656;
-  --field-bg: #fbf5e6;
-  --accent-soft: rgb(122 79 36 / 14%);
-  --mark-bg: #f2c98f;
-  /* Multiplied over each page: white paper turns warm, black text stays black. */
-  --page-tint: #f3e2bf;
-}
-
-:root[data-theme='dark'] {
-  --bg: #1d1d1f;
-  --surface: #262628;
-  --text: #e6e3dc;
-  --muted: #a29e95;
-  --accent: #8fb3e0;
-  --on-accent: #14171c;
-  --error-bg: #3d1f1b;
-  --error-text: #ffb4a6;
-  --reader-bg: #141415;
-  --border: #3a3a3d;
-  --border-soft: #303033;
-  --control-border: #7a7a80;
-  --field-bg: #1f1f21;
-  --page-shadow: none;
-  --accent-soft: rgb(143 179 224 / 18%);
-  --mark-bg: #6b4a1f;
-  color-scheme: dark;
+::selection {
+  background: var(--selection);
 }
 
 html,
@@ -89,8 +28,8 @@ body,
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--surface);
+  color: var(--ink);
 }
 
 .app {
@@ -105,27 +44,24 @@ body {
   align-items: center;
   gap: var(--space-2) var(--space-3);
   padding: var(--space-2) var(--space-4);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--line);
 }
 
 .toolbar h1 {
-  font-size: 1.1rem;
   margin: 0;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 600;
 }
 
-.button {
+.open-button {
   position: relative;
-  padding: 6px 14px;
-  border-radius: 6px;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 0.9rem;
-  cursor: pointer;
 }
 
-.button:focus-within {
-  outline: 2px solid var(--accent);
+.open-button:focus-within {
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -140,8 +76,9 @@ body {
 
 .book-info {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
+  color: var(--ink-muted);
+  font-family: var(--font-serif);
+  font-size: var(--text-m);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -150,19 +87,14 @@ body {
 .error {
   margin: 0;
   padding: 10px 16px;
-  background: var(--error-bg);
-  color: var(--error-text);
-}
-
-.empty-state {
-  margin: auto;
-  color: var(--muted);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .reader-scroller {
   flex: 1;
   overflow: auto;
-  background: var(--reader-bg);
+  background: var(--canvas);
 }
 
 .reader-scroller:focus {
@@ -183,8 +115,8 @@ body {
   /* top, left, width and height come from the viewer's layout. */
   position: absolute;
   isolation: isolate;
-  background: white;
-  box-shadow: var(--page-shadow);
+  background: var(--page-paper);
+  box-shadow: var(--shadow-page);
 }
 
 /* Pages are drawn as the PDF says; the theme is applied on top, so it needs no redraw. */
@@ -216,17 +148,9 @@ body {
 
 .highlight-box {
   position: absolute;
-  background: rgb(255 212 0 / 45%);
+  background: var(--hl-yellow);
   mix-blend-mode: multiply;
   border-radius: 2px;
-}
-
-.button.secondary {
-  background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  font: inherit;
-  font-size: 0.9rem;
 }
 
 .library {
@@ -237,18 +161,20 @@ body {
 }
 
 .library h2 {
-  font-size: 1rem;
-  color: var(--muted);
-  font-weight: 600;
   margin: 0 0 12px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .library ul {
   list-style: none;
   margin: 0;
   padding: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 8px;
 }
 
@@ -257,22 +183,11 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  border-top: 1px solid var(--border-soft);
+  border-top: 1px solid var(--line);
 }
 
 .library-item:first-child {
   border-top: none;
-}
-
-.library-item button {
-  font: inherit;
-  font-size: 0.85rem;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--control-border);
-  background: var(--field-bg);
-  color: var(--text);
-  cursor: pointer;
 }
 
 .library-item .library-title {
@@ -280,7 +195,9 @@ body {
   text-align: left;
   border: none;
   background: none;
-  font-size: 1rem;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 16px;
   padding: 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -307,7 +224,7 @@ body {
 .library-note {
   display: block;
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .upload-status:empty {
@@ -319,13 +236,7 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.library-item .danger {
-  background: var(--error-text);
-  border-color: var(--error-text);
-  color: var(--error-bg);
+  color: var(--ink-muted);
 }
 
 .reader {
@@ -357,16 +268,17 @@ body {
   flex: none;
   overflow: auto;
   padding: 12px 8px 24px;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-right: 1px solid var(--line);
 }
 
 .side-panel h2 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
   margin: 4px 8px 8px;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .side-panel ul {
@@ -385,7 +297,7 @@ body {
   text-align: left;
   font: inherit;
   font-size: 0.9rem;
-  color: var(--text);
+  color: var(--ink);
   background: none;
   border: none;
   border-radius: 6px;
@@ -393,21 +305,19 @@ body {
   cursor: pointer;
 }
 
-.panel-entry:hover:not(:disabled),
-.panel-entry:focus-visible {
-  background: var(--reader-bg);
-  outline: none;
+.panel-entry:hover:not(:disabled) {
+  background: var(--surface-sunken);
 }
 
 .panel-entry:disabled {
-  color: var(--muted);
+  color: var(--ink-muted);
   cursor: default;
   font-style: italic;
 }
 
 .panel-note {
   margin: 8px;
-  color: var(--muted);
+  color: var(--ink-muted);
   font-size: 0.9rem;
 }
 
@@ -421,8 +331,8 @@ body {
 }
 
 .bookmark-toggle:disabled {
-  border-color: var(--muted);
-  color: var(--muted);
+  border-color: var(--ink-muted);
+  color: var(--ink-muted);
   cursor: default;
 }
 
@@ -441,7 +351,7 @@ body {
   width: auto;
   flex: none;
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .selection-actions {
@@ -454,26 +364,18 @@ body {
   max-width: calc(100% - 16px);
 }
 
-.selection-actions .button {
-  border: none;
-  font: inherit;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
-}
-
-.selection-actions .button:disabled {
-  background: var(--muted);
-  cursor: default;
+.selection-actions .br-btn {
+  box-shadow: var(--shadow-raised);
 }
 
 .selection-note {
   margin: 0;
   max-width: 240px;
   padding: 4px 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
+  background: var(--surface-raised);
+  color: var(--ink);
   font-size: 0.8rem;
 }
 
@@ -494,16 +396,17 @@ body {
   padding: 8px;
   font: inherit;
   font-size: 16px;
-  color: var(--text);
-  background: var(--field-bg);
-  border: 1px solid var(--control-border);
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
   resize: vertical;
 }
 .note-editor blockquote {
   margin: 8px 0;
-  padding-left: 8px;
-  border-left: 2px solid var(--accent);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 25px;
 }
 .note-buttons {
   display: flex;
@@ -515,7 +418,7 @@ body {
   width: auto;
 }
 .note-row {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
   padding: 10px 4px;
 }
 .note-text,
@@ -526,8 +429,10 @@ body {
   margin-top: 6px;
 }
 .note-quote {
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--ink-muted);
+  font-family: var(--font-serif);
+  font-size: var(--text-m);
+  line-height: 22px;
 }
 .notes-panel .error {
   margin: 8px;
@@ -541,7 +446,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgb(0 0 0 / 35%);
+  background: var(--scrim);
 }
 .confirmation-dialog {
   width: min(100%, 420px);
@@ -549,13 +454,15 @@ body {
   overflow: auto;
   padding: 20px;
   border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 4px 24px rgb(0 0 0 / 25%);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-raised);
 }
 .confirmation-dialog h2 {
   margin-top: 0;
-  font-size: 1.15rem;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 26px;
 }
 
 @media (max-width: 699px) {
@@ -564,7 +471,7 @@ body {
     inset: 0 auto 0 0;
     width: min(85vw, 320px);
     z-index: 2;
-    box-shadow: 4px 0 16px rgb(0 0 0 / 18%);
+    box-shadow: var(--shadow-sheet);
   }
 }
 
@@ -573,8 +480,8 @@ body {
   align-items: center;
   gap: 10px;
   padding: 8px 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--line);
   font-size: 0.9rem;
 }
 
@@ -588,25 +495,15 @@ body {
   gap: 4px;
 }
 
-.zoom-controls .button {
-  min-width: 2.2em;
-  padding: 6px 8px;
-}
-
-.zoom-controls .button:disabled {
-  border-color: var(--muted);
-  color: var(--muted);
-  cursor: default;
-}
-
 .picker {
   font: inherit;
-  font-size: 0.9rem;
+  /* 16 px: iOS zooms the page into smaller fields. */
+  font-size: 16px;
   padding: 5px 6px;
-  border: 1px solid var(--control-border);
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
-  background: var(--field-bg);
-  color: var(--text);
+  background: var(--surface-sunken);
+  color: var(--ink);
 }
 
 .theme-picker {
@@ -614,7 +511,7 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 /* Library shelf (phase 11). */
@@ -651,13 +548,13 @@ body {
   align-items: stretch;
   gap: 6px;
   padding: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 
 .shelf .library-item:first-child {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
 }
 
 .shelf .library-title-group {
@@ -672,7 +569,7 @@ body {
   padding: 0;
   border: none;
   background: none;
-  color: var(--text);
+  color: var(--ink);
   text-align: left;
   font: inherit;
   cursor: pointer;
@@ -680,8 +577,8 @@ body {
 
 .library-open .library-title {
   font-weight: 600;
-  font-size: 0.95rem;
-  line-height: 1.3;
+  font-size: 16px;
+  line-height: 21px;
   max-height: 2.6em;
   white-space: normal;
   display: -webkit-box;
@@ -701,12 +598,13 @@ body {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   object-position: top;
-  border-radius: 4px;
-  background: white;
-  box-shadow: var(--page-shadow);
+  border-radius: var(--radius-xs);
+  background: var(--page-paper);
+  box-shadow: var(--shadow-page);
 }
 
 .cover-placeholder {
+  font-family: var(--font-serif);
   /* A long title shows its start, cut at the end (review: centring cut off the beginning). */
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -715,8 +613,8 @@ body {
   text-align: center;
   font-size: 0.85rem;
   line-height: 1.35;
-  color: var(--muted);
-  background: var(--reader-bg);
+  color: var(--ink-muted);
+  background: var(--canvas);
   overflow: hidden;
   overflow-wrap: anywhere;
 }
@@ -726,21 +624,7 @@ body {
   flex-direction: column;
   gap: 4px;
   font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.progress-bar {
-  display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border);
-  overflow: hidden;
-}
-
-.progress-bar > span {
-  display: block;
-  height: 100%;
-  background: var(--accent);
+  color: var(--ink-muted);
 }
 
 .shelf .library-confirm {
@@ -763,13 +647,12 @@ body {
 
 .search-hit {
   position: absolute;
-  background: rgb(255 140 0 / 30%);
+  background: var(--hl-yellow);
   border-radius: 2px;
 }
 
 .search-hit.current {
-  background: rgb(255 120 0 / 55%);
-  outline: 2px solid #d35400;
+  outline: 2px solid var(--accent);
 }
 
 .search-form input {
@@ -784,12 +667,11 @@ body {
   gap: 6px;
   margin: 4px 8px 8px;
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
-.search-steps .button {
-  padding: 4px 8px;
-  font-size: 0.8rem;
+.search-steps .br-btn {
+  padding: 0 var(--space-3);
 }
 
 .search-result .note-quote {
@@ -798,12 +680,12 @@ body {
 
 .search-result mark {
   /* A solid colour per theme, with body text on it: 4.5:1 in every theme (phase 14 review). */
-  background: var(--mark-bg);
-  color: var(--text);
+  background: var(--hl-yellow);
+  color: var(--ink);
 }
 
 .search-result[aria-current='true'] {
-  background: var(--reader-bg);
+  background: var(--canvas);
   outline: 2px solid var(--accent);
 }
 
@@ -815,17 +697,9 @@ body {
   }
 }
 
-.button,
 .picker {
   min-height: var(--control-h);
-  border-radius: var(--radius-s);
-}
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
 .icon {
@@ -843,22 +717,20 @@ body {
   height: var(--control-h);
   padding: 0 10px;
   border: 1px solid transparent;
-  border-radius: var(--radius-s);
+  border-radius: var(--radius-full);
   background: none;
-  color: var(--text);
+  color: var(--ink);
   font: inherit;
   font-size: var(--text-s);
+  font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.16s ease-out,
+    color 0.16s ease-out;
 }
 
 .tool-button:hover:not(:disabled) {
-  background: var(--accent-soft);
-}
-
-.tool-button:focus-visible,
-.button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  background: var(--surface-sunken);
 }
 
 .tool-button[aria-expanded='true'],
@@ -869,7 +741,7 @@ body {
 
 .tool-button:disabled,
 .tool-button[aria-disabled='true'] {
-  color: var(--muted);
+  opacity: 0.45;
   cursor: default;
 }
 
@@ -905,16 +777,15 @@ body {
   }
 }
 
-.toolbar .open-button.button .tool-label {
+.toolbar .open-button.br-btn .tool-label {
   position: static;
   width: auto;
   height: auto;
   clip-path: none;
 }
 
-.toolbar .open-button.button {
+.toolbar .open-button.br-btn {
   width: auto;
-  padding: 0 14px;
 }
 
 .toolbar-tools {
@@ -937,7 +808,7 @@ body {
   align-items: center;
   gap: 6px;
   font-size: var(--text-s);
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .toolbar.reading .picker-caption {
@@ -968,40 +839,14 @@ body {
   gap: var(--space-3);
   min-width: 220px;
   padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--surface);
-  box-shadow: 0 6px 24px rgb(0 0 0 / 20%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
 }
 
 .display-popover .picker-label {
   justify-content: space-between;
-}
-
-/* The notice is a toast that fades on its own, instead of taking a row of the toolbar. */
-.notice {
-  position: fixed;
-  left: 50%;
-  bottom: var(--space-4);
-  z-index: 40;
-  max-width: calc(100% - 2 * var(--space-4));
-  margin: 0;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
-  transform: translateX(-50%);
-  pointer-events: none;
-  animation: notice-fade 0.4s ease 4s forwards;
-}
-
-@keyframes notice-fade {
-  to {
-    opacity: 0;
-    visibility: hidden;
-  }
 }
 
 /* Phones: two compact rows in the reader (back, title, open; then the tools). */
@@ -1038,7 +883,7 @@ body {
     justify-content: space-between;
   }
 
-  .toolbar .open-button.button {
+  .toolbar .open-button.br-btn {
     padding: 0 var(--space-3);
   }
 }
@@ -1046,10 +891,8 @@ body {
 /* Touch-sized controls everywhere else too (phase 14). */
 @media (pointer: coarse), (max-width: 699px) {
   .panel-entry,
-  .library-item button,
-  .note-buttons button,
-  .confirmation-dialog button,
-  .search-steps .button,
+  .br-btn,
+  .br-iconbtn,
   .library-filter {
     min-height: 44px;
     min-width: 44px;
@@ -1070,18 +913,19 @@ body {
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--surface);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
   transform: translateX(-50%);
 }
 
 .search-bar-count {
   min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
   text-align: center;
   font-size: var(--text-s);
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .page-error {
@@ -1092,7 +936,7 @@ body {
   justify-content: center;
   margin: 0;
   padding: var(--space-4);
-  color: #6b675e;
+  color: var(--page-ink-muted);
   font-size: var(--text-m);
   text-align: center;
 }
@@ -1109,7 +953,7 @@ body {
   height: auto;
   clip-path: none;
   font-size: var(--text-s);
-  color: var(--muted);
+  color: var(--ink-muted);
 }
 
 .display-popover .zoom-row {
@@ -1117,14 +961,6 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-}
-
-.notice {
-  left: var(--space-4);
-  right: var(--space-4);
-  width: fit-content;
-  margin: 0 auto;
-  transform: none;
 }
 
 @media (max-width: 699px) {
@@ -1142,7 +978,7 @@ body {
 /* Voice notes (phase 15). */
 .voice-notes {
   margin-top: var(--space-4);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
   padding-top: var(--space-2);
 }
 
@@ -1165,7 +1001,7 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #c62828;
+  background: var(--danger);
   animation: recording-pulse 1.2s ease-in-out infinite;
 }
 
@@ -1184,8 +1020,8 @@ body {
 
 .spoken-hit {
   position: absolute;
-  background: rgb(61 140 255 / 22%);
-  border-bottom: 2px solid rgb(61 110 200 / 70%);
+  background: var(--listen-mark);
+  border-bottom: 2px solid var(--accent);
 }
 
 /* Read aloud (phase 16). */
@@ -1199,17 +1035,18 @@ body {
   gap: var(--space-1);
   max-width: calc(100% - 2 * var(--space-4));
   padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-m);
-  background: var(--surface);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 18%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
   transform: translateX(-50%);
 }
 
 .player-status {
   margin-right: var(--space-2);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-s);
-  color: var(--muted);
+  color: var(--ink-muted);
   white-space: nowrap;
 }
 
@@ -1225,13 +1062,307 @@ body {
   }
 }
 
-/* Phase 16 review: the toast sits at the top, clear of the player and search bars at the bottom;
-   the player's status has a fixed width so its buttons don't move as it changes. */
-.notice {
-  top: var(--space-2);
-  bottom: auto;
-}
-
+/* The player's status has a fixed width so its buttons don't move as it changes (phase 16). */
 .player-bar .player-status {
   min-width: 9.5em;
+}
+
+/* ---- Phase 18: the Book Reader design system's controls (harness/context/design-system). ---- */
+
+/* Keyboard focus: a 2 px ring with a 2 px gap on everything that can take it. */
+:where(button, a, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.br-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease-out,
+    border-color 0.16s ease-out,
+    color 0.16s ease-out;
+}
+
+.br-btn--sm {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.br-btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.br-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.br-btn--secondary {
+  background: var(--surface-raised);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.br-btn--secondary:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.br-btn--ghost {
+  background: transparent;
+  color: var(--accent);
+}
+
+.br-btn--ghost:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.br-btn--danger {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.br-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.br-iconbtn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease-out,
+    color 0.16s ease-out;
+}
+
+.br-iconbtn--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.br-iconbtn--lg {
+  width: 52px;
+  height: 52px;
+}
+
+.br-iconbtn--plain:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.br-iconbtn--filled {
+  background: var(--surface-sunken);
+}
+
+.br-iconbtn--filled:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.br-iconbtn--accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.br-iconbtn[aria-pressed='true'],
+.tool-button[aria-expanded='true'],
+.tool-button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.br-iconbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Touch screens and phones: 44 px everywhere, the small sizes included (phase 14 rule). */
+@media (pointer: coarse), (max-width: 699px) {
+  .br-btn--sm {
+    min-height: 44px;
+  }
+
+  .br-iconbtn--sm {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.br-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.br-progress__track {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.br-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.br-progress__val,
+.library-progress {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Toasts sit at the bottom, above the read-aloud and search bars when those are open. */
+.br-toast {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+  max-width: min(480px, calc(100% - 2 * var(--space-4)));
+  min-height: 52px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 1px var(--line);
+}
+
+body:has(.player-bar, .search-bar) .br-toast {
+  bottom: calc(var(--listen-bar-height) + 2 * var(--space-4) + env(safe-area-inset-bottom));
+}
+
+/* Status and success messages leave on their own; failures stay until dismissed. */
+.br-toast:not(.br-toast--danger) {
+  pointer-events: none;
+  animation: toast-leave 0.2s ease-out 4s forwards;
+}
+
+@keyframes toast-leave {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.br-toast--danger {
+  background: var(--danger-soft);
+}
+
+.br-toast__icon {
+  display: flex;
+  color: var(--accent);
+}
+
+.br-toast--danger .br-toast__icon {
+  color: var(--danger);
+}
+
+.br-toast--positive .br-toast__icon {
+  color: var(--positive);
+}
+
+.br-toast__msg {
+  flex: 1;
+  padding: 6px 0;
+}
+
+.br-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  max-width: 420px;
+  margin: auto;
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.br-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.br-empty h2 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.br-empty__body {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.br-empty__action {
+  margin-top: var(--space-4);
+}
+
+.br-empty--compact {
+  justify-items: start;
+  grid-auto-flow: column;
+  align-items: center;
+  max-width: none;
+  margin: var(--space-2);
+  padding: 0;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.br-empty--compact .br-empty__icon {
+  width: 36px;
+  height: 36px;
+  margin: 0;
+}
+
+/* Reduced motion: state changes are instant and nothing moves; colours still change. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-property: color, background-color, border-color !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Selected text on a page takes the design's selection colour (PDF.js sets its own). */
+.viewer-page .textLayer ::selection {
+  background: var(--selection);
 }

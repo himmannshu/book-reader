@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type SyntheticEvent } from 'react';
+import { Button } from './controls';
 
 /** What the floating button offers, and where (CSS px inside the reader body). */
 export type SelectionAction =
@@ -67,51 +68,30 @@ export function SelectionActions({
     >
       {action.kind === 'create' ? (
         <>
-          <button
-            type="button"
-            className="button"
-            disabled={unsavedReason !== null}
-            onClick={onHighlight}
-          >
+          <Button variant="primary" disabled={unsavedReason !== null} onClick={onHighlight}>
             Highlight
-          </button>
+          </Button>
           {unsavedReason && <p className="selection-note">{unsavedReason}</p>}
         </>
       ) : (
         <>
           {onNote && (
-            <button
-              type="button"
-              className="button"
-              disabled={noteUnavailableReason !== null}
-              onClick={() => onNote(action.id)}
-            >
+            <Button disabled={noteUnavailableReason !== null} onClick={() => onNote(action.id)}>
               {noteLabel}
-            </button>
+            </Button>
           )}
           {onVoiceNote && (
-            <button
-              type="button"
-              className="button"
+            <Button
               disabled={noteUnavailableReason !== null}
               onClick={() => onVoiceNote(action.id)}
             >
               Voice note
-            </button>
+            </Button>
           )}
-          {onShare && (
-            <button type="button" className="button" onClick={() => onShare(action.id)}>
-              Share
-            </button>
-          )}
-          <button
-            type="button"
-            className="button"
-            disabled={removeUnavailableReason !== null}
-            onClick={() => onRemove(action.id)}
-          >
+          {onShare && <Button onClick={() => onShare(action.id)}>Share</Button>}
+          <Button disabled={removeUnavailableReason !== null} onClick={() => onRemove(action.id)}>
             Remove highlight
-          </button>
+          </Button>
           {(noteUnavailableReason || removeUnavailableReason) && (
             <p className="selection-note">{noteUnavailableReason || removeUnavailableReason}</p>
           )}

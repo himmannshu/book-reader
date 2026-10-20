@@ -174,10 +174,29 @@ test.describe('phones', () => {
   });
 });
 
-/** WCAG relative luminance contrast of two CSS colours (computed rgb() strings). */
+/** Parses a computed colour (`rgb()`/`rgba()`, or `color(srgb ...)` for 8-digit hex). */
+function channels(css: string): [number, number, number, number] {
+  const values = (css.match(/[\d.]+/g) ?? []).map(Number);
+  if (css.startsWith('color(')) {
+    const [r = 0, g = 0, b = 0, a = 1] = values;
+    return [r * 255, g * 255, b * 255, a];
+  }
+  const [r = 0, g = 0, b = 0, a = 1] = values;
+  return [r, g, b, a];
+}
+
+/** A translucent colour as it shows over an opaque one. */
+function over(top: string, bottom: string): string {
+  const [r, g, b, a] = channels(top);
+  const [r2, g2, b2] = channels(bottom);
+  const mix = (x: number, y: number) => x * a + y * (1 - a);
+  return `rgb(${mix(r, r2)}, ${mix(g, g2)}, ${mix(b, b2)})`;
+}
+
+/** WCAG relative luminance contrast of two opaque CSS colours. */
 function contrast(a: string, b: string): number {
   const lum = (css: string) => {
-    const [r = 0, g = 0, bl = 0] = (css.match(/[\d.]+/g) ?? []).map(Number);
+    const [r, g, bl] = channels(css);
     const channel = (v: number) => {
       const c = v / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
@@ -192,44 +211,51 @@ for (const theme of ['light', 'sepia', 'dark']) {
   test(`text contrast meets WCAG AA in the ${theme} theme`, async ({ page }) => {
     await page.goto('/');
     await page.getByRole('combobox', { name: 'Theme' }).selectOption(theme);
-    const colours = await page.evaluate(() => {
+    const names = [
+      'surface',
+      'surface-raised',
+      'surface-sunken',
+      'ink',
+      'ink-muted',
+      'accent',
+      'on-accent',
+      'line-strong',
+      'focus-ring',
+      'danger',
+      'danger-soft',
+      'hl-yellow',
+    ];
+    const colours = await page.evaluate((list) => {
       const probe = document.createElement('span');
       document.body.append(probe);
       const resolve = (name: string) => {
-        probe.style.color = `var(${name})`;
+        probe.style.color = `var(--${name})`;
         return getComputedStyle(probe).color;
       };
-      const names = [
-        '--bg',
-        '--surface',
-        '--text',
-        '--muted',
-        '--accent',
-        '--on-accent',
-        '--control-border',
-        '--error-bg',
-        '--error-text',
-        '--mark-bg',
-      ];
-      const result = Object.fromEntries(names.map((name) => [name, resolve(name)]));
+      const result = Object.fromEntries(list.map((name) => [name, resolve(name)]));
       probe.remove();
       return result as Record<string, string>;
-    });
+    }, names);
     const c = (a: string, b: string) => contrast(colours[a] ?? '', colours[b] ?? '');
+    const surfaces = ['surface', 'surface-raised', 'surface-sunken'];
     const pairs: [string, string, number][] = [
-      ['--text', '--bg', 4.5],
-      ['--text', '--surface', 4.5],
-      ['--muted', '--bg', 4.5],
-      ['--muted', '--surface', 4.5],
-      ['--accent', '--surface', 4.5],
-      ['--on-accent', '--accent', 4.5],
-      ['--error-text', '--error-bg', 4.5],
-      // The matched words in search results.
-      ['--text', '--mark-bg', 4.5],
-      ['--control-border', '--surface', 3],
+      ...surfaces.flatMap((bg): [string, string, number][] => [
+        ['ink', bg, 4.5],
+        ['ink-muted', bg, 4.5],
+        ['line-strong', bg, 3],
+        ['focus-ring', bg, 3],
+      ]),
+      ['accent', 'surface', 4.5],
+      ['accent', 'surface-raised', 4.5],
+      ['on-accent', 'accent', 4.5],
+      ['danger', 'danger-soft', 4.5],
+      ['ink', 'danger-soft', 4.5],
     ];
     for (const [fg, bg, min] of pairs) {
       expect(c(fg, bg), `${fg} on ${bg}`).toBeGreaterThanOrEqual(min);
     }
+    // The matched words in search results: the translucent highlight over a panel.
+    const mark = over(colours['hl-yellow'] ?? '', colours['surface-raised'] ?? '');
+    expect(contrast(colours.ink ?? '', mark), 'ink on hl-yellow').toBeGreaterThanOrEqual(4.5);
   });
 }

@@ -42,7 +42,15 @@ import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
-import { NARROW_QUERY, ThemePicker, ToolButton, useMediaQuery } from './controls';
+import {
+  Button,
+  IconButton,
+  NARROW_QUERY,
+  ThemePicker,
+  Toast,
+  ToolButton,
+  useMediaQuery,
+} from './controls';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
 import { browserSpeaker, type Speaker } from './speech';
@@ -690,10 +698,10 @@ export function ReaderView({
 
   const zoomControls = (
     <div className="zoom-controls">
-      <ToolButton
+      <IconButton
         icon="minus"
         label="Zoom out"
-        className="icon-only"
+
         disabled={zoom === MIN_ZOOM}
         onClick={() => stepZoom('out')}
       />
@@ -712,10 +720,10 @@ export function ReaderView({
           </option>
         ))}
       </select>
-      <ToolButton
+      <IconButton
         icon="plus"
         label="Zoom in"
-        className="icon-only"
+
         disabled={zoom === MAX_ZOOM}
         onClick={() => stepZoom('in')}
       />
@@ -734,7 +742,7 @@ export function ReaderView({
       />
       <ToolButton
         ref={bookmarksButtonRef}
-        icon="bookmarks"
+        icon="list"
         label="Bookmarks"
         aria-expanded={openPanel === 'bookmarks'}
         aria-controls={openPanel === 'bookmarks' ? BOOKMARKS_ID : undefined}
@@ -759,7 +767,7 @@ export function ReaderView({
       />
       <ToolButton
         ref={notesButtonRef}
-        icon="notes"
+        icon="note"
         label="Notes"
         aria-expanded={openPanel === 'notes'}
         aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
@@ -786,7 +794,7 @@ export function ReaderView({
         <div className="display-menu">
           <ToolButton
             ref={displayButtonRef}
-            icon="display"
+            icon="text-settings"
             label="Display"
             aria-expanded={displayOpen}
             aria-controls={displayOpen ? DISPLAY_ID : undefined}
@@ -812,9 +820,9 @@ export function ReaderView({
     <div className="reader">
       {toolsSlot ? createPortal(tools, toolsSlot) : tools}
       {annotationError && (
-        <p className="error" role="alert">
+        <Toast tone="danger" onDismiss={() => setAnnotationError(null)}>
           {annotationError}
-        </p>
+        </Toast>
       )}
       <div ref={bodyRef} className="reader-body">
         {openPanel === 'contents' && (
@@ -879,19 +887,19 @@ export function ReaderView({
               {listen.state.pageIndex + 1}
             </span>
             {listen.state.status === 'reading' ? (
-              <ToolButton icon="pause" label="Pause" className="icon-only" onClick={listen.pause} />
+              <IconButton icon="pause" label="Pause" onClick={listen.pause} />
             ) : (
-              <ToolButton
+              <IconButton
                 icon="play"
                 label="Resume"
-                className="icon-only"
+
                 onClick={listen.resume}
               />
             )}
-            <ToolButton
+            <IconButton
               icon="stop"
               label="Stop reading"
-              className="icon-only"
+
               onClick={listen.stop}
             />
             <select
@@ -910,25 +918,25 @@ export function ReaderView({
         )}
         {narrow && searchCurrent !== null && openPanel !== 'search' && searchResults.length > 0 && (
           <div className="search-bar" role="toolbar" aria-label="Search matches">
-            <ToolButton
-              icon="up"
+            <IconButton
+              icon="collapse"
               label="Previous match"
-              className="icon-only"
+
               onClick={() => stepSearch(-1)}
             />
             <span className="search-bar-count">
               {searchCurrent + 1} of {searchResults.length}
             </span>
-            <ToolButton
-              icon="down"
+            <IconButton
+              icon="expand"
               label="Next match"
-              className="icon-only"
+
               onClick={() => stepSearch(1)}
             />
-            <ToolButton
+            <IconButton
               icon="close"
               label="Close search"
-              className="icon-only"
+
               onClick={() => runSearch('')}
             />
           </div>
@@ -940,12 +948,12 @@ export function ReaderView({
             <span className="player-status">
               Recording voice note · <Elapsed since={voice.recording.startedAt} />
             </span>
-            <button type="button" className="button" onClick={() => void voice.save()}>
+            <Button variant="primary" size="sm" onClick={() => void voice.save()}>
               Stop and save
-            </button>
-            <button type="button" className="button secondary" onClick={voice.cancel}>
+            </Button>
+            <Button size="sm" onClick={voice.cancel}>
               Cancel recording
-            </button>
+            </Button>
           </div>
         )}
         <SelectionActions
@@ -983,11 +991,7 @@ export function ReaderView({
           removeUnavailableReason={written.unavailableReason}
         />
       </div>
-      {readerNotice && (
-        <p key={readerNotice.key} className="notice" role="status">
-          {readerNotice.text}
-        </p>
-      )}
+      {readerNotice && <Toast key={readerNotice.key}>{readerNotice.text}</Toast>}
       {written.confirmation && (
         <ConfirmDialog
           question={written.confirmation}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { NoteTarget } from '../core/notes';
 import { formatDuration, MAX_VOICE_NOTE_MS } from '../core/voice-notes';
 import type { useVoiceNotes } from './useVoiceNotes';
+import { Button } from './controls';
 
 /** The running time of a recording, updated a few times a second. */
 export function Elapsed({ since }: { since: number }) {
@@ -41,12 +42,10 @@ export function VoiceNotes({
             {formatDuration(MAX_VOICE_NOTE_MS)}
           </span>
           <div className="note-buttons">
-            <button type="button" className="button" onClick={() => void voice.save()}>
+            <Button variant="primary" onClick={() => void voice.save()}>
               Stop and save
-            </button>
-            <button type="button" className="button secondary" onClick={voice.cancel}>
-              Cancel recording
-            </button>
+            </Button>
+            <Button onClick={voice.cancel}>Cancel recording</Button>
           </div>
         </div>
       ) : (

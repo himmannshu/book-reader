@@ -26,7 +26,17 @@ const FETCH_PROPERTIES = ['window', 'globalThis', 'self'].map((object) => ({
 }));
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'playwright-report', 'test-results', '.wrangler'] },
+  {
+    // harness/context/design-system holds the design's sources as reference only (ported into src/ui).
+    ignores: [
+      'dist',
+      'node_modules',
+      'playwright-report',
+      'test-results',
+      '.wrangler',
+      'harness/context/design-system',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strict,
   reactHooks.configs.flat.recommended,
