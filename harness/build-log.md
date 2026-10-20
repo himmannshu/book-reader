@@ -1266,3 +1266,17 @@ Contract evidence from this final canonical run (contract unchanged after approv
   side). The login redirect names the preview application's audience tag beginning 498b4e00; the preview's
   ACCESS_AUD must equal it (not checked from here: agents don't read dashboard settings).
 - Not yet observed: a signed-in sync against the real D1 (needs the user's browser) and item 13 (two real devices).
+
+### 2026-10-19 23:05 EDT | Phase 09a | Claude Code (Opus 5.5) | Merged into main; production deployed
+- User report (item 13, partial): on the preview, a book added on the Mac appeared on the iPhone as "On your other
+  devices" (its PDF did not open there: expected, the file arrives in 09b), and deletions reached the other device.
+  Not yet reported: annotations appearing on the second device after importing the same PDF there.
+- The user asked to continue with the merge. Merged phase-09a-sync-library-and-annotations into main (a5100f5,
+  --no-ff). `scripts/verify.sh` on merged main → PASS: unit 212, browser 175 + 1 skipped, sync 14, perf 8
+  (chromium first 174, jump 16, p95 16.8; webkit first 151, jump 44, p95 32; canvas 67.1). Budgets unchanged.
+- Pushed main. CI https://github.com/himmannshu/book-reader/actions/runs/39360795702 → success; Cloudflare Pages
+  check on a5100f5 → success. Logged-out curl to production / and /api/sync → 302 to the Access login.
+- Finding: production's login redirect names the same Access audience (starts 498b4e00) as the preview, so one
+  Access application covers both; ACCESS_AUD must be that tag in BOTH environments.
+- Phase 09a stays In progress until the user reports the annotation part of item 13 (can be checked on
+  production now).
