@@ -69,7 +69,7 @@
       "phase": "08",
       "description": "The app installs as a PWA and its shell opens offline",
       "status": "failing",
-      "evidence": ""
+      "evidence": "2026-10-19 automated: e2e/pwa.spec.ts passes (installable in full Chromium; offline shell and offline book in Chromium+WebKit). Real device: the user reports the installed iPhone app did NOT work offline. Kept failing; deferred by the user (phase-08 contract Amendment 1)."
     },
     {
       "id": "F-010",

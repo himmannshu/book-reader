@@ -6,25 +6,20 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 ## Status
 
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
-- Phase 08 In progress, merged into main (e9a9c00) and deployed to production:
-  https://book-reader-cpi.pages.dev (behind Cloudflare Access, email one-time code; previews too).
-  Items 1–11 observed; CI on main green (run 39347261723 on e9a9c00).
-- Remaining: item 12 (user installs on iPhone/iPad + Mac, imports a book in the installed app,
-  opens it offline), item 6's real-world part (after a second deploy the installed app shows
-  "A new version is ready."), item 13 (guide usable: the user finished setup after one correction).
+- Phase 08 Complete with recorded exceptions (contract Amendment 1): the installed iPhone app did not
+  work offline; the user deprioritized offline reading. Production: https://book-reader-cpi.pages.dev
+  (behind Access, email one-time code; previews too).
+- Next: phase 09a (planned, contract approved), then 09b. The user asked to move to phase 09 now.
 
 ## In flight
 
-- The user is installing the app and testing offline (docs/deploy.md sections 3–4).
+- Second deploy pushed for item 6's real-world part: the user may report whether the installed app
+  shows "A new version is ready."
 
 ## Next action
 
-2. When the user reports item 12: with their OK, push the pending harness commits to main. That is a
-   docs-only second deploy, which should make the installed app show the update notice (item 6).
-   Then mark phase 08 Complete.
-3. Phase 09 is split into 09a/09b. 09a is planned, with its contract approved
-   (harness/build/phase-09a-sync-library-and-annotations.md, harness/contracts/phase-09a-contract.md).
-   Start building 09a ONLY after phase 08 is Complete (the user's instruction). 09b is an outline.
+1. Build phase 09a per harness/build/phase-09a-sync-library-and-annotations.md and its approved
+   contract, on branch phase-09a-sync-library-and-annotations. Then 09b (plan it in detail first).
 
 ## Decisions worth remembering
 

@@ -1,6 +1,6 @@
 # Phase 08: Installable and hosted
 
-- Status: Not started
+- Status: Complete with recorded exceptions (see contract Amendment 1: iPhone offline deferred)
 - Branch: phase-08-installable-and-hosted
 - Depends on: 03
 

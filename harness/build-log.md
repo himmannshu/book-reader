@@ -8,6 +8,7 @@ If an earlier entry is wrong, append a correction that names it.
 
 | Phase | Status | Branch | Evidence | Blockers |
 |---|---|---|---|---|
+| 08 | Complete* | phase-08-installable-and-hosted | items 1–11 observed; CI 39345677490 + 39347261723 green; *iPhone offline failed, deferred (Amendment 1) | offline on iPhone |
 | 07 | Complete | phase-07-notes | verify PASS at 26875e4 (137/166/8); items 1–16 per Codex entries; CI 39331468496 green; 18 user-checked | none |
 | 06 | Complete | phase-06-highlights | per Codex entries: all 14 items observed; CI 39320769897 green on 7ac8b1e; user check confirmed | none (row added later by Claude Code) |
 | 05 | Complete | phase-05-bookmarks | verify PASS at aa73b5c; items 1–13 observed (B1 fixed after review FAIL); 14 user-checked; CI 39291151035 green | none |
@@ -1164,3 +1165,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
   https://github.com/himmannshu/book-reader/actions/runs/39347261723
 - Phase 08 still In progress: item 12 (user install + offline) and item 6's real-world part (update notice after a
   second deploy) remain.
+
+### 2026-10-19 20:51 EDT | Phase 08 | Claude Code (Opus 5.5) | Item 12: iPhone offline fails; user deprioritizes offline; phase closed with recorded exceptions
+- User first said "checked the offline version, working", then (asked which devices): "I tested it again to make sure
+  on the iphone offline, it didn't work". User decision: deprioritize offline reading ("I would most likely have
+  internet") and move to phase 09.
+- Recorded as Amendment 1 to phase-08-contract.md: the offline part of item 12 is a deferred known issue (iPhone),
+  not a pass; item 6's real-world notice check is left to the user after the second deploy.
+- Unverified hypotheses for the iPhone failure: the installed app has its own storage, so its service worker must
+  install inside the app while online; the precache may not have finished before going offline; the Access login
+  redirect inside the installed app may interrupt the first load. Not investigated (deprioritized).
+- Phase 08 → Complete with the exceptions above (user direction). F-009 kept failing: automated tests pass, but
+  the real iPhone fails offline (evidence in features.json).

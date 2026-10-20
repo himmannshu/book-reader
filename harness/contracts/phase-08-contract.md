@@ -38,3 +38,15 @@ User decisions during planning:
 ## Amendments
 
 (none)
+
+### Amendment 1 (2026-10-19, user decision after the device check)
+
+- Item 12: the user installed the app and checked offline reading on the iPhone. **It did not work
+  offline there** (the user's first quick report said it worked; a recheck showed it failing).
+  The user decided offline reading is low priority ("I would most likely have internet") and
+  deprioritized it. The offline part of item 12 is **deferred as a known issue**, not passed.
+  Automated offline tests (items 4 and 5, Chromium and WebKit) still pass.
+- Item 6: the unit tests pass. The real-world check (the installed app shows "A new version is
+  ready." after a second deploy) is left to the user to report when convenient. The second deploy
+  was pushed with the user's OK at this amendment.
+- With these exceptions recorded, the user directed the work to move on to phase 09.
