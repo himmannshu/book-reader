@@ -11,7 +11,7 @@ export interface SqlDb {
   run(sql: string, params?: SqlValue[]): Promise<void>;
 }
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /** Creates or upgrades the tables. Idempotent, so the Function can run it on first use. */
 export async function migrate(db: SqlDb): Promise<void> {
@@ -23,12 +23,33 @@ export async function migrate(db: SqlDb): Promise<void> {
       'data TEXT, updated_at INTEGER NOT NULL, deleted INTEGER NOT NULL, device TEXT NOT NULL, ' +
       'seq INTEGER NOT NULL, PRIMARY KEY (user, kind, id));' +
       'CREATE INDEX IF NOT EXISTS sync_items_by_seq ON sync_items (user, seq);' +
-      'CREATE INDEX IF NOT EXISTS sync_items_by_book ON sync_items (user, book_id);',
+      'CREATE INDEX IF NOT EXISTS sync_items_by_book ON sync_items (user, book_id);' +
+      // v2 (phase 09b): book files stored in R2, for the storage cap and "already uploaded".
+      'CREATE TABLE IF NOT EXISTS files (' +
+      'user TEXT NOT NULL, book_id TEXT NOT NULL, size INTEGER NOT NULL, ' +
+      'PRIMARY KEY (user, book_id));',
   );
   const rows = await db.all<{ version: number }>('SELECT version FROM schema_version');
   if (rows.length === 0) {
     await db.run('INSERT INTO schema_version (version) VALUES (?)', [SCHEMA_VERSION]);
+  } else if ((rows[0]?.version ?? 0) < SCHEMA_VERSION) {
+    await db.run('UPDATE schema_version SET version = ?', [SCHEMA_VERSION]);
   }
+}
+
+const migrated = new WeakMap<SqlDb, Promise<void>>();
+
+/** Runs `migrate` once per database (per Function instance); retries after a failure. */
+export function ensureMigrated(db: SqlDb): Promise<void> {
+  let done = migrated.get(db);
+  if (!done) {
+    done = migrate(db).catch((error: unknown) => {
+      migrated.delete(db);
+      throw error;
+    });
+    migrated.set(db, done);
+  }
+  return done;
 }
 
 /** Next sequence number for this user; one atomic statement, so concurrent syncs never share one. */
@@ -75,13 +96,17 @@ async function write(db: SqlDb, user: string, item: SyncItem): Promise<void> {
   );
 }
 
-/** Applies changes with last write wins. A deleted book also deletes its annotations. */
+/**
+ * Applies changes with last write wins. A deleted book also deletes its annotations; the books
+ * deleted this way are returned so the caller can delete their files.
+ */
 export async function applyChanges(
   db: SqlDb,
   user: string,
   changes: readonly SyncItem[],
-): Promise<{ applied: number }> {
+): Promise<{ applied: number; deletedBooks: string[] }> {
   let applied = 0;
+  const deletedBooks: string[] = [];
   for (const change of changes) {
     const stored = await db.all<{ updated_at: number; device: string }>(
       'SELECT updated_at, device FROM sync_items WHERE user = ? AND kind = ? AND id = ?',
@@ -94,6 +119,7 @@ export async function applyChanges(
     applied++;
 
     if (change.kind === 'book' && change.deleted) {
+      deletedBooks.push(change.id);
       const annotations = await db.all<Row>(
         "SELECT * FROM sync_items WHERE user = ? AND book_id = ? AND kind != 'book' AND deleted = 0",
         [user, change.id],
@@ -111,7 +137,22 @@ export async function applyChanges(
       }
     }
   }
-  return { applied };
+  return { applied, deletedBooks };
+}
+
+/** Whether the server knows this book: never synced, synced and present, or deleted. */
+export async function bookState(
+  db: SqlDb,
+  user: string,
+  bookId: string,
+): Promise<'unknown' | 'present' | 'deleted'> {
+  const rows = await db.all<{ deleted: number }>(
+    "SELECT deleted FROM sync_items WHERE user = ? AND kind = 'book' AND id = ?",
+    [user, bookId],
+  );
+  const row = rows[0];
+  if (!row) return 'unknown';
+  return row.deleted === 1 ? 'deleted' : 'present';
 }
 
 export interface Pulled {

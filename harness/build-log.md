@@ -1289,3 +1289,16 @@ Contract evidence from this final canonical run (contract unchanged after approv
   its `phase` field still says "09" (left as is: only status and evidence change in features.json).
 - Facts used (Cloudflare docs): R2 multipart parts ≥ 5 MiB, equal size except the last, ≤ 10,000 parts;
   request bodies ≤ 100 MB → fixed 8 MiB parts. Free Workers CPU is tight → no hashing on the server.
+
+### 2026-10-19 23:40 EDT | Phase 09b | Claude Code (Opus 5.5) | Probe; server file API green
+- Probe (scratch project, `wrangler pages dev --r2`): multipart with an 8 MiB streamed part (Content-Length set) +
+  a 3 MB last part → complete size 11388608; ranged GET 206 and full GET byte-identical (cmp). A 4 MB non-last
+  part → complete fails "smaller than the minimum allowed object size (10011)"; a single small part (4 B, 4 MB)
+  completes. A chunked body (no length) → "Provided readable stream must have a known length". So: fixed 8 MiB
+  parts, and the server answers 411 without Content-Length.
+- Server: functions/_lib/files.ts (create / part / complete / ranged GET; cap; 409 not-synced, 410 deleted; R2 key
+  per sha256(user)), r2.ts adapter, memory-bucket.ts (test only), route functions/api/files/[[path]].ts; D1 schema
+  v2 (`files` table); applyChanges returns deleted books and the sync handler deletes their files.
+- Tests first: files.test.ts (12) failed (no module), then pass; store.test.ts adds the v1 → v2 upgrade. Vitest
+  deep equality on 16 MB arrays ran Node out of memory; tests compare bytes with Buffer.compare instead.
+  `npx vitest run functions` → 31 passed; typecheck and eslint clean.
