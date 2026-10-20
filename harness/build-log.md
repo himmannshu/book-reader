@@ -1408,3 +1408,19 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - User decision: keep building the roadmap (10 → 17) while away, using the original direction and the agent's
   best judgment, in a cloud session. Standing instructions recorded in harness/HANDOFF.md (stacked phase
   branches; no pushes to main; self-approved plans recorded as such; user-only checks left pending).
+
+### 2026-10-20 05:45 UTC | Phase 10 | Claude Code (Opus 5.5, cloud session) | Cloud baseline on 8c2c526 (= local main 1b47217 + branch note)
+- Environment: Node 24.22 installed with nvm (the image has 22). `npm ci` OK. Network policy blocks
+  cdn.playwright.dev and playwright.download.prss.microsoft.com (403), so Playwright's pinned Chromium 1248 and
+  WebKit 2370 cannot be installed. The preinstalled Chromium 141 is too old for pdfjs-dist 6.4 (pages fail with
+  `getOrInsertComputed is not a function`). Workaround outside the repo: Chromium 153 from the npm package
+  @sparticuz/chromium (scratchpad), linked into a private PLAYWRIGHT_BROWSERS_PATH under the pinned revision
+  names. No repo file changed for this. The stand-in for verify runs the same steps with Chromium projects only.
+- Baseline results (no app changes): lint, format, typecheck PASS; unit 260 passed; browser (chromium) 87 passed,
+  1 failed: "Chromium reports the app as installable" (needs full Chromium with a profile; the npm build is a
+  headless shell that reports no installability errors). Sync (sync-chromium, wrangler local D1/R2) 15 passed.
+  Perf (perf-chromium) 3 passed, 1 failed: firstPage 351, 350, 368 ms in three runs (budget 350; the Mac measured
+  177 on the same code), jump 34/42/29, p95 16.8, canvas 67.1 MB. The 4-core cloud machine is slower; budgets are
+  not changed. Here perf is only compared before/after on this machine; the budget evidence is the full CI run.
+- Not available here: WebKit (all suites), the installability check, Mac-comparable timings.
+- Phase 10 contract and context written, approved by the agent under the user's standing instruction.

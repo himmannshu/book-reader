@@ -43,12 +43,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Moving to the cloud from branch phase-10-reading-comfort. Next: phase 10 plan, contract, build.
+- Phase 10 (Reading comfort) on cloud branch `phase-10-reading-comfort-k8v7pk` (the session's
+  assigned name for phase-10-reading-comfort). Plan, contract and context written and
+  self-approved. Building: core → layout → viewer → storage → UI → e2e.
+- Cloud environment: no WebKit, no pinned Chromium (network policy); Chromium 153 from npm stands
+  in (build log 05:45 UTC). First-page timing here is ~350–368 ms on unchanged code, so the budget
+  evidence must come from the full CI run.
 
 ## Next action
 
-1. Session start (AGENTS.md), including a verify baseline in the cloud environment.
-2. Phase 10 on branch phase-10-reading-comfort (already created from local main at 1b47217).
+1. Finish phase 10 items, verify (cloud stand-in), full CI run, evaluator.
+2. Then phase 11 on a branch cut from phase 10's.
 
 ## Decisions worth remembering
 
