@@ -1158,3 +1158,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
   harness/contracts/phase-09a-contract.md (approved at planning); features.json F-016 (09a, failing).
   F-010's text and fields are unchanged (AGENTS.md); it now belongs to phase 09b.
 - Phase 08: CI run 39347261723 on main (e9a9c00) still in progress at this entry.
+
+### 2026-10-19 20:33 EDT | Phase 08 | Claude Code (Opus 5.5) | CI green on main
+- GitHub Actions run 39347261723 on e9a9c00 (main, the production deploy commit) → completed, success.
+  https://github.com/himmannshu/book-reader/actions/runs/39347261723
+- Phase 08 still In progress: item 12 (user install + offline) and item 6's real-world part (update notice after a
+  second deploy) remain.

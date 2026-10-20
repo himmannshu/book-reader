@@ -8,7 +8,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Last agent: Claude Code (Opus 5.5), 2026-10-19
 - Phase 08 In progress, merged into main (e9a9c00) and deployed to production:
   https://book-reader-cpi.pages.dev (behind Cloudflare Access, email one-time code; previews too).
-  Items 1–11 observed; CI on main (for e9a9c00) being watched at hand-off.
+  Items 1–11 observed; CI on main green (run 39347261723 on e9a9c00).
 - Remaining: item 12 (user installs on iPhone/iPad + Mac, imports a book in the installed app,
   opens it offline), item 6's real-world part (after a second deploy the installed app shows
   "A new version is ready."), item 13 (guide usable: the user finished setup after one correction).
@@ -19,7 +19,6 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Next action
 
-1. Record the CI result on main (run for e9a9c00).
 2. When the user reports item 12: with their OK, push the pending harness commits to main. That is a
    docs-only second deploy, which should make the installed app show the update notice (item 6).
    Then mark phase 08 Complete.
