@@ -1605,3 +1605,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Read the user's Claude Design system (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z: tokens for three
   themes, Literata and Source Sans 3, 47 Lucide icons, 23 components). Added phases 18–23 to PLANS.md and a
   scope line to GOALS.md. No code yet; phase 18 waits for the user's approval of its plan.
+
+### 2026-10-20 17:45 UTC | Phase 18 | Claude Code (Opus 5.5, cloud session) | Branches sorted; baseline; plan posted
+- New work moved off the merged phase 10 branch: `docs-readme` (README only) and `phase-18-design-foundations`
+  (plan), both cut from main 14de167.
+- Baseline on main (cloud stand-in): lint, format, types pass; unit 362 passed; chromium e2e 140 passed, 1 failed
+  (pwa "installable", the known environment failure on this machine, same as phases 10–17).
+- Plan and contract written (harness/build/phase-18-design-foundations.md, harness/contracts/phase-18-contract.md);
+  waiting on the user's approval before any code.
