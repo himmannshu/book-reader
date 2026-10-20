@@ -25,6 +25,8 @@ const test = base.extend<{ device: () => Promise<Page> }>({
 });
 
 const BOOK = 'basic-3-pages.pdf';
+/** Has a text layer, for highlights. */
+const TEXT_BOOK = 'text-4-pages.pdf';
 const TITLE = 'basic-3-pages';
 
 const status = (page: Page) => page.getByTestId('sync-status');
@@ -102,21 +104,39 @@ async function noteTexts(page: Page): Promise<string[]> {
   return notesPanel(page).locator('.note-text').allTextContents();
 }
 
-test('bookmarks and notes made on one device appear on another that has the same book', async ({
+/** Highlights the first line containing `text` on page 1 (as the notes tests do). */
+async function highlightText(page: Page, text: string) {
+  const start = page.locator('[data-page-index="0"] .textLayer span', { hasText: text });
+  await expect(start).toHaveCount(1);
+  const before = await page.locator('.highlight-box').count();
+  await start.evaluate((element) => {
+    const range = document.createRange();
+    range.setStart(element, 0);
+    range.setEnd(element, element.childNodes.length);
+    document.getSelection()?.removeAllRanges();
+    document.getSelection()?.addRange(range);
+  });
+  await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+  await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
+}
+
+test('bookmarks, highlights and notes made on one device appear on another that has the same book', async ({
   device,
 }) => {
   const a = await device();
   const b = await device();
-  await importBook(a, BOOK);
-  await importBook(b, BOOK);
+  await importBook(a, TEXT_BOOK);
+  await importBook(b, TEXT_BOOK);
 
-  await bookmarkPage(a, 1);
+  await highlightText(a, 'Bravo two');
   await pageNote(a, 'Written on the Mac');
+  await bookmarkPage(a, 1);
   await syncNow(a);
   await syncNow(b);
 
   await expect.poll(() => bookmarkLabels(b)).toEqual(['Page 2']);
   await expect.poll(() => noteTexts(b)).toEqual(['Written on the Mac']);
+  await expect.poll(() => b.locator('.highlight-box').count()).toBeGreaterThan(0);
 });
 
 test('a book added on one device is listed on the other, and importing it brings its annotations', async ({
