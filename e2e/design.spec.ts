@@ -35,11 +35,17 @@ async function smallControls(page: Page): Promise<string[]> {
 }
 
 test.describe('desktop', () => {
-  test('the reader has one bar of controls', async ({ page }) => {
+  test('the reader has one bar of controls, each icon naming itself on hover', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/');
     await importBook(page, 'text-4-pages.pdf');
     expect(await chromeHeight(page)).toBeLessThanOrEqual(64);
+    const untitled = await page
+      .locator('header .tool-button')
+      .evaluateAll((buttons) =>
+        buttons.filter((b) => !b.getAttribute('title')).map((b) => b.textContent),
+      );
+    expect(untitled).toEqual([]);
   });
 
   test('ctrl+wheel is left to the browser, so wheel scrolling never waits for the app', async ({
@@ -129,11 +135,15 @@ test.describe('phones', () => {
         expect(await noSidewaysScroll(page), panel).toBe(true);
         await page.keyboard.press('Escape');
       }
-      // Theme and zoom are in the Display menu.
+      // Theme and zoom are in the Display menu, which closes on Escape or a tap elsewhere.
       await page.getByRole('button', { name: 'Display', exact: true }).click();
       await expect(page.getByRole('combobox', { name: 'Theme' })).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Zoom' })).toBeVisible();
       await page.keyboard.press('Escape');
+      await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveCount(0);
+      await page.getByRole('button', { name: 'Display', exact: true }).click();
+      await page.getByTestId('reader').click({ position: { x: 10, y: 300 } });
+      await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveCount(0);
 
       await page.getByRole('button', { name: 'Library', exact: true }).click();
       expect(await noSidewaysScroll(page), 'library').toBe(true);
@@ -199,6 +209,7 @@ for (const theme of ['light', 'sepia', 'dark']) {
         '--control-border',
         '--error-bg',
         '--error-text',
+        '--mark-bg',
       ];
       const result = Object.fromEntries(names.map((name) => [name, resolve(name)]));
       probe.remove();
@@ -213,6 +224,8 @@ for (const theme of ['light', 'sepia', 'dark']) {
       ['--accent', '--surface', 4.5],
       ['--on-accent', '--accent', 4.5],
       ['--error-text', '--error-bg', 4.5],
+      // The matched words in search results.
+      ['--text', '--mark-bg', 4.5],
       ['--control-border', '--surface', 3],
     ];
     for (const [fg, bg, min] of pairs) {
