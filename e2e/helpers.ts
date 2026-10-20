@@ -80,3 +80,24 @@ export async function importBook(page: Page, file: string) {
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
   await expect(page.getByRole('status')).toHaveText('Saved on this device.');
 }
+
+/**
+ * Loads the app, waits until its service worker has activated, and reloads so the worker controls
+ * the page (offline tests). Polls the registration instead of awaiting `serviceWorker.ready`,
+ * which WebKit sometimes never resolves when the page was loaded twice in a row.
+ */
+export async function loadControlled(page: Page) {
+  await page.goto('/');
+  await expect
+    .poll(() =>
+      page.evaluate(
+        async () =>
+          (await navigator.serviceWorker.getRegistration())?.active?.state === 'activated',
+      ),
+    )
+    .toBe(true);
+  await page.reload();
+  await expect
+    .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
+    .toBe(true);
+}

@@ -1,21 +1,18 @@
-import { expect, test, type Page } from '@playwright/test';
-import { bandColor, bandColorOnCanvas, expectColorClose, openFixture, pageSlot } from './helpers';
+import { expect, test } from '@playwright/test';
+import {
+  bandColor,
+  bandColorOnCanvas,
+  expectColorClose,
+  loadControlled,
+  openFixture,
+  pageSlot,
+} from './helpers';
 
 interface ManifestIcon {
   src: string;
   sizes: string;
   type?: string;
   purpose?: string;
-}
-
-/** Loads the page, waits for the service worker, and reloads so it controls the page. */
-async function loadControlled(page: Page) {
-  await page.goto('/');
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  await page.reload();
-  await expect
-    .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
-    .toBe(true);
 }
 
 test(

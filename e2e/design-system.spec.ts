@@ -1,7 +1,7 @@
 // Phase 18: the Book Reader design system's foundations. Fonts (also offline), focus rings,
 // motion, toasts and the colours drawn over pages.
 import { expect, test, type Page } from '@playwright/test';
-import { importBook, openFixture, pageSlot } from './helpers';
+import { importBook, loadControlled, openFixture, pageSlot } from './helpers';
 
 /** The resolved value of a design token, as a computed colour. */
 function token(page: Page, name: string): Promise<string> {
@@ -53,12 +53,7 @@ test.describe('fonts', () => {
   });
 
   test('the fonts still load with the network off', async ({ page, context }) => {
-    await page.goto('/');
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    await page.reload();
-    await expect
-      .poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null))
-      .toBe(true);
+    await loadControlled(page);
     await context.setOffline(true);
     await page.reload();
     await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
