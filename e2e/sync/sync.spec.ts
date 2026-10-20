@@ -150,9 +150,10 @@ test('when both devices change the same note, the later change wins on both', as
 
   await pageNote(a, 'Earlier, from A');
   await pageNote(b, 'Later, from B');
-  await syncNow(a);
+  // The later change reaches the server first; the earlier one, arriving afterwards, must lose.
   await syncNow(b);
   await syncNow(a);
+  await syncNow(b);
 
   await expect.poll(() => noteTexts(a)).toEqual(['Later, from B']);
   await expect.poll(() => noteTexts(b)).toEqual(['Later, from B']);
@@ -223,6 +224,10 @@ test('changes made offline are kept and sync when the device is back online', as
   await a.context().setOffline(true);
   await bookmarkPage(a, 2);
   await a.getByRole('button', { name: /^(Sync now|Retry)$/ }).click();
+  await expect(status(a)).toHaveText('Offline: changes will sync when you are back online');
+  // Let the sync scheduled after the edit (2 s) happen while still offline, so only coming back
+  // online can trigger the next one.
+  await a.waitForTimeout(2_500);
   await expect(status(a)).toHaveText('Offline: changes will sync when you are back online');
 
   // Coming back online syncs on its own.
