@@ -19,7 +19,8 @@ export default defineConfig({
   },
   projects: [
     { name: 'sync-chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'sync-webkit', use: { ...devices['Desktop Safari'] } },
+    // `@any-engine` tests (one device, nothing engine-specific) run in Chromium only.
+    { name: 'sync-webkit', use: { ...devices['Desktop Safari'] }, grepInvert: /@any-engine/ },
   ],
   webServer: {
     command:

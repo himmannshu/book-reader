@@ -118,33 +118,37 @@ test('a book bigger than one part uploads in parts and arrives intact, with prog
   expect(stored).toBe(big.id);
 });
 
-test('an interrupted upload resumes from the next part', async ({ device }) => {
-  const big = await bigPdf(20);
-  const a = await device();
-  const sent: string[] = [];
-  a.on('request', (r) => {
-    if (r.method() === 'PUT' && r.url().includes('/api/files/'))
-      sent.push(r.url().split('/').at(-1) ?? '');
-  });
-  let dropped = false;
-  await a.route('**/api/files/**/uploads/*/2', async (route) => {
-    if (!dropped) {
-      dropped = true;
-      await route.abort('connectionreset');
-    } else {
-      await route.continue();
-    }
-  });
-  await a.getByLabel('Open PDF').setInputFiles(big.path);
-  await expect(pageSlot(a, 0)).toHaveAttribute('data-state', 'rendered');
-  await syncNow(a);
-  await expect.poll(() => dropped).toBe(true);
-  await expect(a.getByTestId('upload-status')).toHaveText('');
+test(
+  'an interrupted upload resumes from the next part',
+  { tag: '@any-engine' },
+  async ({ device }) => {
+    const big = await bigPdf(20);
+    const a = await device();
+    const sent: string[] = [];
+    a.on('request', (r) => {
+      if (r.method() === 'PUT' && r.url().includes('/api/files/'))
+        sent.push(r.url().split('/').at(-1) ?? '');
+    });
+    let dropped = false;
+    await a.route('**/api/files/**/uploads/*/2', async (route) => {
+      if (!dropped) {
+        dropped = true;
+        await route.abort('connectionreset');
+      } else {
+        await route.continue();
+      }
+    });
+    await a.getByLabel('Open PDF').setInputFiles(big.path);
+    await expect(pageSlot(a, 0)).toHaveAttribute('data-state', 'rendered');
+    await syncNow(a);
+    await expect.poll(() => dropped).toBe(true);
+    await expect(a.getByTestId('upload-status')).toHaveText('');
 
-  await syncAndUpload(a, big.id);
-  // Part 1 went once; part 2 twice (dropped, then again); part 3 once.
-  expect(sent).toEqual(['1', '2', '2', '3']);
-});
+    await syncAndUpload(a, big.id);
+    // Part 1 went once; part 2 twice (dropped, then again); part 3 once.
+    expect(sent).toEqual(['1', '2', '2', '3']);
+  },
+);
 
 test('a damaged download is refused and nothing is kept; trying again works', async ({
   device,
@@ -247,16 +251,18 @@ test('"Remove from this device" frees the file; the book downloads again with it
   await expect.poll(() => bookmarkLabels(a)).toEqual(['Page 3']);
 });
 
-test('when the cloud is full, the status says so and the book keeps working here', async ({
-  device,
-}) => {
-  const a = await device({ headers: { 'x-dev-files-cap': '1000' } });
-  await importBook(a, BOOK);
-  await syncNow(a);
-  await expect(a.getByTestId('upload-status')).toHaveText(
-    'Cloud storage is full (9 GB). New books stay on this device only.',
-  );
-  await a.reload();
-  await libraryItem(a, TITLE).getByRole('button', { name: TITLE, exact: true }).click();
-  await expect(pageSlot(a, 0)).toHaveAttribute('data-state', 'rendered');
-});
+test(
+  'when the cloud is full, the status says so and the book keeps working here',
+  { tag: '@any-engine' },
+  async ({ device }) => {
+    const a = await device({ headers: { 'x-dev-files-cap': '1000' } });
+    await importBook(a, BOOK);
+    await syncNow(a);
+    await expect(a.getByTestId('upload-status')).toHaveText(
+      'Cloud storage is full (9 GB). New books stay on this device only.',
+    );
+    await a.reload();
+    await libraryItem(a, TITLE).getByRole('button', { name: TITLE, exact: true }).click();
+    await expect(pageSlot(a, 0)).toHaveAttribute('data-state', 'rendered');
+  },
+);

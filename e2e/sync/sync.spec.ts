@@ -157,7 +157,7 @@ test('changes made offline are kept and sync when the device is back online', as
   await expect.poll(() => bookmarkLabels(b)).toEqual(['Page 3']);
 });
 
-test('reading a book never waits for sync', async ({ device }) => {
+test('reading a book never waits for sync', { tag: '@any-engine' }, async ({ device }) => {
   const a = await device();
   // Hold every sync request; opening and drawing a book must not depend on it.
   await a.route('**/api/sync', () => new Promise(() => {}));

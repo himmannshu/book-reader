@@ -1,10 +1,12 @@
 name: verify
 
 # The repository is private, so Actions minutes are limited (2000 a month on GitHub Free) and the
-# runners have 2 cores. The full suite takes ~17 minutes there, so it runs only where it counts:
+# runners have 2 cores. The full suite takes ~20 minutes there, so it runs only where it counts:
 #   - quick (lint, format, types, unit; ~2 min): every push to a branch other than main;
 #   - full (scripts/verify.sh, the same command both agents run locally): pushes to main, pull
 #     requests, and on demand before merging a phase: gh workflow run verify.yml --ref <branch>
+#     It runs as two parallel jobs, one per browser engine (VERIFY_BROWSER), so the wait is about
+#     the WebKit half; the static checks and unit tests run once, in the chromium job.
 # Locally, scripts/verify.sh stays the evidence for every step.
 on:
   push:
@@ -37,6 +39,12 @@ jobs:
     if: github.event_name != 'push' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      # Both engines report, even when one fails.
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    name: verify (${{ matrix.browser }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,24 +60,26 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
       - if: steps.browsers.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium webkit
+        run: npx playwright install --with-deps ${{ matrix.browser }}
       - if: steps.browsers.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium webkit
-      # The same single command both agents use locally.
+        run: npx playwright install-deps ${{ matrix.browser }}
+      # The same single command both agents use locally, for this job's engine.
       - run: scripts/verify.sh
+        env:
+          VERIFY_BROWSER: ${{ matrix.browser }}
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 7
       # Measured speed numbers, on every run (time budgets are ×4 in CI, see e2e/perf/budgets.json).
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: perf-results
+          name: perf-results-${{ matrix.browser }}
           path: perf-results/
           if-no-files-found: warn
           retention-days: 30
