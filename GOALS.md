@@ -38,6 +38,8 @@ Things I could check by actually using it.
 - Later, in priority order (added 2026-10-19 and 2026-10-20): a UI and UX design pass so the app
   looks and feels polished on every device, voice notes, listening to a book read aloud, and,
   lowest of all, sharing excerpts to social media.
+- Next (added 2026-10-20): apply the Book Reader design system made in Claude Design across the
+  app, including highlight colours, a designed library shelf and bottom sheets on iPhone.
 - Built incrementally, one small working piece at a time.
 
 ## Non-goals

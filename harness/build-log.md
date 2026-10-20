@@ -1600,3 +1600,8 @@ Contract evidence from this final canonical run (contract unchanged after approv
   upgrades v6 → v9 run on the device and are covered by the upgrade unit tests).
 - main fast-forwarded to phase 17 (the user chose this over a PR): one production deploy.
 - Remaining USER-CHECKLIST items are now checked in daily use; problems found go to new work.
+
+### 2026-10-20 17:20 UTC | Planning | Claude Code (Opus 5.5, cloud session) | Phases 18–23 planned from the design system
+- Read the user's Claude Design system (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z: tokens for three
+  themes, Literata and Source Sans 3, 47 Lucide icons, 23 components). Added phases 18–23 to PLANS.md and a
+  scope line to GOALS.md. No code yet; phase 18 waits for the user's approval of its plan.
