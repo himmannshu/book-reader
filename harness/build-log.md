@@ -1561,3 +1561,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   reader closed during the permission prompt; missing unit tests for the time limit and the upgrade; CI).
 - Fixes: see the review appendix. New unit tests: recorder (3), useVoiceNotes lifecycle (3, red on the old hook),
   v8 → v9 upgrade. Unit 352 passed; chromium voice-notes 5/5.
+
+### 2026-10-20 13:25 UTC | Phase 12 | Claude Code (Opus 5.5, cloud session) | Full CI green after review fixes
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39391982795 on 36073e0 → success (08:14–08:34Z).
+- Contract items 1–6 have evidence; item 7 (devices, layout confirmation) waits on the user. F-014 → passing.
