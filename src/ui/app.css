@@ -1334,8 +1334,8 @@ body:has(.player-bar, .search-bar) .br-toast {
 }
 
 .br-empty--compact {
+  grid-template-columns: auto 1fr;
   justify-items: start;
-  grid-auto-flow: column;
   align-items: center;
   max-width: none;
   margin: var(--space-2);

@@ -1613,3 +1613,22 @@ Contract evidence from this final canonical run (contract unchanged after approv
   (pwa "installable", the known environment failure on this machine, same as phases 10–17).
 - Plan and contract written (harness/build/phase-18-design-foundations.md, harness/contracts/phase-18-contract.md);
   waiting on the user's approval before any code.
+
+### 2026-10-20 18:15 UTC | Phase 18 | Claude Code (Opus 5.5, cloud session) | Built; chromium green; perf compared
+- Red first: tests/config/design-tokens.test.ts failed (no tokens.css, colour literals in app.css), then passed
+  after scripts/generate-tokens.mjs (`npm run tokens`) and the app.css move to tokens (7/7 incl. status-bar
+  colours). New e2e/design-system.spec.ts (fonts and offline fonts, 16 px fields, focus ring, motion and
+  reduced motion, toasts at the bottom / above the player / failures stay, page colours, Dark filter): first run
+  found PDF.js's own selection colour (fixed with an override); 11/11 after. New src/ui/controls.test.tsx 8/8.
+- Tests changed by the design (contract item 11): e2e/design.spec.ts contrast pairs now the design's tokens
+  (more pairs; search mark composited over the panel); e2e/comfort.spec.ts Dark status bar #1d1d1f → #1a1815
+  and the Sepia page check now the exact composite of the design's page-tint (was "r − b > 30"; the design's
+  tint is lighter: r − b ≈ 20). No check loosened.
+- Cloud stand-in run: lint, format, types pass; unit 377 passed; chromium e2e 151 passed, 1 failed (pwa
+  "installable", the known environment failure).
+- Perf, chromium on this machine, alternating main (14de167, worktree -p17) and phase 18, six rounds each:
+  firstPageMs main 369/423/372/374/380/396 (median 377), phase 18 443/379/441/382/364/365 (median 380.5);
+  jumpMs 29–46 both; p95FrameMs 16.8 or 33.3 on both (bimodal on this machine); blank 0. No regression.
+  Budget evidence = the full CI run.
+- Screenshots checked in all three themes at 1280 px and on an iPhone 13 emulation; the compact empty state's
+  text was centred oddly and was fixed.
