@@ -15,6 +15,8 @@ export type FileErrorKind =
   | 'deleted'
   /** The upload id expired or is unknown: start the upload again. */
   | 'no-such-upload'
+  /** The downloaded bytes don't match the book (SHA-256 differs from its id). */
+  | 'damaged'
   | 'failed';
 
 export class FileError extends Error {

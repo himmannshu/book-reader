@@ -75,6 +75,8 @@ export interface UploadRecord {
   /** done: the cloud has it; full: the cloud was full last time we tried. */
   state: 'uploading' | 'done' | 'full';
   uploadId?: string;
+  /** Bytes per part, as the server chose when the upload started. */
+  partSize?: number;
   /** Parts the server has accepted, so an interrupted upload resumes from the next one. */
   parts: { partNumber: number; etag: string }[];
 }
