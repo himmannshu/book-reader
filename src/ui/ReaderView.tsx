@@ -699,9 +699,9 @@ export function ReaderView({
   const zoomControls = (
     <div className="zoom-controls">
       <IconButton
+        variant="filled"
         icon="minus"
         label="Zoom out"
-
         disabled={zoom === MIN_ZOOM}
         onClick={() => stepZoom('out')}
       />
@@ -721,9 +721,9 @@ export function ReaderView({
         ))}
       </select>
       <IconButton
+        variant="filled"
         icon="plus"
         label="Zoom in"
-
         disabled={zoom === MAX_ZOOM}
         onClick={() => stepZoom('in')}
       />
@@ -889,19 +889,9 @@ export function ReaderView({
             {listen.state.status === 'reading' ? (
               <IconButton icon="pause" label="Pause" onClick={listen.pause} />
             ) : (
-              <IconButton
-                icon="play"
-                label="Resume"
-
-                onClick={listen.resume}
-              />
+              <IconButton icon="play" label="Resume" onClick={listen.resume} />
             )}
-            <IconButton
-              icon="stop"
-              label="Stop reading"
-
-              onClick={listen.stop}
-            />
+            <IconButton icon="stop" label="Stop reading" onClick={listen.stop} />
             <select
               className="picker"
               aria-label="Speed"
@@ -918,27 +908,12 @@ export function ReaderView({
         )}
         {narrow && searchCurrent !== null && openPanel !== 'search' && searchResults.length > 0 && (
           <div className="search-bar" role="toolbar" aria-label="Search matches">
-            <IconButton
-              icon="collapse"
-              label="Previous match"
-
-              onClick={() => stepSearch(-1)}
-            />
+            <IconButton icon="collapse" label="Previous match" onClick={() => stepSearch(-1)} />
             <span className="search-bar-count">
               {searchCurrent + 1} of {searchResults.length}
             </span>
-            <IconButton
-              icon="expand"
-              label="Next match"
-
-              onClick={() => stepSearch(1)}
-            />
-            <IconButton
-              icon="close"
-              label="Close search"
-
-              onClick={() => runSearch('')}
-            />
+            <IconButton icon="expand" label="Next match" onClick={() => stepSearch(1)} />
+            <IconButton icon="close" label="Close search" onClick={() => runSearch('')} />
           </div>
         )}
         {voice.recording && openPanel !== 'notes' && (

@@ -210,6 +210,7 @@ test.describe('toasts', () => {
 test.describe('on the page', () => {
   test('highlights and search marks use the design’s highlight colour, the current match ringed in accent', async ({
     page,
+    browserName,
   }) => {
     await importBook(page, 'text-4-pages.pdf');
     await expect(
@@ -227,11 +228,26 @@ test.describe('on the page', () => {
       document.getSelection()?.removeAllRanges();
       document.getSelection()?.addRange(range);
     });
-    const selection = await page
-      .locator('[data-page-index="0"] .textLayer span')
-      .first()
-      .evaluate((span) => getComputedStyle(span, '::selection').backgroundColor);
-    expect(selection).toBe(await token(page, 'selection'));
+    // The stylesheet sets the design's selection colour on the text layer (every browser); where
+    // the browser reports ::selection styles (Chromium), the computed colour must match too.
+    const rule = await page.evaluate(() =>
+      [...document.styleSheets]
+        .flatMap((sheet) => [...sheet.cssRules])
+        .some(
+          (r) =>
+            r instanceof CSSStyleRule &&
+            r.selectorText.includes('.textLayer ::selection') &&
+            r.style.background.includes('var(--selection)'),
+        ),
+    );
+    expect(rule).toBe(true);
+    if (browserName === 'chromium') {
+      const selection = await page
+        .locator('[data-page-index="0"] .textLayer span')
+        .first()
+        .evaluate((span) => getComputedStyle(span, '::selection').backgroundColor);
+      expect(selection).toBe(await token(page, 'selection'));
+    }
     await page.getByRole('button', { name: 'Highlight', exact: true }).click();
     const yellow = await token(page, 'hl-yellow');
     await expect(page.locator('.highlight-box').first()).toHaveCSS('background-color', yellow);

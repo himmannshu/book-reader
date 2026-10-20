@@ -325,11 +325,6 @@ body {
   margin-left: auto;
 }
 
-.bookmark-toggle[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
 .bookmark-toggle:disabled {
   border-color: var(--ink-muted);
   color: var(--ink-muted);
@@ -611,7 +606,7 @@ body {
   -webkit-line-clamp: 7;
   padding: 16px 12px;
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 15px;
   line-height: 1.35;
   color: var(--ink-muted);
   background: var(--canvas);
@@ -648,6 +643,8 @@ body {
 .search-hit {
   position: absolute;
   background: var(--hl-yellow);
+  /* Multiplied like highlights, so the matched words stay black (phase 18 review N2). */
+  mix-blend-mode: multiply;
   border-radius: 2px;
 }
 
@@ -731,12 +728,6 @@ body {
 
 .tool-button:hover:not(:disabled) {
   background: var(--surface-sunken);
-}
-
-.tool-button[aria-expanded='true'],
-.tool-button[aria-pressed='true'] {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 
 .tool-button:disabled,
@@ -1365,4 +1356,10 @@ body:has(.player-bar, .search-bar) .br-toast {
 /* Selected text on a page takes the design's selection colour (PDF.js sets its own). */
 .viewer-page .textLayer ::selection {
   background: var(--selection);
+}
+
+/* Placeholders in the design's muted ink, not the browser's grey (phase 18 review N1). */
+::placeholder {
+  color: var(--ink-muted);
+  opacity: 1;
 }
