@@ -55,21 +55,23 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 19 built on `phase-19-reader-chrome` (stacked on `mac-webkit-baseline`; neither pushed). Unit 391, the changed
-  specs and sync pass; `scripts/verify.sh` has not passed yet: run 2 failed only on perf-webkit p95 (42 > 40; A/B
-  shows no regression, see build log), runs 3–4 stalled because the machine was overloaded (Chrome tabs, load 82).
-- Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). WebKit and the
-  perf budgets run locally now (the cloud container could not run them). Never run perf in two
-  places at once. Close heavy browser tabs before verify: WebKit tests stall under load.
+- Phase 19 built and reviewed on `phase-19-reader-chrome` (stacked on `mac-webkit-baseline`; neither pushed).
+  Review: FAIL (B1, B2) → fixed → recheck PASS conditional on CI (harness/code_review/phase-19-review.md).
+  `scripts/verify.sh` PASS at 7a039dc (author and reviewer). Contract item 12 needs the full CI run; item 13 is the
+  user's device check (USER-CHECKLIST, phase 19). PLANS row 19 stays In progress; F-021 stays failing until then.
+- Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
+  at once. Close heavy browser tabs before verify: WebKit tests stall under load (2026-10-20, load average 82).
 
 ## Next action
 
-1. On a quiet machine: `scripts/verify.sh` on `phase-19-reader-chrome`; record the result.
-2. Evaluator review (harness/prompts/03-evaluate.md), fix blockers.
-3. Ask the user before pushing the branch (preview deploy), then `gh workflow run verify.yml --ref phase-19-reader-chrome`.
-4. Contract item 13 (devices) goes to harness/USER-CHECKLIST.md.
-5. Watch: WebKit steady-scroll p95 sits at 33–38 ms locally (budget 40) and one of its three samples is a ~2.4 s
-   freeze on every run (also on the baseline); library-view's "100 books" filter check is load-sensitive.
+1. With the user's approval: push `phase-19-reader-chrome` (a preview deploy; it also carries the
+   `mac-webkit-baseline` commits), then `gh workflow run verify.yml --ref phase-19-reader-chrome`; record the run.
+2. Then mark item 12, PLANS row 19 and F-021 as evidence allows; item 13 waits on the user.
+3. The user decides on merging `mac-webkit-baseline` (and later phase 19) into main (pushing main deploys).
+4. Watch: WebKit steady-scroll p95 hit its 40 ms budget once in a full run (31 alone) and one of its three samples
+   is a ~2.4 s freeze on every run (also on the baseline: worth a look of its own); chromium first page 235 of 250 in
+   full runs (186–190 alone); load-sensitive tests (voice-notes chromium, library-view 100 books, design zoomed
+   reopen) fail now and then under full-suite load.
 
 ## Decisions worth remembering
 
@@ -114,31 +116,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 20:18 EDT
+Snapshot 2026-10-20 21:13 EDT
 - Branch: phase-19-reader-chrome
-- HEAD: 0b9279c phase 19: plan, contract and context (approved by the user)
-- Uncommitted files: 41
-- Last verify: FAIL at 2026-10-20 20:17 EDT (commit 0b9279c)
+- HEAD: 7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
+- Uncommitted files: 3
+- Last verify: PASS at 2026-10-20 21:12 EDT (commit 7a039dc)
 - Recent commits:
+    7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
+    0d6bddc phase 19: verify passes locally (WebKit and perf included)
+    2abcef8 wip: phase 19: remove the unused ToolButton; NARROW_QUERY comment
+    5cfceac wip: phase 19: designed toolbar, Reading settings and page pill
     0b9279c phase 19: plan, contract and context (approved by the user)
-    13988a3 wip: handoff after the Mac WebKit baseline fix
-    6a30927 tests: verify passes on macOS WebKit; Mac Safari pickers drawn at full height
-    fea67a5 phase 18: complete; test-suite trim CI green (12 min wall); handoff for the local session
-    5952687 tests: one loadControlled helper that waits for an activated service worker (WebKit could hang on serviceWorker.ready)
 - Changed files:
-     M e2e/bookmarks.spec.ts
-     M e2e/comfort.spec.ts
-     M e2e/contents.spec.ts
-     M e2e/design-system.spec.ts
-     M e2e/design.spec.ts
-     M e2e/helpers.ts
-     M e2e/highlights.spec.ts
-     M e2e/library-view.spec.ts
-     M e2e/library.spec.ts
-     M e2e/notes.spec.ts
-     M e2e/open-pdf.spec.ts
-     M e2e/sync/devices.ts
-     M e2e/sync/sync.spec.ts
      M harness/HANDOFF.md
-     M harness/build-log.md
+     M harness/USER-CHECKLIST.md
+     M harness/code_review/phase-19-review.md
 <!-- AUTO:END -->

@@ -141,3 +141,97 @@ exercised. Both blockers are small to fix.
   sheet top 406 px at 320 × 700).
 - N8 fixed: the class is gone from the library's Open PDF label.
 - `scripts/verify.sh` after the fixes → PASS (see build log).
+
+## Recheck (evaluator, Claude Code Opus 5.5, 2026-10-20, HEAD 7a039dc)
+
+I reran everything against a fresh production build of 7a039dc. I ran the software one thing at a
+time, with no perf run in parallel. I read the diff `0d6bddc..7a039dc`; it touches only the files
+listed in the author appendix. I wrote no app code.
+
+### Verdict: PASS (conditional on the full CI run, item 12; item 13 is the user's device check)
+
+### Blockers
+
+- **B1: fixed.** My original reproduction (routed `/api/sync`, service workers blocked, 320 and 390 px,
+  Chromium and WebKit) for 401, 500 and offline gives the same result in every case:
+  - There are no overlaps between any toolbar buttons or the badge, nothing sits outside the bar, and nothing scrolls sideways.
+  - The title keeps 29 px at 320 and 99 px at 390.
+  - The element at Library's centre is Library, and tapping it opens the library.
+  - On compact screens the badge shows its icon only. The full words are in its `title` and in the polite live region.
+  - The new spec test ("on a 320 px phone the badge leaves the Library button free to tap") checks the hit target, the title width and sideways scrolling.
+- **B2: fixed, to the contract's wording.** Each result was the same in Chromium and WebKit:
+
+  | Action | Where focus goes |
+  |---|---|
+  | Mouse click on the title | Reading settings button |
+  | Mouse click on the pages | pages (Page Down then still scrolls them) |
+  | Mouse click near the bottom of the pages | pages |
+  | Escape | Reading settings button |
+  | Click on Contents while settings is open | settings closes, the panel opens, focus stays in the panel |
+  | iPhone 13 emulation, tap on the title (WebKit) | Reading settings button |
+  | iPhone 13 emulation, tap on the pages (WebKit) | pages |
+
+  The spec now asserts both the title and the pages cases.
+
+### Non-blocking items
+
+| Item | Status | What I saw |
+|---|---|---|
+| N1 | Watch in CI | My verify at 7a039dc passed on the first try (below). The earlier pattern was one load flake per full run, each test passing alone. One clean run doesn't disprove that. |
+| N2 | Fixed, stricter than the original | The test logs every `covers` store `put` with its book and time. It requires no writes after the next book shows, and none for that book at all. |
+| N3 | Fixed (e2e) | 404 gives no badge, 401 "Sign in to sync", 500 "Sync failed", plus the 320 px test. There are still no `compact` unit cases in `SyncStatusLine.test.tsx`, but the e2e checks are enough. The new hold test covers the highlight menu and the More menu. |
+| N4 | Fixed | Zoom out pressed repeatedly with Enter stops at 25% with `aria-disabled="true"`, focus stays on Zoom out, and one more Enter changes nothing. |
+| N5 | Fixed | `settledPageIndex` is the current page while the pages are still, and starts from the saved position. The spec checks "Page 3 of 4" at once after a reopen. |
+| N6 | Fixed | 2% relative step tolerance: 66.4% steps to 75%, 65% still steps to 67%. The unit test passes. |
+| N7 | Fixed | iPhone 13 emulation with the sheet up: the toast is at y 60–112, the sheet starts at y 370. |
+| N8 | Fixed | The `tool-label` class is gone from the library's Open PDF label. |
+
+### Test artifacts I hit (not app bugs)
+
+- Clicking Aa right after Page Down waits forever, because the faded toolbar has `pointer-events: none` until you tap the page. This is intended.
+- Playwright's `click()` waits on an `aria-disabled` button, because it treats it as disabled. Pressing Enter shows the app correctly ignores the press.
+
+### New minor note
+
+**R1:** on phones the badge is an icon only, and iOS shows no tooltips. A sighted iPhone reader sees an alert or offline icon without words. Screen readers still get the words. The full sync line, with Retry, is in the library. This is acceptable for this phase. Phase 20 could make the badge tappable to say what it means.
+
+### Item 12
+
+`scripts/verify.sh` at 7a039dc on this machine: **PASS** (exit 0).
+
+| Step | Result |
+|---|---|
+| Lint, format, types | pass |
+| Unit | 392 passed |
+| Browser | 295 passed, 1 skipped |
+| Sync | 27 passed |
+| Perf | 10 passed |
+
+| Perf metric | Chromium | WebKit |
+|---|---|---|
+| firstPageMs | 186 | 144 |
+| jumpMs | 32 | 67 |
+| p95FrameMs | 16.8 | 31 |
+| maxCanvasMB | 67.1 | 67.1 |
+| blankFramePct | 0 | 1 |
+
+`budgets.json` is unchanged. Item 12 passes locally. Its CI half is still **PENDING**: the branch is
+not pushed and has no `verify.yml` run. If that run is red, this verdict becomes FAIL.
+
+### Updated contract results
+
+- Items 1–11: PASS. Item 3 and item 6 were the two that failed before; both now pass.
+- Item 12: local PASS, CI PENDING.
+- Item 13: PENDING (user).
+
+### Updated rubric
+
+| Criterion | Score | Threshold | Notes |
+|---|---|---|---|
+| Contract fidelity | 5 | 5 | Items 1–11 pass; 12 depends on CI; 13 is the user's check. |
+| Functionality | 4 | 4 | |
+| Robustness | 4 | 4 | |
+| Code quality | 4 | 3 | |
+| Test quality | 4 | 3 | The new tests were mutation-checked by the author, and I confirmed the B1 and B2 cases independently. |
+| Product depth | 4 | 3 | |
+| Design | 4 | 3 | |
