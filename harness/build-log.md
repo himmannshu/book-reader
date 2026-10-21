@@ -1870,3 +1870,24 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` at 53ed3aa → PASS: unit 403; browser 345 passed + 2 skipped; sync 29; perf 10 (chromium first
   185 ms, jump 16, p95 16.8, canvas 67.1, search 869; webkit first 143, jump 64, p95 32, canvas 67.1, search 1405
   (not budgeted); blank 0 / 1.1 %). Budgets unchanged.
+
+### 2026-10-21 11:20 EDT | Phase 21 | Claude Code (Opus 5.5) | Review FAIL (B1–B4) fixed; verify PASS
+- Evaluator review (harness/code_review/phase-21-review.md) at fab20ab: FAIL, blockers B1–B4. Fixed in 814f19d, each
+  with a test seen failing on the old code first:
+  - B1/N1: the HighlightMenu measures the pages (not the area under a docked panel) and stacks into two rows, colours
+    then actions, where one row doesn't fit (SelectionActions.tsx, `.br-hlmenu--stacked`). Tests: every target on
+    screen and 44 px at 390 and 320 px over an existing highlight; inside the pages beside a docked panel at 760 px.
+    The spec's beforeEach had forced 1280 px, so its earlier phone test never ran at phone width: the viewport is now
+    set per describe with `test.use`.
+  - B2: `passageSentence` finds a passage by the longest start of it on the page (binary search), so a passage running
+    on to the next page starts where it starts. Unit cases and an e2e case across the page break (both engines).
+  - B3: the row flex layout is scoped to `.annotation-row`; voice note rows are stacked again. panels.spec's voice row
+    test now also checks the stacking (an added check).
+  - B4: a page note's More menu has Share (its text, with the title and page); highlight-colours.spec checks it.
+  - N4: a colour pressed while the save runs is applied to the new highlight afterwards (test added). N5: the stale
+    BUTTON_WIDTH constant is gone; the menu clamps itself from its real size.
+  - Left as they are: N2 (bookmark rows' More menu holds only Remove bookmark; a bookmark has no passage), N3 (Add
+    note then Cancel keeps the yellow highlight, the recorded judgment call; for the device check).
+- `scripts/verify.sh` at 814f19d → PASS: unit 404; browser 352 passed + 2 skipped; sync 29; perf 10 (chromium first
+  201 ms, jump 16, p95 16.7, canvas 67.1, search 876; webkit first 146, jump 74, p95 32, canvas 67.1, search 1390 (not
+  budgeted); blank 0 / 1 %). Budgets unchanged.

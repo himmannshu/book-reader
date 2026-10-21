@@ -61,7 +61,7 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   rows for every highlight (`annotationRows`) with a row More menu (src/ui/RowMenu.tsx; also on bookmark rows),
   Notes count including highlights, a two-device recolour test. Earlier specs updated (build log lists each change).
   Fixed on the way: a save finishing after Escape brought the menu back and cleared a newer selection.
-- Verify PASS (build log). Left: evaluator review, CI (the push needs the user's approval), the user's device check.
+- Review FAIL (B1–B4) fixed in 814f19d, verify PASS. Left: evaluator recheck review, CI (the push needs the user's approval), the user's device check.
 
 ## Next action
 
@@ -115,17 +115,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 10:56 EDT
+Snapshot 2026-10-21 11:20 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 53ed3aa wip: phase 21: two-device test for a colour change
+- HEAD: 814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
 - Uncommitted files: 2
-- Last verify: PASS at 2026-10-21 10:55 EDT (commit 53ed3aa)
+- Last verify: PASS at 2026-10-21 11:19 EDT (commit 814f19d)
 - Recent commits:
+    814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
+    fab20ab phase 21: built; verify PASS (build log)
     53ed3aa wip: phase 21: two-device test for a colour change
     b936df2 wip: phase 21: earlier specs updated for the colour menu and row More menus
     46d23fe wip: phase 21: Notes rows for every highlight, row More menus, save/dismiss race fixed
-    49ed62e wip: phase 21: colour model, highlight menu, fills, export, listen from here; lists not yet
-    896ab97 phase 21: plan approved by the user
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
