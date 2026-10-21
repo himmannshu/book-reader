@@ -75,3 +75,23 @@ export function sortVoiceNotes<T extends VoiceNote>(
       a.createdAt - b.createdAt,
   );
 }
+
+/**
+ * A recording's waveform (phase 23): one level per bar, 0 to 1, the loudest sample in that stretch
+ * of the recording scaled to the loudest bar. Rounded, so it draws the same everywhere.
+ */
+export function waveformLevels(samples: Float32Array, bars: number): number[] {
+  const peaks: number[] = [];
+  for (let bar = 0; bar < bars; bar++) {
+    const start = Math.floor((bar * samples.length) / bars);
+    const end = Math.min(
+      samples.length,
+      Math.max(start + 1, Math.floor(((bar + 1) * samples.length) / bars)),
+    );
+    let peak = 0;
+    for (let at = start; at < end; at++) peak = Math.max(peak, Math.abs(samples[at] ?? 0));
+    peaks.push(peak);
+  }
+  const loudest = Math.max(0, ...peaks);
+  return peaks.map((peak) => (loudest > 0 ? Math.round((peak / loudest) * 1000) / 1000 : 0));
+}

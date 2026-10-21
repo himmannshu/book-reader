@@ -1101,6 +1101,102 @@ body {
   min-width: 9.5em;
 }
 
+/* The listen bar (phase 23, the design's ListenBar), floating over the bottom of the pages. */
+.br-listen {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  z-index: 6;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  max-width: 640px;
+  height: var(--listen-bar-height);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised), 0 0 0 1px var(--line);
+}
+
+.br-listen__info {
+  display: grid;
+  min-width: 0;
+}
+
+.br-listen__state {
+  font-weight: 600;
+}
+
+.br-listen__state,
+.br-listen__place {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.br-listen__place {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.br-listen__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.br-listen__trail {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.br-rate {
+  height: 32px;
+  min-width: 52px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.br-rate:hover {
+  background: var(--surface-sunken);
+}
+
+@media (pointer: coarse) {
+  .br-rate {
+    height: var(--touch-target);
+  }
+}
+
+@media (max-width: 480px) {
+  .br-listen {
+    grid-template-columns: 1fr auto;
+    padding-left: var(--space-2);
+  }
+
+  .br-listen__info {
+    display: none;
+  }
+
+  .br-listen__controls {
+    justify-content: flex-start;
+  }
+}
+
 /* ---- Phase 18: the Book Reader design system's controls (harness/context/design-system). ---- */
 
 /* Keyboard focus: a 2 px ring with a 2 px gap on everything that can take it. */
@@ -1292,7 +1388,7 @@ body {
     0 0 0 1px var(--line);
 }
 
-body:has(.player-bar, .search-bar) .br-toast {
+body:has(.player-bar, .br-listen, .search-bar) .br-toast {
   bottom: calc(var(--listen-bar-height) + 2 * var(--space-4) + env(safe-area-inset-bottom));
 }
 
@@ -1749,7 +1845,7 @@ body:has(.player-bar, .search-bar) .br-toast {
 }
 
 /* Above a bar or a message at the bottom, never under it. */
-body:has(.player-bar, .search-bar, .br-toast) .br-pagepill {
+body:has(.player-bar, .br-listen, .search-bar, .br-toast) .br-pagepill {
   bottom: calc(var(--listen-bar-height) + 2 * var(--space-4) + env(safe-area-inset-bottom));
 }
 

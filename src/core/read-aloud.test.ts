@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_CHUNK, passageSentence, sentenceAt, splitSentences } from './read-aloud';
+import {
+  MAX_CHUNK,
+  SPEEDS,
+  nextSpeed,
+  passageSentence,
+  sentenceAt,
+  splitSentences,
+} from './read-aloud';
 
 const texts = (text: string) => splitSentences(text).map((s) => text.slice(s.start, s.end));
 
@@ -76,5 +83,20 @@ describe('passageSentence', () => {
   it('starts at the top when the passage is not found in the page text', () => {
     expect(passageSentence(text, 'Not on this page')).toBe(0);
     expect(passageSentence('', 'anything')).toBe(0);
+  });
+});
+
+describe('nextSpeed (phase 23)', () => {
+  it('cycles through the speeds and wraps around', () => {
+    expect(SPEEDS).toEqual([0.75, 1, 1.25, 1.5, 2]);
+    expect(nextSpeed(0.75)).toBe(1);
+    expect(nextSpeed(1)).toBe(1.25);
+    expect(nextSpeed(1.5)).toBe(2);
+    expect(nextSpeed(2)).toBe(0.75);
+  });
+
+  it('goes to the next speed above an unknown one, or back to the slowest', () => {
+    expect(nextSpeed(1.1)).toBe(1.25);
+    expect(nextSpeed(3)).toBe(0.75);
   });
 });

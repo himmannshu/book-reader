@@ -3,6 +3,7 @@ import type { Highlight } from './highlights';
 import {
   MAX_VOICE_NOTE_MS,
   formatDuration,
+  waveformLevels,
   pickAudioType,
   sortVoiceNotes,
   validVoiceNote,
@@ -89,5 +90,23 @@ describe('sortVoiceNotes', () => {
       voice({ id: 'high', target: { kind: 'highlight', pageIndex: 1, highlightId: 'high' } }),
     ];
     expect(sortVoiceNotes(notes, highlights).map((n) => n.id)).toEqual(['p1', 'high', 'low', 'p3']);
+  });
+});
+
+describe('waveformLevels (phase 23)', () => {
+  it('gives one level per bar: the loudest sample in its stretch, scaled to the loudest bar', () => {
+    const samples = new Float32Array([0, 0.1, -0.2, 0.05, 0.4, -0.1, 0, 0]);
+    expect(waveformLevels(samples, 4)).toEqual([0.25, 0.5, 1, 0]);
+  });
+
+  it('is a flat line for silence or no audio', () => {
+    expect(waveformLevels(new Float32Array(100), 5)).toEqual([0, 0, 0, 0, 0]);
+    expect(waveformLevels(new Float32Array(0), 3)).toEqual([0, 0, 0]);
+  });
+
+  it('copes with fewer samples than bars', () => {
+    const levels = waveformLevels(new Float32Array([0.5, -1]), 4);
+    expect(levels).toHaveLength(4);
+    expect(Math.max(...levels)).toBe(1);
   });
 });

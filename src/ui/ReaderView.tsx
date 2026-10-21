@@ -21,7 +21,7 @@ import { highlightColor, type Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
 import { excerptText } from '../core/share';
 import { annotationRows, type NoteTarget } from '../core/notes';
-import type { PageLabels } from '../core/page-labels';
+import { pageLabel, type PageLabels } from '../core/page-labels';
 import {
   fitModeOf,
   nearestZoomLevel,
@@ -65,7 +65,8 @@ import { ReadingSettings } from './ReadingSettings';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
 import { browserSpeaker, type Speaker } from './speech';
-import { SPEEDS, useReadAloud } from './useReadAloud';
+import { ListenBar } from './ListenBar';
+import { useReadAloud } from './useReadAloud';
 import { Elapsed, VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
@@ -1073,30 +1074,22 @@ export function ReaderView({
           settledPageIndex={pill.visible ? pill.settledPage : currentPage}
         />
         {listen.state.status !== 'idle' && (
-          <div className="player-bar" role="toolbar" aria-label="Read aloud">
-            <span className="player-status" role="status">
-              {listen.state.status === 'reading' ? 'Reading' : 'Paused on'} page{' '}
-              {listen.state.pageIndex + 1}
-            </span>
-            {listen.state.status === 'reading' ? (
-              <IconButton icon="pause" label="Pause" onClick={listen.pause} />
-            ) : (
-              <IconButton icon="play" label="Resume" onClick={listen.resume} />
-            )}
-            <IconButton icon="stop" label="Stop reading" onClick={listen.stop} />
-            <select
-              className="picker"
-              aria-label="Speed"
-              value={String(listen.rate)}
-              onChange={(event) => listen.changeRate(Number(event.currentTarget.value))}
-            >
-              {SPEEDS.map((speed) => (
-                <option key={speed} value={String(speed)}>
-                  {speed}×
-                </option>
-              ))}
-            </select>
-          </div>
+          <ListenBar
+            reading={listen.state.status === 'reading'}
+            place={[
+              `p. ${pageLabel(listen.state.pageIndex, pageLabels)}`,
+              chapterFor(listen.state.pageIndex),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            rate={listen.rate}
+            onPause={listen.pause}
+            onResume={listen.resume}
+            onPrevious={() => void listen.skip(-1)}
+            onNext={() => void listen.skip(1)}
+            onSpeed={listen.cycleRate}
+            onStop={listen.stop}
+          />
         )}
         {searchBarShown && searchResults.length > 0 && (
           <div className="search-bar" role="toolbar" aria-label="Search matches">

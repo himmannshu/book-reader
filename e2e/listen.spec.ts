@@ -92,7 +92,7 @@ test.describe('with speech', () => {
     await expect
       .poll(async () => (await spoken(page))[0])
       .toBe('and Juliet ten finishes it at the top of page two.');
-    await expect(bar(page)).toContainText('page 2');
+    await expect(bar(page)).toContainText('p. 2');
   });
 
   test('pause keeps the place, resume repeats that sentence and goes on, stop ends it', async ({
@@ -103,7 +103,7 @@ test.describe('with speech', () => {
     await page.getByRole('button', { name: 'Listen', exact: true }).click();
     await expect.poll(async () => (await spoken(page)).length).toBeGreaterThanOrEqual(2);
     await bar(page).getByRole('button', { name: 'Pause' }).click();
-    await expect(bar(page)).toContainText('Paused on page');
+    await expect(bar(page)).toContainText('Paused');
     const atPause = await spoken(page);
     await page.waitForTimeout(500);
     expect(await spoken(page)).toEqual(atPause);
@@ -121,8 +121,102 @@ test.describe('with speech', () => {
   test('a new speed applies to what is read next', { tag: '@any-engine' }, async ({ page }) => {
     await page.getByRole('button', { name: 'Listen', exact: true }).click();
     await expect.poll(async () => (await spoken(page)).length).toBeGreaterThanOrEqual(1);
-    await bar(page).getByRole('combobox', { name: 'Speed' }).selectOption('1.5');
+    // The speed button steps 1× → 1.25× → 1.5× (phase 23; it was a list before).
+    await bar(page).getByRole('button', { name: /^Speed / }).click();
+    await bar(page).getByRole('button', { name: /^Speed / }).click();
     await expect.poll(() => page.evaluate(() => window.spoken.at(-1)?.rate)).toBe(1.5);
+  });
+});
+
+test.describe('the listen bar (phase 23)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(fakeSpeech);
+    await page.goto('/');
+    await importBook(page, 'text-4-pages.pdf');
+    // Each piece "lasts" long enough for the test to press buttons on it.
+    await page.evaluate(() => (window.speechMs = 5000));
+  });
+
+  const last = async (page: Page) => (await spoken(page)).at(-1) ?? '';
+
+  test('it shows the state and place, previous and next sentence, play/pause, speed and stop', async ({
+    page,
+  }) => {
+    await page.getByRole('button', { name: 'Listen', exact: true }).click();
+    await expect(bar(page)).toContainText('Reading aloud');
+    await expect(bar(page)).toContainText('p. 1');
+    for (const name of ['Previous sentence', 'Pause', 'Next sentence', 'Stop reading']) {
+      await expect(bar(page).getByRole('button', { name, exact: true })).toBeVisible();
+    }
+    await expect(bar(page).getByRole('button', { name: /^Speed 1×/ })).toHaveText('1×');
+    const box = await bar(page).boundingBox();
+    expect(box?.height).toBeCloseTo(64, 0);
+    await bar(page).getByRole('button', { name: 'Pause' }).click();
+    await expect(bar(page)).toContainText('Paused');
+  });
+
+  test('next and previous sentence move the reading, across a page break too', async ({ page }) => {
+    await page.getByRole('button', { name: 'Listen', exact: true }).click();
+    await expect.poll(() => last(page)).toMatch(/^Alpha one/);
+    const next = bar(page).getByRole('button', { name: 'Next sentence' });
+    const previous = bar(page).getByRole('button', { name: 'Previous sentence' });
+    await next.click();
+    await expect.poll(() => last(page)).toMatch(/^Bravo two/);
+    for (let i = 0; i < 3; i++) await next.click();
+    await expect.poll(() => last(page)).toMatch(/^India nine/);
+    await next.click();
+    await expect.poll(() => last(page)).toMatch(/^and Juliet ten/);
+    await expect(bar(page)).toContainText('p. 2');
+    await previous.click();
+    await expect.poll(() => last(page)).toMatch(/^India nine/);
+    await expect(bar(page)).toContainText('p. 1');
+
+    // While paused it moves the place without speaking; Resume reads from there.
+    await bar(page).getByRole('button', { name: 'Pause' }).click();
+    const count = (await spoken(page)).length;
+    await next.click();
+    await expect(bar(page)).toContainText('p. 2');
+    expect((await spoken(page)).length).toBe(count);
+    await expect(page.locator('[data-page-index="1"] .spoken-hit').first()).toBeVisible();
+    await bar(page).getByRole('button', { name: 'Resume' }).click();
+    await expect.poll(() => last(page)).toMatch(/^and Juliet ten/);
+  });
+
+  test(
+    'the speed button steps through the speeds and applies at once',
+    { tag: '@any-engine' },
+    async ({ page }) => {
+      await page.getByRole('button', { name: 'Listen', exact: true }).click();
+      await expect.poll(async () => (await spoken(page)).length).toBe(1);
+      const speed = bar(page).getByRole('button', { name: /^Speed / });
+      await speed.click();
+      await expect(speed).toHaveText('1.25×');
+      await expect.poll(() => page.evaluate(() => window.spoken.at(-1)?.rate)).toBe(1.25);
+      for (const shown of ['1.5×', '2×', '0.75×', '1×']) {
+        await speed.click();
+        await expect(speed).toHaveText(shown);
+      }
+    },
+  );
+
+  test.describe('on a 390 px phone', () => {
+    test.use({ viewport: { width: 390, height: 760 }, hasTouch: true, isMobile: true });
+
+    test(
+      'the status text hides and every control is on screen at 44 px',
+      { tag: '@touch-device' },
+      async ({ page }) => {
+        await page.getByRole('button', { name: 'Listen', exact: true }).click();
+        await expect(bar(page)).toBeVisible();
+        await expect(bar(page).getByText('Reading aloud')).toBeHidden();
+        for (const target of await bar(page).getByRole('button').all()) {
+          const box = await target.boundingBox();
+          expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(43.5);
+          expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+          expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(390);
+        }
+      },
+    );
   });
 });
 

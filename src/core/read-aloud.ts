@@ -1,5 +1,13 @@
 // Reading a book aloud (phase 16): the page text cut into short pieces for speech. Pure logic.
 
+/** Reading speeds, slowest first (phase 16); the listen bar's button steps through them. */
+export const SPEEDS = [0.75, 1, 1.25, 1.5, 2] as const;
+
+/** The speed after `rate` (phase 23): the next one up, wrapping round to the slowest. */
+export function nextSpeed(rate: number): number {
+  return SPEEDS.find((speed) => speed > rate) ?? SPEEDS[0];
+}
+
 /** Longest piece given to the speech engine at once; some engines stop long utterances. */
 export const MAX_CHUNK = 280;
 

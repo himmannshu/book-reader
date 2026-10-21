@@ -1,13 +1,17 @@
 // Reading the open book aloud (phase 16): sentence by sentence from where the reader is, the
 // spoken sentence marked and followed on the page. Pause keeps the place; stop clears it.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { passageSentence, sentenceAt, splitSentences } from '../core/read-aloud';
+import {
+  nextSpeed,
+  passageSentence,
+  sentenceAt,
+  splitSentences,
+  type Sentence,
+} from '../core/read-aloud';
 import { findMatches } from '../core/search';
 import type { PdfDoc } from '../engine/types';
 import type { Viewer } from '../viewer/viewer';
 import type { Speaker } from './speech';
-
-export const SPEEDS = [0.75, 1, 1.25, 1.5, 2] as const;
 
 export type ReadAloudState =
   { status: 'idle' } | { status: 'reading' | 'paused'; pageIndex: number; sentence: number };
@@ -45,6 +49,20 @@ export function useReadAloud({
     [doc],
   );
 
+  /** Marks a sentence on the page. The same words may appear earlier on the page: mark the right one. */
+  const mark = useCallback(
+    (pageIndex: number, text: string, piece: Sentence) => {
+      const spoken = text.slice(piece.start, piece.end);
+      const occurrence = Math.max(
+        0,
+        findMatches(text, spoken).findIndex((match) => match.start >= piece.start),
+      );
+      viewer.current?.setSpoken({ pageIndex, text: spoken, occurrence });
+      return spoken;
+    },
+    [viewer],
+  );
+
   const read = useCallback(
     async (fromPage: number, fromSentence: number) => {
       const id = ++run.current;
@@ -58,15 +76,9 @@ export function useReadAloud({
           for (let sentence = first; sentence < sentences.length; sentence++) {
             const piece = sentences[sentence];
             if (!piece) continue;
-            const spoken = text.slice(piece.start, piece.end);
-            // The same words may appear earlier on the page: mark the right one.
-            const occurrence = Math.max(
-              0,
-              findMatches(text, spoken).findIndex((match) => match.start >= piece.start),
-            );
             place.current = { pageIndex, sentence };
             setState({ status: 'reading', pageIndex, sentence });
-            viewer.current?.setSpoken({ pageIndex, text: spoken, occurrence });
+            const spoken = mark(pageIndex, text, piece);
             spokeAny = true;
             const result = await speaker.speak(spoken, rateRef.current);
             if (id !== run.current || result === 'stopped') return;
@@ -86,7 +98,7 @@ export function useReadAloud({
         viewer.current?.setSpoken(null);
       }
     },
-    [doc, pageText, speaker, viewer, onError],
+    [doc, pageText, speaker, viewer, onError, mark],
   );
 
   /** Starts from the place at the top of the window. */
@@ -124,6 +136,55 @@ export function useReadAloud({
       }
     },
     [speaker, pageText, read, onError],
+  );
+
+  /**
+   * Moves the reading one sentence on or back (phase 23), across pages (skipping pages without
+   * text). While reading it goes on from there; while paused it only moves the place and the mark.
+   * At either end of the book it stays where it is.
+   */
+  const skip = useCallback(
+    async (step: 1 | -1) => {
+      const from = place.current;
+      if (!from) return;
+      const reading = state.status === 'reading';
+      if (reading) {
+        run.current++;
+        speaker.stop();
+      }
+      try {
+        let pageIndex = from.pageIndex;
+        let sentence = from.sentence + step;
+        let text = await pageText(pageIndex);
+        let sentences = splitSentences(text);
+        while (sentence < 0 || sentence >= sentences.length) {
+          const nextPage = pageIndex + step;
+          if (nextPage < 0 || nextPage >= doc.pageCount) {
+            ({ pageIndex, sentence } = from);
+            text = await pageText(pageIndex);
+            sentences = splitSentences(text);
+            break;
+          }
+          pageIndex = nextPage;
+          text = await pageText(pageIndex);
+          sentences = splitSentences(text);
+          sentence = step > 0 ? 0 : sentences.length - 1;
+        }
+        if (reading) {
+          void read(pageIndex, sentence);
+          return;
+        }
+        const piece = sentences[sentence];
+        place.current = { pageIndex, sentence };
+        setState({ status: 'paused', pageIndex, sentence });
+        if (piece) mark(pageIndex, text, piece);
+      } catch (error) {
+        if (doc.destroyed) return;
+        console.error('Moving the reading failed', error);
+        onError("The book couldn't be read aloud. Try again.");
+      }
+    },
+    [state.status, speaker, pageText, doc, read, mark, onError],
   );
 
   const pause = useCallback(() => {
@@ -166,5 +227,8 @@ export function useReadAloud({
     [speaker],
   );
 
-  return { state, rate, start, startAt, pause, resume, stop, changeRate };
+  /** The next speed in the cycle (phase 23, the listen bar's speed button). */
+  const cycleRate = useCallback(() => changeRate(nextSpeed(rate)), [changeRate, rate]);
+
+  return { state, rate, start, startAt, pause, resume, stop, changeRate, cycleRate, skip };
 }
