@@ -17,6 +17,7 @@ const fakeDoc: PdfDoc = {
   renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
   renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
   outline: () => Promise.resolve([]),
+  pageLabels: () => Promise.resolve(null),
   pageText: () => Promise.resolve(''),
   destroy: () => Promise.resolve(),
 };
@@ -90,7 +91,7 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "There isn't enough storage space to keep this book on this device. You can still read it now.",
     );
-    expect(screen.getByTestId('book-info')).toHaveTextContent('big.pdf · 2 pages');
+    expect(screen.getByTestId('book-title')).toHaveTextContent('big');
   });
 
   it('explains when this browser mode cannot save books, and keeps the book open', async () => {
@@ -99,7 +100,7 @@ describe('App', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "This browser mode can't save books",
     );
-    expect(screen.getByTestId('book-info')).toHaveTextContent('private.pdf');
+    expect(screen.getByTestId('book-title')).toHaveTextContent('private');
   });
 
   it('keeps the open book after it is saved, and enables bookmarks for it', async () => {
@@ -126,12 +127,12 @@ describe('App', () => {
       <App engine={{ open: () => Promise.resolve(doc) }} store={store} bookmarks={bookmarks} />,
     );
     chooseFile('new.pdf');
-    expect(await screen.findByTestId('book-info')).toHaveTextContent('new.pdf');
+    expect(await screen.findByTestId('book-title')).toHaveTextContent('new');
     finishSave();
     expect(await screen.findByRole('status')).toHaveTextContent('Saved on this device.');
     await vi.waitFor(() => expect(bookmarks.list).toHaveBeenCalledWith('saved'));
     await vi.waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Bookmark page' })).toBeEnabled(),
+      expect(screen.getByRole('button', { name: 'Bookmark this page' })).toBeEnabled(),
     );
     expect(destroy).not.toHaveBeenCalled();
   });

@@ -47,6 +47,11 @@ export interface PdfDoc {
   pageText(index: number): Promise<string>;
   /** The book's table of contents; empty if it has none. Never rejects for a broken entry. */
   outline(): Promise<OutlineItem[]>;
+  /**
+   * The book's own page labels ("iv", "12"), one per page, or null when it defines none
+   * (phase 19). An empty label means that page has none.
+   */
+  pageLabels(): Promise<string[] | null>;
   destroy(): Promise<void>;
 }
 

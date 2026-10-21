@@ -1,6 +1,6 @@
 // Phase 14: the design pass. Toolbar size, touch targets, overflow, contrast, pinch to zoom.
 import { devices, expect, test, type Page } from '@playwright/test';
-import { importBook, pageSlot } from './helpers';
+import { importBook, openPanel, pageSlot, readerZoom, setReaderZoom } from './helpers';
 
 /** Height of everything above the pages in the reader. */
 async function chromeHeight(page: Page): Promise<number> {
@@ -78,13 +78,13 @@ test.describe('desktop', () => {
       fire('gestureend', 1.82);
     });
     // Fit width is 110.3% here; × 1.82 is about 200%.
-    await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveValue('200');
+    await expect.poll(() => readerZoom(page)).toBe('200');
   });
 
   test('the horizontal place is kept when a zoomed book is reopened', async ({ page }) => {
     await page.goto('/');
     await importBook(page, 'basic-3-pages.pdf');
-    await page.getByRole('combobox', { name: 'Zoom' }).selectOption('300');
+    await setReaderZoom(page, 300);
     const reader = page.getByTestId('reader');
     await expect.poll(() => reader.evaluate((e) => e.scrollWidth > e.clientWidth)).toBe(true);
     await reader.evaluate((e) => {
@@ -110,11 +110,21 @@ for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
       await page.goto('/');
       await importBook(page, 'text-4-pages.pdf');
       expect(await smallControls(page), 'reader').toEqual([]);
-      for (const panel of ['Contents', 'Bookmarks', 'Notes', 'Search']) {
-        await page.getByRole('button', { name: panel, exact: true }).click();
+      for (const panel of ['Contents', 'Bookmarks', 'Notes', 'Search'] as const) {
+        await openPanel(page, panel);
         expect(await smallControls(page), panel).toEqual([]);
         await page.keyboard.press('Escape');
       }
+      // The new touch surfaces (phase 19): the More menu on iPhone, and Reading settings.
+      const more = page.getByRole('button', { name: 'More', exact: true });
+      if (await more.isVisible()) {
+        await more.click();
+        expect(await smallControls(page), 'More menu').toEqual([]);
+        await page.keyboard.press('Escape');
+      }
+      await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
+      expect(await smallControls(page), 'Reading settings').toEqual([]);
+      await page.keyboard.press('Escape');
       await page.getByRole('button', { name: 'Library', exact: true }).click();
       expect(await smallControls(page), 'library').toEqual([]);
     });
@@ -132,20 +142,23 @@ test.describe('phones', () => {
       await importBook(page, 'text-4-pages.pdf');
       expect(await chromeHeight(page)).toBeLessThanOrEqual(112);
       expect(await noSidewaysScroll(page), 'reader').toBe(true);
-      for (const panel of ['Contents', 'Bookmarks', 'Notes', 'Search']) {
-        await page.getByRole('button', { name: panel, exact: true }).click();
+      for (const panel of ['Contents', 'Bookmarks', 'Notes', 'Search'] as const) {
+        await openPanel(page, panel);
         expect(await noSidewaysScroll(page), panel).toBe(true);
         await page.keyboard.press('Escape');
       }
-      // Theme and zoom are in the Display menu, which closes on Escape or a tap elsewhere.
-      await page.getByRole('button', { name: 'Display', exact: true }).click();
-      await expect(page.getByRole('combobox', { name: 'Theme' })).toBeVisible();
-      await expect(page.getByRole('combobox', { name: 'Zoom' })).toBeVisible();
+      // Theme, zoom and fit are in the Reading settings sheet (phase 19), which closes on Escape
+      // or a tap elsewhere.
+      const settings = page.getByRole('dialog', { name: 'Reading settings' });
+      await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
+      await expect(settings.getByRole('radiogroup', { name: 'Theme' })).toBeVisible();
+      await expect(settings.getByRole('radiogroup', { name: 'Fit' })).toBeVisible();
+      expect(await noSidewaysScroll(page), 'Reading settings').toBe(true);
       await page.keyboard.press('Escape');
-      await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveCount(0);
-      await page.getByRole('button', { name: 'Display', exact: true }).click();
-      await page.getByTestId('reader').click({ position: { x: 10, y: 300 } });
-      await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveCount(0);
+      await expect(settings).toHaveCount(0);
+      await page.getByRole('button', { name: 'Reading settings', exact: true }).click();
+      await page.getByTestId('reader').click({ position: { x: 10, y: 100 } });
+      await expect(settings).toHaveCount(0);
 
       await page.getByRole('button', { name: 'Library', exact: true }).click();
       expect(await noSidewaysScroll(page), 'library').toBe(true);
@@ -162,7 +175,7 @@ test.describe('phones', () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await page.goto('/');
     await importBook(page, 'text-4-pages.pdf');
-    await page.getByRole('button', { name: 'Search', exact: true }).click();
+    await openPanel(page, 'Search');
     await page.getByRole('searchbox', { name: 'Search in book' }).fill('page');
     await page.getByRole('list', { name: 'Search results' }).getByRole('button').first().click();
     const bar = page.getByRole('toolbar', { name: 'Search matches' });

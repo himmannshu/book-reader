@@ -1686,3 +1686,39 @@ Contract evidence from this final canonical run (contract unchanged after approv
   (chromium + webkit); sync 27; perf 10 (heavy-600-v1: chromium first 194 ms, jump 31, p95 16.8, canvas 67.1 MB, search
   874; webkit first 177, jump 78, p95 31, canvas 67.1, search 925; blank frames 0 / 1%). Budgets unchanged. First
   complete local pass on the Mac, WebKit and perf included.
+
+### 2026-10-20 18:20 EDT | Phase 19 | Claude Code (Opus 5.5) | Built: designed toolbar, Reading settings, page pill
+- Plan approved by the user (Bookmarks and Notes beside Contents until phase 20; Open PDF and the sync line out of
+  the reader). Branch `phase-19-reader-chrome` cut from `mac-webkit-baseline`.
+- New: `src/ui/ReaderToolbar.tsx` (More menu on phones), `ReadingSettings.tsx`, `PagePill.tsx`, `SegmentedControl` in
+  controls.tsx, `src/core/page-labels.ts`, `fitModeOf`/`zoomForFit` in reading-state.ts, `PdfDoc.pageLabels()` (PDF.js
+  `getPageLabels`), viewer `onFirstPageDrawn` (outline and labels load after the first page), compact `SyncStatusLine`,
+  `--theme-swatch-*` tokens (generator + config test), fixture `labels-8-pages` (i–iii, 1–5; other fixtures unchanged).
+- Red first: e2e/reader-chrome.spec.ts (17 tests ×2 engines) failed before the UI existed; unit tests for
+  SegmentedControl, page labels, fit modes and the first-draw callback failed first.
+- Test changes for renamed or moved controls (none loosened):
+  - Bookmark toggle: "Bookmark page" + aria-pressed → the design's labels "Bookmark this page" / "Remove bookmark"
+    (the label is the state, so no aria-pressed); assertions on aria-pressed became assertions on the name.
+  - Zoom and Theme selects in the reader → Reading settings; e2e helpers `readerZoom`, `setReaderZoom`,
+    `stepReaderZoom`, `chooseTheme` (they restore focus so key tests still reach the pages); `openPanel`/`tapPanel`
+    go through More on phones; the Display menu checks became Reading settings sheet checks.
+  - `book-info` ("x.pdf · N pages") → `book-title` plus the page count from the pill's announcement.
+  - Open PDF is in the library only: `openFixture` goes back to the library first; the notes guard test leaves for
+    the Library (guarded) instead of opening a file from the reader; library-view's cover test allows the first
+    book's cover drawn as it closes (phase 11 design) and still requires no drawing while the next book is open.
+  - Unit: zoomLabel test removed with zoomLabel (no users); `zoomOut(42)` → 25 (33% is not a design step); the outline
+    test renamed (also read after the first page is drawn); App tests read `book-title`.
+  - WebKit keyboard tests press Option+Tab (Safari skips buttons on plain Tab; the reader has no selects left).
+  - Sync helper: in the reader there is no Sync now, so `syncNow` fires the app's `online` handler; the reader's
+    status stays in a visually hidden live region with the same test ids.
+- Visual check (WebKit screenshots, 1280 and 820 px, 390 px): toolbar order and centring, popover, Sepia/Dark, pill,
+  More menu, bottom sheet. Found and fixed: an old `.bookmark-toggle { margin-left: auto }` split the trail tools.
+- `scripts/verify.sh` (run 2) → FAIL at perf only: perf-webkit p95FrameMs 42 > 40. Everything else passed: unit 391,
+  browser 285 + 1 skipped, sync 27. A/B, WebKit steady scrolling alone: branch 35, 37, 33, 38; baseline
+  (mac-webkit-baseline app) 37, 34, 36. No regression. Every run in both has one sample of about 2.4 s (the middle
+  scroll from 45 % into the book): the known "occasional" freeze (phase-03 context) now happens on every run here.
+- `scripts/verify.sh` runs 3 and 4 → FAIL, environment: WebKit browser tests stalled (pages stuck "rendering",
+  page.goto timeouts, closed contexts; run 4 took 1.9 h, 85 passed). Cause: the machine was saturated (load average 82
+  on 8 cores, 3.2 GB swap; two Chrome renderer processes at 92 % and 65 % CPU, spindump and other system services).
+  Not a code failure: the same specs passed earlier on a quiet machine (both engines, 147 passed in 1.5 min; sync 27).
+  No passing full verify on this branch yet; to be rerun on a quiet machine.

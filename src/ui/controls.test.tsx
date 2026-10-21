@@ -1,7 +1,7 @@
 // Phase 18: the design system's basic controls.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { Button, EmptyState, IconButton, ProgressBar, Toast } from './controls';
+import { Button, EmptyState, IconButton, ProgressBar, SegmentedControl, Toast } from './controls';
 import { ICON_NAMES, Icon } from './icons';
 
 describe('Icon', () => {
@@ -95,5 +95,64 @@ describe('EmptyState', () => {
     );
     expect(screen.queryByRole('heading')).toBeNull();
     expect(screen.getByText('No notes yet.')).toBeInTheDocument();
+  });
+});
+
+describe('SegmentedControl', () => {
+  const options = [
+    { value: 'width', label: 'Width', icon: 'fit-width' },
+    { value: 'page', label: 'Page', icon: 'fit-page' },
+    { value: 'custom', label: 'Custom' },
+  ] as const;
+
+  it('is a named radio group whose chosen option is checked and the only Tab stop', () => {
+    render(<SegmentedControl label="Fit" options={options} value="page" onChange={() => {}} />);
+    expect(screen.getByRole('radiogroup', { name: 'Fit' })).toBeInTheDocument();
+    const radios = screen.getAllByRole('radio');
+    expect(radios.map((radio) => radio.getAttribute('aria-checked'))).toEqual([
+      'false',
+      'true',
+      'false',
+    ]);
+    expect(radios.map((radio) => radio.tabIndex)).toEqual([-1, 0, -1]);
+    expect(screen.getByRole('radio', { name: 'Page' })).toHaveClass('is-selected');
+  });
+
+  it('chooses with a click, and with the arrow keys (wrapping, focus following)', () => {
+    const onChange = vi.fn();
+    render(<SegmentedControl label="Fit" options={options} value="width" onChange={onChange} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Custom' }));
+    expect(onChange).toHaveBeenLastCalledWith('custom');
+    const width = screen.getByRole('radio', { name: 'Width' });
+    fireEvent.keyDown(width, { key: 'ArrowRight' });
+    expect(onChange).toHaveBeenLastCalledWith('page');
+    expect(screen.getByRole('radio', { name: 'Page' })).toHaveFocus();
+    fireEvent.keyDown(width, { key: 'ArrowLeft' });
+    expect(onChange).toHaveBeenLastCalledWith('custom');
+  });
+
+  it('shows a paper swatch for each theme, and names icon-only options', () => {
+    render(
+      <SegmentedControl
+        label="View"
+        iconOnly
+        options={[
+          { value: 'grid', label: 'Grid', icon: 'grid' },
+          { value: 'list', label: 'List', icon: 'list' },
+        ]}
+        value="grid"
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole('radio', { name: 'Grid' })).toHaveAttribute('title', 'Grid');
+    const { container } = render(
+      <SegmentedControl
+        label="Theme"
+        options={[{ value: 'sepia', label: 'Sepia', swatch: 'sepia' }]}
+        value="sepia"
+        onChange={() => {}}
+      />,
+    );
+    expect(container.querySelector('.br-seg__swatch--sepia')).not.toBeNull();
   });
 });

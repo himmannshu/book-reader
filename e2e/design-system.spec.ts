@@ -1,7 +1,7 @@
 // Phase 18: the Book Reader design system's foundations. Fonts (also offline), focus rings,
 // motion, toasts and the colours drawn over pages.
 import { expect, test, type Page } from '@playwright/test';
-import { importBook, loadControlled, openFixture, pageSlot } from './helpers';
+import { chooseTheme, importBook, loadControlled, openFixture, pageSlot } from './helpers';
 
 /** The resolved value of a design token, as a computed colour. */
 function token(page: Page, name: string): Promise<string> {
@@ -30,8 +30,8 @@ test.describe('fonts', () => {
     page,
   }) => {
     await importBook(page, 'text-4-pages.pdf');
-    expect(await family(page, '[data-testid="book-info"]')).toMatch(/^'?"?Literata/);
-    expect(await family(page, '.tool-button')).toMatch(/^'?"?Source Sans 3/);
+    expect(await family(page, '[data-testid="book-title"]')).toMatch(/^'?"?Literata/);
+    expect(await family(page, '.br-pagepill')).toMatch(/^'?"?Source Sans 3/);
     await page.getByRole('button', { name: 'Library', exact: true }).click();
     expect(await family(page, '.library-title')).toMatch(/^'?"?Literata/);
     await expect
@@ -82,13 +82,18 @@ test.describe('fonts', () => {
   });
 });
 
-test('every control reached with the keyboard shows a 2 px focus ring', async ({ page }) => {
+test('every control reached with the keyboard shows a 2 px focus ring', async ({
+  page,
+  browserName,
+}) => {
   await importBook(page, 'text-4-pages.pdf');
   await page.getByRole('button', { name: 'Notes', exact: true }).click();
   const seen: string[] = [];
   const missing: string[] = [];
   for (let i = 0; i < 25; i++) {
-    await page.keyboard.press('Tab');
+    // Safari's Tab skips buttons unless Option is held, as its users do (phase 19: the reader has
+    // no selects left for plain Tab to reach).
+    await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
     const result = await page.evaluate(() => {
       const element = document.activeElement as HTMLElement | null;
       if (!element || element === document.body) return null;
@@ -261,7 +266,7 @@ test.describe('on the page', () => {
 
   test('Dark pages are filtered as the design gives it', async ({ page }) => {
     await importBook(page, 'basic-3-pages.pdf');
-    await page.getByRole('combobox', { name: 'Theme' }).selectOption('dark');
+    await chooseTheme(page, 'Dark');
     await expect(pageSlot(page, 0)).toHaveCSS('filter', 'invert(0.9) hue-rotate(180deg)');
   });
 });

@@ -38,6 +38,7 @@ function fakeDoc(pageCount: number, size: PageSize = { width: 500, height: 700 }
       };
     },
     outline: () => Promise.resolve([]),
+    pageLabels: () => Promise.resolve(null),
     pageText: () => Promise.resolve(''),
     destroy: () => Promise.resolve(),
   };
@@ -125,6 +126,36 @@ describe('Viewer drawing order', () => {
     // Zooming draws it again, and the message goes.
     viewer.setZoom(150);
     expect(slot?.querySelector('.page-error')).toBeNull();
+  });
+
+  // The reader loads the outline (for the chapter title) and page labels only then (phase 19).
+  it('says once when the first page has been drawn, or could not be', async () => {
+    const drawn = vi.fn();
+    const { doc, render } = fakeDoc(5);
+    viewer = new Viewer(scroller(1000, 600), doc, {
+      ...defaultViewerOptions,
+      onFirstPageDrawn: drawn,
+    });
+    await flush();
+    expect(drawn).not.toHaveBeenCalled();
+    render(0).finish();
+    await flush();
+    expect(drawn).toHaveBeenCalledTimes(1);
+    render(1).finish();
+    await flush();
+    expect(drawn).toHaveBeenCalledTimes(1);
+
+    const failed = vi.fn();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const other = fakeDoc(5);
+    const second = new Viewer(scroller(1000, 600), other.doc, {
+      ...defaultViewerOptions,
+      onFirstPageDrawn: failed,
+    });
+    other.render(0).fail(new Error('broken page'));
+    await flush();
+    expect(failed).toHaveBeenCalledTimes(1);
+    second.destroy();
   });
 
   it('still starts overscan pages when a visible page fails to draw', async () => {

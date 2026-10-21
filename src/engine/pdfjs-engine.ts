@@ -145,6 +145,11 @@ class PdfjsDoc implements PdfDoc {
     );
   }
 
+  async pageLabels(): Promise<string[] | null> {
+    const labels = await this.#doc.getPageLabels();
+    return labels?.some((label) => label.trim() !== '') ? labels : null;
+  }
+
   async destroy(): Promise<void> {
     if (this.#destroyed) return;
     this.#destroyed = true;

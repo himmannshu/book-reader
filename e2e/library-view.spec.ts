@@ -253,13 +253,17 @@ test('no cover is drawn while a book is open, even when opening one book after a
   page,
 }) => {
   await importBook(page, 'basic-3-pages.pdf');
-  // Open the next book straight from the reader, as when importing several in a row.
+  // Open the next book right away, as when importing several in a row. Open PDF is in the library
+  // only (phase 19), so this passes through it, and the first book may draw its cover as it
+  // closes (phase 11). Nothing more may be drawn once the next book is open.
   await openFixture(page, 'text-4-pages.pdf');
   await expect(page.getByRole('status')).toHaveText('Saved on this device.');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  const whenOpened = await storedCovers(page);
+  expect(whenOpened).toBeLessThanOrEqual(1);
   // Longer than the worker's idle delay: nothing may happen while reading.
   await page.waitForTimeout(2500);
-  expect(await storedCovers(page)).toBe(0);
+  expect(await storedCovers(page)).toBe(whenOpened);
 
   await backToLibrary(page);
   await expect.poll(() => storedCovers(page), { timeout: 15_000 }).toBe(2);

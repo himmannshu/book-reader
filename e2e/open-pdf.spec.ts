@@ -97,11 +97,14 @@ test('a file that is not a PDF shows an error, and a real PDF still opens afterw
 
 test('opening a second book replaces the first', async ({ page }) => {
   await openFixture(page, 'long-300-pages.pdf');
-  await expect(page.getByTestId('book-info')).toHaveText('long-300-pages.pdf · 300 pages');
+  // The title is in the toolbar and the page count in the page pill (phase 19).
+  await expect(page.getByTestId('book-title')).toHaveText('long-300-pages');
+  await expect(page.getByTestId('page-announcement')).toHaveText(/ of 300 /);
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
 
   await openFixture(page, 'basic-3-pages.pdf');
-  await expect(page.getByTestId('book-info')).toHaveText('basic-3-pages.pdf · 3 pages');
+  await expect(page.getByTestId('book-title')).toHaveText('basic-3-pages');
+  await expect(page.getByTestId('page-announcement')).toHaveText(/ of 3 /);
   await expect(page.locator('[data-page-index]')).toHaveCount(3);
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
   const color = await bandColorOnCanvas(page, 0);

@@ -11,8 +11,9 @@ export function validTheme(value: unknown): value is Theme {
 /** Fit the reading column's width, fit the whole page in the window, or a percentage of actual size. */
 export type ZoomSetting = 'fit-width' | 'fit-page' | number;
 
+/** The design's zoom steps (Reading settings, phase 19). A saved zoom between them still opens. */
 export const ZOOM_LEVELS = [
-  25, 33, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400,
+  25, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400,
 ] as const;
 export const MIN_ZOOM = ZOOM_LEVELS[0];
 export const MAX_ZOOM = ZOOM_LEVELS[ZOOM_LEVELS.length - 1] ?? 400;
@@ -50,10 +51,18 @@ export function nearestZoomLevel(percent: number): number {
   return best;
 }
 
-export function zoomLabel(zoom: ZoomSetting): string {
-  if (zoom === 'fit-width') return 'Fit width';
-  if (zoom === 'fit-page') return 'Fit page';
-  return `${zoom}%`;
+/** How pages are sized (Reading settings' Fit): to the column, to the window, or a percentage. */
+export type FitMode = 'width' | 'page' | 'custom';
+
+export function fitModeOf(zoom: ZoomSetting): FitMode {
+  return zoom === 'fit-width' ? 'width' : zoom === 'fit-page' ? 'page' : 'custom';
+}
+
+/** The zoom a Fit choice means. Custom keeps the percentage now shown, as a whole percent. */
+export function zoomForFit(fit: FitMode, shownPercent: number): ZoomSetting {
+  if (fit === 'width') return 'fit-width';
+  if (fit === 'page') return 'fit-page';
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(shownPercent)));
 }
 
 export function validZoom(value: unknown): value is ZoomSetting {

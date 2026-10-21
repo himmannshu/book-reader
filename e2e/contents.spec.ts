@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectPageAtTop, openFixture, pageSlot } from './helpers';
+import { expectPageAtTop, openFixture, openPanel, pageSlot } from './helpers';
 
 function contents(page: Page) {
   return page.getByRole('navigation', { name: 'Table of contents' });
@@ -137,7 +137,8 @@ test('in a narrow window the panel covers the pages and closes after a choice', 
   const reader = page.getByTestId('reader');
   const widthBefore = (await reader.boundingBox())?.width ?? 0;
 
-  await page.getByRole('button', { name: 'Contents' }).click();
+  // Narrow: Contents is under More (phase 19).
+  await openPanel(page, 'Contents');
   await expect(entry(page, 'Chapter 3')).toBeVisible();
   const panel = await contents(page).boundingBox();
   const readerBox = await reader.boundingBox();
@@ -159,7 +160,8 @@ test('opening another book while Contents is open shows the new book, not a stuc
   await expect(entry(page, 'Chapter 1')).toBeVisible();
 
   await openFixture(page, 'basic-3-pages.pdf');
-  await expect(page.getByTestId('book-info')).toHaveText('basic-3-pages.pdf · 3 pages');
+  await expect(page.getByTestId('book-title')).toHaveText('basic-3-pages');
+  await expect(page.getByTestId('page-announcement')).toHaveText(/ of 3 /);
   // Either the panel closed with the old book, or it shows the new book's contents; never "Loading".
   if ((await contents(page).count()) === 0) {
     await page.getByRole('button', { name: 'Contents' }).click();

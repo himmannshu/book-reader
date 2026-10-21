@@ -35,7 +35,7 @@ import { Library } from './Library';
 import { ReaderView, type ReaderHandle } from './ReaderView';
 import { SyncStatusLine } from './SyncStatusLine';
 import { applyTheme } from './theme';
-import { NARROW_QUERY, ThemePicker, Toast, ToolButton, useMediaQuery } from './controls';
+import { ThemePicker, Toast } from './controls';
 import { Icon } from './icons';
 import { CoverWorker, drawCover, type DrawnCover } from './covers';
 import { UpdateNotice } from './UpdateNotice';
@@ -157,8 +157,7 @@ export function App({
   /** Bumped when another device changed data, so the open reader reloads its annotations. */
   const [syncVersion, setSyncVersion] = useState(0);
   const [theme, setTheme] = useState<Theme>(() => preferences.theme());
-  const [toolsSlot, setToolsSlot] = useState<HTMLDivElement | null>(null);
-  const narrow = useMediaQuery(NARROW_QUERY);
+  const [toolsSlot, setToolsSlot] = useState<HTMLElement | null>(null);
 
   // Before paint, so the first frame already has the theme (index.html also sets it at startup).
   useLayoutEffect(() => applyTheme(theme), [theme]);
@@ -522,42 +521,31 @@ export function App({
 
   return (
     <div className="app">
-      <header className={book ? 'toolbar reading' : 'toolbar'}>
-        {book ? (
-          <ToolButton icon="back" label="Library" className="back-button" onClick={backToLibrary} />
-        ) : (
+      {book ? (
+        // The open reader puts its toolbar here, so the reader has one bar (phase 19).
+        <header ref={setToolsSlot} className="reader-header" />
+      ) : (
+        <header className="toolbar">
           <h1>Book Reader</h1>
-        )}
-        {book && (
-          <p className="book-info" data-testid="book-info">
-            {book.fileName} · {book.doc.pageCount} {book.doc.pageCount === 1 ? 'page' : 'pages'}
-          </p>
-        )}
-        {/* The open reader puts its tools here, so the reader has one bar (phase 14). */}
-        <div ref={setToolsSlot} className="toolbar-tools" />
-        {(!book || !narrow) && <ThemePicker theme={theme} onChange={chooseTheme} />}
-        <label
-          className={
-            book ? 'tool-button open-button' : 'br-btn br-btn--primary br-btn--md open-button'
-          }
-          title="Open PDF"
-        >
-          <Icon name="import" />
-          <span className="tool-label">Open PDF</span>
-          <input
-            className="visually-hidden"
-            type="file"
-            accept="application/pdf,.pdf"
-            onChange={(event) => void onFileChosen(event)}
-            disabled={busy}
+          <ThemePicker theme={theme} onChange={chooseTheme} />
+          <label className="br-btn br-btn--primary br-btn--md open-button" title="Open PDF">
+            <Icon name="import" />
+            <span className="tool-label">Open PDF</span>
+            <input
+              className="visually-hidden"
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(event) => void onFileChosen(event)}
+              disabled={busy}
+            />
+          </label>
+          <SyncStatusLine
+            status={syncStatus}
+            uploads={uploads}
+            onSyncNow={() => void syncEngine?.syncNow()}
           />
-        </label>
-        <SyncStatusLine
-          status={syncStatus}
-          uploads={uploads}
-          onSyncNow={() => void syncEngine?.syncNow()}
-        />
-      </header>
+        </header>
+      )}
       {notice && <Toast tone="positive">{notice}</Toast>}
       <UpdateNotice />
       {error && (
@@ -579,6 +567,8 @@ export function App({
           voiceNotes={voiceNotes}
           initialState={book.readingState}
           toolsSlot={toolsSlot}
+          onLibrary={backToLibrary}
+          status={<SyncStatusLine compact status={syncStatus} uploads={uploads} />}
           theme={theme}
           onThemeChange={chooseTheme}
           syncVersion={syncVersion}

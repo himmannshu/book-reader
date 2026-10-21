@@ -5,9 +5,10 @@ import {
   ZOOM_LEVELS,
   scaleForPercent,
   nearestZoomLevel,
+  fitModeOf,
   validReadingState,
+  zoomForFit,
   zoomIn,
-  zoomLabel,
   zoomOut,
   zoomPercent,
   type ReadingState,
@@ -37,7 +38,7 @@ describe('zoomIn / zoomOut', () => {
     expect(zoomIn(117)).toBe(125);
     expect(zoomOut(117)).toBe(110);
     // On a phone, fit width can be about 42%.
-    expect(zoomOut(42)).toBe(33);
+    expect(zoomOut(42)).toBe(25);
     expect(zoomIn(42)).toBe(50);
   });
 
@@ -56,11 +57,29 @@ describe('zoomIn / zoomOut', () => {
   });
 });
 
-describe('zoomLabel', () => {
-  it('names fit modes and shows percentages', () => {
-    expect(zoomLabel('fit-width')).toBe('Fit width');
-    expect(zoomLabel('fit-page')).toBe('Fit page');
-    expect(zoomLabel(150)).toBe('150%');
+describe('zoom levels', () => {
+  it('are the design’s steps', () => {
+    expect([...ZOOM_LEVELS]).toEqual([
+      25, 50, 67, 75, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400,
+    ]);
+  });
+});
+
+describe('fit modes', () => {
+  it('name the zoom setting: width, page, or a chosen percentage', () => {
+    expect(fitModeOf('fit-width')).toBe('width');
+    expect(fitModeOf('fit-page')).toBe('page');
+    expect(fitModeOf(150)).toBe('custom');
+    // A saved zoom between the steps (33% from before phase 19) is still custom.
+    expect(fitModeOf(33)).toBe('custom');
+  });
+
+  it('turn a Fit choice into a zoom; Custom keeps the shown percentage, within range', () => {
+    expect(zoomForFit('width', 117.4)).toBe('fit-width');
+    expect(zoomForFit('page', 64)).toBe('fit-page');
+    expect(zoomForFit('custom', 117.4)).toBe(117);
+    expect(zoomForFit('custom', 12)).toBe(MIN_ZOOM);
+    expect(zoomForFit('custom', 900)).toBe(MAX_ZOOM);
   });
 });
 

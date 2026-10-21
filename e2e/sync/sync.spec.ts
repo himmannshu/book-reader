@@ -7,6 +7,7 @@ import {
   TITLE,
   status,
   syncNow,
+  requestSync,
   libraryItem,
   openFromLibrary,
   backToLibrary,
@@ -87,7 +88,7 @@ test('deleting a bookmark on one device removes it on the other, for good', asyn
   await expect.poll(() => bookmarkLabels(b)).toEqual(['Page 2']);
 
   await bookmarkToggle(a).click(); // un-bookmark page 2
-  await expect(bookmarkToggle(a)).toHaveAttribute('aria-pressed', 'false');
+  await expect(bookmarkToggle(a)).toHaveAccessibleName('Bookmark this page');
   await syncNow(a);
   await syncNow(b);
   await syncNow(a);
@@ -140,7 +141,7 @@ test('changes made offline are kept and sync when the device is back online', as
 
   await a.context().setOffline(true);
   await bookmarkPage(a, 2);
-  await a.getByRole('button', { name: /^(Sync now|Retry)$/ }).click();
+  await requestSync(a);
   await expect(status(a)).toHaveText('Offline: changes will sync when you are back online');
   // Let the sync scheduled after the edit (2 s) happen while still offline, so only coming back
   // online can trigger the next one.

@@ -74,16 +74,6 @@ body {
   white-space: nowrap;
 }
 
-.book-info {
-  margin: 0;
-  color: var(--ink-muted);
-  font-family: var(--font-serif);
-  font-size: var(--text-m);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .error {
   margin: 0;
   padding: 10px 16px;
@@ -246,12 +236,6 @@ body {
   min-height: 0;
 }
 
-.reader-tools {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
 .reader-body {
   position: relative;
   display: flex;
@@ -319,10 +303,6 @@ body {
   margin: 8px;
   color: var(--ink-muted);
   font-size: 0.9rem;
-}
-
-.bookmark-toggle {
-  margin-left: auto;
 }
 
 .bookmark-toggle:disabled {
@@ -482,12 +462,6 @@ body {
 
 .update-notice span {
   margin-right: auto;
-}
-
-.zoom-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 
 /* Drawn by the app, not the system: Safari on the Mac ignores the height of a native select (27 px
@@ -716,180 +690,12 @@ body {
   flex: none;
 }
 
-/* Quiet toolbar buttons: an icon, and a label on wide screens. */
-.tool-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: var(--control-h);
-  height: var(--control-h);
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  background: none;
-  color: var(--ink);
-  font: inherit;
-  font-size: var(--text-s);
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 0.16s ease-out,
-    color 0.16s ease-out;
-}
-
-.tool-button:hover:not(:disabled) {
-  background: var(--surface-sunken);
-}
-
-.tool-button:disabled,
-.tool-button[aria-disabled='true'] {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.tool-button.icon-only,
-.toolbar .tool-button {
-  padding: 0;
-  width: var(--control-h);
-}
-
-.tool-button.icon-only .tool-label,
-.toolbar .tool-label {
-  /* Visually hidden, still the button's name. */
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-/* Labels next to the icons where there is room for them. */
-@media (min-width: 1400px) {
-  .toolbar .tool-button:not(.icon-only) {
-    width: auto;
-    padding: 0 10px;
-  }
-
-  .toolbar .tool-button:not(.icon-only) .tool-label {
-    position: static;
-    width: auto;
-    height: auto;
-    clip-path: none;
-  }
-}
-
-.toolbar .open-button.br-btn .tool-label {
-  position: static;
-  width: auto;
-  height: auto;
-  clip-path: none;
-}
-
-.toolbar .open-button.br-btn {
-  width: auto;
-}
-
-.toolbar-tools {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.toolbar-tools:empty {
-  display: none;
-}
-
-.toolbar.reading .book-info {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
 .picker-label {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: var(--text-s);
   color: var(--ink-muted);
-}
-
-.toolbar.reading .picker-caption {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.zoom-controls .picker {
-  min-width: 6.5em;
-}
-
-.display-menu {
-  position: relative;
-}
-
-.display-popover {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-1));
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  min-width: 220px;
-  padding: var(--space-3);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
-  box-shadow: var(--shadow-raised);
-}
-
-.display-popover .picker-label {
-  justify-content: space-between;
-}
-
-/* Phones: two compact rows in the reader (back, title, open; then the tools). */
-@media (max-width: 699px) {
-  .toolbar {
-    padding: var(--space-1) var(--space-2);
-    gap: var(--space-1);
-  }
-
-  .toolbar h1 {
-    margin-right: auto;
-  }
-
-  .toolbar.reading .book-info {
-    order: 1;
-  }
-
-  .toolbar.reading .back-button {
-    order: 0;
-  }
-
-  .toolbar.reading .open-button {
-    order: 2;
-  }
-
-  .toolbar.reading .toolbar-tools {
-    order: 3;
-    flex-basis: 100%;
-    margin-left: 0;
-  }
-
-  .toolbar.reading .reader-tools {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .toolbar .open-button.br-btn {
-    padding: 0 var(--space-3);
-  }
 }
 
 /* Touch-sized controls everywhere else too (phase 14). */
@@ -943,28 +749,6 @@ body {
   color: var(--page-ink-muted);
   font-size: var(--text-m);
   text-align: center;
-}
-
-/* Phase 14 refinements after looking at the screens. */
-.toolbar .bookmark-toggle {
-  margin-left: 0;
-}
-
-.display-popover .picker-caption,
-.display-popover .zoom-caption {
-  position: static;
-  width: auto;
-  height: auto;
-  clip-path: none;
-  font-size: var(--text-s);
-  color: var(--ink-muted);
-}
-
-.display-popover .zoom-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
 }
 
 @media (max-width: 699px) {
@@ -1054,15 +838,11 @@ body {
   white-space: nowrap;
 }
 
-/* Seven 44 px tools need 308 px: on the narrowest phones, trim the bar's padding and gaps. */
+/* On the narrowest phones, trim the library bar's padding. */
 @media (max-width: 359px) {
   .toolbar {
     padding-left: var(--space-1);
     padding-right: var(--space-1);
-  }
-
-  .toolbar .reader-tools {
-    gap: 0;
   }
 }
 
@@ -1190,8 +970,7 @@ body {
 }
 
 .br-iconbtn[aria-pressed='true'],
-.tool-button[aria-expanded='true'],
-.tool-button[aria-pressed='true'] {
+.br-iconbtn.is-pressed {
   background: var(--accent-soft);
   color: var(--accent);
 }
@@ -1375,4 +1154,331 @@ body:has(.player-bar, .search-bar) .br-toast {
 ::placeholder {
   color: var(--ink-muted);
   opacity: 1;
+}
+
+/* ---- Phase 19: the reader's chrome (design: ReaderToolbar, ReadingSettings, PagePill). ---- */
+
+.br-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The app's header holds the reader's toolbar, which draws the bar itself. */
+.reader-header {
+  position: relative;
+  z-index: 20;
+  flex: none;
+  padding-top: env(safe-area-inset-top);
+  background: var(--surface);
+}
+
+.br-toolbar {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--toolbar-height);
+  padding: 0 var(--space-2);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid var(--line);
+  transition: opacity 0.2s ease-out;
+}
+
+/* Faded while the reader scrolls; it keeps its space, and a tap where it was brings it back. */
+.br-toolbar.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.br-toolbar__lead,
+.br-toolbar__trail {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.br-toolbar__trail {
+  justify-content: flex-end;
+}
+
+.br-toolbar__title {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  max-width: 44ch;
+  text-align: center;
+}
+
+.br-toolbar__title > * {
+  max-width: 100%;
+}
+
+.br-toolbar__chapter {
+  color: var(--ink-muted);
+}
+
+.br-toolbar.is-compact {
+  grid-template-columns: auto 1fr auto;
+}
+
+.br-toolbar.is-compact .br-toolbar__title {
+  justify-items: start;
+  text-align: left;
+}
+
+/* The phone toolbar's More menu. */
+.more-menu {
+  position: relative;
+}
+
+.br-menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 200px;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 1px var(--line);
+}
+
+.br-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.br-menu__item:hover {
+  background: var(--surface-sunken);
+}
+
+.br-menu__item.is-current {
+  color: var(--accent);
+}
+
+/* Sync status in the reader: a badge only when it needs the reader. */
+.sync-status--compact {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--space-1);
+}
+
+.br-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.br-badge--neutral {
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+}
+
+.br-badge--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Segmented control: the selected option is lifted and edged, not told apart by colour alone. */
+.br-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.br-seg--block {
+  display: flex;
+  width: 100%;
+}
+
+.br-seg--block .br-seg__opt {
+  flex: 1;
+}
+
+.br-seg__opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease-out,
+    color 0.16s ease-out;
+}
+
+@media (pointer: coarse), (max-width: 699px) {
+  .br-seg__opt {
+    min-height: var(--touch-target);
+  }
+}
+
+.br-seg__opt:hover {
+  color: var(--ink);
+}
+
+.br-seg__opt.is-selected {
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+.br-seg__swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.br-seg__swatch--light {
+  background: var(--theme-swatch-light);
+}
+
+.br-seg__swatch--sepia {
+  background: var(--theme-swatch-sepia);
+}
+
+.br-seg__swatch--dark {
+  background: var(--theme-swatch-dark);
+}
+
+/* Reading settings: under the toolbar's right end; a bottom sheet on phones. */
+.br-settings {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + var(--toolbar-height) + var(--space-1));
+  right: var(--space-2);
+  z-index: 30;
+  display: grid;
+  gap: var(--space-5);
+  width: var(--popover-width);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 1px var(--line);
+}
+
+.br-settings__group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.br-settings__label {
+  margin: 0;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+.br-zoom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.br-zoom__val {
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 699px) {
+  .br-settings {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: var(--shadow-sheet);
+  }
+}
+
+/* The page pill floats at the bottom centre while the pages move. */
+.br-pagepill {
+  position: absolute;
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--surface-raised);
+  color: var(--ink-muted);
+  box-shadow: var(--shadow-raised);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.br-pagepill[data-visible='true'] {
+  opacity: 1;
+}
+
+/* Above a bar or a message at the bottom, never under it. */
+body:has(.player-bar, .search-bar, .br-toast) .br-pagepill {
+  bottom: calc(var(--listen-bar-height) + 2 * var(--space-4) + env(safe-area-inset-bottom));
+}
+
+.br-pagepill__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .br-toolbar,
+  .br-pagepill {
+    transition: none;
+  }
 }

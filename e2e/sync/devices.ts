@@ -41,12 +41,22 @@ export const status = (page: Page) => page.getByTestId('sync-status');
  */
 export async function syncNow(page: Page) {
   const button = page.getByRole('button', { name: /^(Sync now|Retry)$/ });
-  await expect(button).toBeEnabled();
+  const inLibrary = await button.isVisible();
+  if (inLibrary) await expect(button).toBeEnabled();
   const sent = page.waitForRequest((r) => r.url().endsWith('/api/sync') && r.method() === 'POST');
-  await button.click();
+  if (inLibrary) await button.click();
+  else await requestSync(page);
   const response = await (await sent).response();
   expect(response?.status()).toBe(200);
   await expect(status(page)).toHaveText('Synced');
+}
+
+/**
+ * Asks for a sync while reading. The reader has no Sync now button (phase 19), so this fires the
+ * event the app syncs on when the device comes back online.
+ */
+export async function requestSync(page: Page) {
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
 }
 
 export const library = (page: Page) => page.getByRole('list', { name: 'Your books' });
@@ -63,8 +73,9 @@ export async function backToLibrary(page: Page) {
 }
 
 export const bookmarksPanel = (page: Page) => page.getByRole('navigation', { name: 'Bookmarks' });
+// The toggle's name says its state (phase 19): 'Remove bookmark' while the page is bookmarked.
 export const bookmarkToggle = (page: Page) =>
-  page.getByRole('button', { name: 'Bookmark page', exact: true });
+  page.getByRole('button', { name: /^(Bookmark this page|Remove bookmark)$/ });
 
 export async function bookmarkPage(page: Page, index: number) {
   await pageSlot(page, index).evaluate((slot: HTMLElement) => {
@@ -72,9 +83,9 @@ export async function bookmarkPage(page: Page, index: number) {
     if (reader) reader.scrollTop = slot.offsetTop;
   });
   await expectPageAtTop(page, index);
-  await expect(bookmarkToggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(bookmarkToggle(page)).toHaveAccessibleName('Bookmark this page');
   await bookmarkToggle(page).click();
-  await expect(bookmarkToggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(bookmarkToggle(page)).toHaveAccessibleName('Remove bookmark');
 }
 
 export async function bookmarkLabels(page: Page): Promise<string[]> {

@@ -3,6 +3,7 @@
 import {
   useSyncExternalStore,
   type ButtonHTMLAttributes,
+  type KeyboardEvent,
   type ComponentProps,
   type ReactNode,
   type Ref,
@@ -86,6 +87,74 @@ export function ThemePicker({ theme, onChange }: { theme: Theme; onChange(theme:
 }
 
 const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boolean).join(' ');
+
+export interface SegmentOption<V extends string> {
+  value: V;
+  label: string;
+  icon?: IconName;
+  /** A theme whose paper colour the option previews (the theme picker). */
+  swatch?: Theme;
+}
+
+/**
+ * Two to four exclusive options side by side (phase 19). A radio group: the arrow keys move the
+ * choice, and only the chosen option is a Tab stop. `iconOnly` still names each option.
+ */
+export function SegmentedControl<V extends string>({
+  options,
+  value,
+  onChange,
+  label,
+  iconOnly = false,
+  block = false,
+}: {
+  options: readonly SegmentOption<V>[];
+  value: V;
+  onChange(value: V): void;
+  label: string;
+  iconOnly?: boolean;
+  block?: boolean;
+}) {
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    const index = options.findIndex((option) => option.value === value);
+    const next = options[(index + step + options.length) % options.length];
+    if (!next) return;
+    onChange(next.value);
+    const group = event.currentTarget.parentElement;
+    group?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[options.indexOf(next)]?.focus();
+  }
+
+  return (
+    <div role="radiogroup" aria-label={label} className={cx('br-seg', block && 'br-seg--block')}>
+      {options.map((option) => {
+        const selected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={iconOnly ? option.label : undefined}
+            title={iconOnly ? option.label : undefined}
+            tabIndex={selected ? 0 : -1}
+            className={cx('br-seg__opt', selected && 'is-selected')}
+            onClick={() => onChange(option.value)}
+            onKeyDown={onKeyDown}
+          >
+            {option.swatch && (
+              <span className={`br-seg__swatch br-seg__swatch--${option.swatch}`} />
+            )}
+            {option.icon && <Icon name={option.icon} size={18} />}
+            {!iconOnly && <span>{option.label}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * A text button. `primary` at most once per screen, `secondary` by default, `ghost` for quiet

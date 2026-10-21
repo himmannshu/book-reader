@@ -69,6 +69,9 @@
   --shadow-sheet: 0 -2px 24px #3b2a1424;
   --page-paper: #ffffff;
   --page-ink-muted: #655c50;
+  --theme-swatch-light: #fffdf9;
+  --theme-swatch-sepia: #f3ead6;
+  --theme-swatch-dark: #24211d;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;

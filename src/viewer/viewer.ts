@@ -48,6 +48,11 @@ export interface ViewerOptions {
   textDelayMs: number;
   /** Called with the current page (see currentPageAt) on open and whenever it changes. */
   onPageChange?: (pageIndex: number) => void;
+  /**
+   * Called once, when the first page has been drawn or failed to draw, so other work on the book
+   * (the outline, page labels) never delays it.
+   */
+  onFirstPageDrawn?: () => void;
   /** How pages are sized at first (default fit width). */
   zoom?: ZoomSetting;
   /** Where to open the book: this place goes at the top of the window. */
@@ -117,6 +122,7 @@ export class Viewer {
   #viewportHeight = -1;
   #frame = 0;
   #destroyed = false;
+  #firstDrawn = false;
   /** True while overscan pages wait for the visible pages to finish drawing. */
   #overscanHeld = false;
   #currentPage = -1;
@@ -445,6 +451,12 @@ export class Viewer {
     this.#options.onPageChange?.(page);
   }
 
+  #reportFirstDraw(): void {
+    if (this.#firstDrawn) return;
+    this.#firstDrawn = true;
+    this.#options.onFirstPageDrawn?.();
+  }
+
   #render(slot: Slot, index: number, pixelRatio: number): void {
     const box = pageAt(this.#layout, index);
     const canvas = document.createElement('canvas');
@@ -460,6 +472,7 @@ export class Viewer {
         if (slot.task !== task) return;
         this.#setState(slot, 'rendered');
         markPageRendered(index);
+        this.#reportFirstDraw();
         if (index >= this.#visibleFirst && index <= this.#visibleLast) this.#scheduleText();
         // Only when needed: #update reads layout, which costs a frame mid-scroll.
         if (this.#overscanHeld) this.#update();
@@ -468,6 +481,7 @@ export class Viewer {
         if (slot.task !== task || error instanceof RenderCancelledError) return;
         if (this.#destroyed || this.#doc.destroyed) return;
         console.error(`Could not draw page ${index + 1}`, error);
+        this.#reportFirstDraw();
         this.#setState(slot, 'error');
         if (this.#overscanHeld) this.#update();
       },

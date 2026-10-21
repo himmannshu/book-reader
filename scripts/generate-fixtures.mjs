@@ -220,6 +220,19 @@ const manifest = {
     );
     return { ...entry, lines };
   })(),
+  // Page labels (phase 19): roman-numbered front matter, then 1 to 5.
+  'labels-8-pages': await makePdf(
+    'labels-8-pages',
+    Array.from({ length: 8 }, () => LETTER),
+    (doc) => {
+      doc.catalog.set(
+        PDFName.of('PageLabels'),
+        doc.context.obj({
+          Nums: [0, { S: PDFName.of('r') }, 3, { S: PDFName.of('D') }],
+        }),
+      );
+    },
+  ),
   // Thin strips: many pages fit on screen at once (review finding B2).
   'strips-40-pages': await makePdf(
     'strips-40-pages',

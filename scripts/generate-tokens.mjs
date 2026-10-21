@@ -39,6 +39,8 @@ for (const font of design.type.fonts) {
 }
 
 const darkThemes = new Set(['dark']);
+/** Which token each theme's swatch takes, as in the design's ReadingSettings. */
+const THEME_SWATCHES = { light: 'surface-raised', sepia: 'surface', dark: 'surface-raised' };
 for (const theme of themes) {
   lines.push(`${selector(theme)} {`);
   lines.push(`  color-scheme: ${darkThemes.has(theme) ? 'dark' : 'light'};`);
@@ -50,6 +52,12 @@ for (const theme of themes) {
     // App additions, not in the design: the PDF page itself. Pages are paper-white in every theme;
     // the theme filter over each page (app.css) darkens or tints them, so these never change.
     lines.push('  --page-paper: #ffffff;', '  --page-ink-muted: #655c50;');
+    // The theme swatches in Reading settings (phase 19) show each theme's paper whatever theme is
+    // on, so they are fixed: the colours the design's ReadingSettings source gives them.
+    for (const [theme, name] of Object.entries(THEME_SWATCHES)) {
+      const token = design.color.tokens.find((candidate) => candidate.name === name);
+      lines.push(`  --theme-swatch-${theme}: ${valueIn(token, theme) ?? valueIn(token, first)};`);
+    }
     for (const family of ['spacing', 'radius', 'size']) {
       for (const token of design[family].tokens) lines.push(`  --${token.name}: ${token.value};`);
     }

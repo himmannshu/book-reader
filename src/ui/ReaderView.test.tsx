@@ -57,6 +57,7 @@ function fakeDoc() {
     renderPage: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
     renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
     outline,
+    pageLabels: () => Promise.resolve(null),
     pageText: () => Promise.resolve(''),
     destroy: () => Promise.resolve(),
   };
@@ -81,7 +82,7 @@ describe('ReaderView contents', () => {
     expect(screen.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
   });
 
-  it('reads the outline only when Contents first opens, and only once per book', async () => {
+  it('reads the outline once per book, and not before the first page is drawn unless Contents opens', async () => {
     const { doc, outline } = fakeDoc();
     render(
       <ReaderView
@@ -138,12 +139,15 @@ describe('ReaderView bookmarks', () => {
         highlights={noHighlights}
       />,
     );
-    const toggle = screen.getByRole('button', { name: 'Bookmark page' });
+    const toggle = screen.getByRole('button', { name: 'Bookmark this page' });
     await vi.waitFor(() => expect(toggle).toBeEnabled());
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(toggle).not.toHaveClass('is-pressed');
 
     fireEvent.click(toggle);
-    await vi.waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'));
+    // Phase 19: the design's toggle says what a press does, and shows pressed.
+    expect(await screen.findByRole('button', { name: 'Remove bookmark' })).toHaveClass(
+      'is-pressed',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
     expect(screen.getByRole('button', { name: 'Page 1' })).toBeInTheDocument();
   });
@@ -158,7 +162,7 @@ describe('ReaderView bookmarks', () => {
         highlights={noHighlights}
       />,
     );
-    const toggle = screen.getByRole('button', { name: 'Bookmark page' });
+    const toggle = screen.getByRole('button', { name: 'Bookmark this page' });
     // Phase 14: aria-disabled rather than disabled, so a tap can say why (iOS has no tooltips).
     expect(toggle).toHaveAttribute('aria-disabled', 'true');
     expect(toggle).toHaveAttribute('title', 'Bookmarks need this book saved on this device.');
@@ -178,13 +182,15 @@ describe('ReaderView bookmarks', () => {
       put: () => Promise.reject(new StorageError('quota', 'full')),
     };
     render(<ReaderView doc={doc} bookId="book" bookmarks={store} highlights={noHighlights} />);
-    const toggle = screen.getByRole('button', { name: 'Bookmark page' });
+    const toggle = screen.getByRole('button', { name: 'Bookmark this page' });
     await vi.waitFor(() => expect(toggle).toBeEnabled());
     fireEvent.click(toggle);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "There isn't enough storage space to save this bookmark.",
     );
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Bookmark this page' })).not.toHaveClass(
+      'is-pressed',
+    );
   });
 
   it('says so when the bookmarks cannot be read', async () => {
@@ -194,11 +200,21 @@ describe('ReaderView bookmarks', () => {
     render(<ReaderView doc={doc} bookId="book" bookmarks={store} highlights={noHighlights} />);
     fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
     expect(await screen.findByText("This book's bookmarks couldn't be read.")).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Bookmark page' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Bookmark this page' })).toBeDisabled();
     expect(errors).toHaveBeenCalled();
     errors.mockRestore();
   });
 });
+
+/** Opens Reading settings and reads the chosen Fit and the zoom shown (phase 19). */
+function fitAndZoom(): [string, string] {
+  if (!screen.queryByRole('dialog', { name: 'Reading settings' })) {
+    fireEvent.click(screen.getByRole('button', { name: 'Reading settings' }));
+  }
+  const fit = screen.getByRole('radiogroup', { name: 'Fit' });
+  const chosen = fit.querySelector('[aria-checked="true"]')?.textContent?.trim() ?? '';
+  return [chosen, screen.getByTestId('zoom-value').textContent ?? ''];
+}
 
 describe('ReaderView resuming a book opened with Open PDF', () => {
   const saved: ReadingState = {
@@ -236,7 +252,7 @@ describe('ReaderView resuming a book opened with Open PDF', () => {
     const { rerenderSaved } = renderUnsaved(store);
     rerenderSaved();
     await act(async () => arrive(saved));
-    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('150');
+    expect(fitAndZoom()).toEqual(['Custom', '150%']);
   });
 
   it('stays put when the reader already scrolled', async () => {
@@ -245,11 +261,11 @@ describe('ReaderView resuming a book opened with Open PDF', () => {
     fireEvent.scroll(screen.getByTestId('reader'));
     rerenderSaved();
     await act(async () => arrive(saved));
-    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('fit-width');
+    expect(fitAndZoom()[0]).toBe('Width');
   });
 });
 
-describe('ReaderView zoom menu', () => {
+describe('ReaderView zoom in Reading settings', () => {
   it('shows a saved zoom that is not one of the set levels', () => {
     const { doc } = fakeDoc();
     render(
@@ -266,7 +282,6 @@ describe('ReaderView zoom menu', () => {
         }}
       />,
     );
-    expect(screen.getByRole('combobox', { name: 'Zoom' })).toHaveValue('120');
-    expect(screen.getByRole('option', { name: '120%' })).toBeInTheDocument();
+    expect(fitAndZoom()).toEqual(['Custom', '120%']);
   });
 });

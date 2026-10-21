@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectPageAtTop, importBook, pageSlot } from './helpers';
+import { expectPageAtTop, importBook, openPanel as togglePanel, pageSlot } from './helpers';
 
 function panel(page: Page) {
   return page.getByRole('navigation', { name: 'Bookmarks' });
@@ -9,8 +9,9 @@ function panelButton(page: Page) {
   return page.getByRole('button', { name: 'Bookmarks', exact: true });
 }
 
+// The toggle's name says its state (phase 19): 'Remove bookmark' while the page is bookmarked.
 function toggle(page: Page) {
-  return page.getByRole('button', { name: 'Bookmark page', exact: true });
+  return page.getByRole('button', { name: /^(Bookmark this page|Remove bookmark)$/ });
 }
 
 function entry(page: Page, label: string) {
@@ -34,13 +35,14 @@ async function scrollToPage(page: Page, index: number) {
 /** Bookmarks page `index` (0-based) and waits until it is saved. */
 async function bookmarkPage(page: Page, index: number) {
   await scrollToPage(page, index);
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle(page)).toHaveAccessibleName('Bookmark this page');
   await toggle(page).click();
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(toggle(page)).toHaveAccessibleName('Remove bookmark');
 }
 
 async function openPanel(page: Page) {
-  if ((await panel(page).count()) === 0) await panelButton(page).click();
+  // On narrow screens Bookmarks is under More (phase 19).
+  if ((await panel(page).count()) === 0) await togglePanel(page, 'Bookmarks');
   await expect(panel(page)).toBeVisible();
 }
 
@@ -124,7 +126,7 @@ test('a removed bookmark stays removed after a reload', async ({ page }) => {
   // By un-toggling the page in view.
   await scrollToPage(page, 8);
   await toggle(page).click();
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
+  await expect(toggle(page)).toHaveAccessibleName('Bookmark this page');
   await expect.poll(() => listed(page)).toEqual(['Page 2 · Chapter 1']);
 
   await reloadAndReopen(page, 'outline-12-pages');
@@ -231,5 +233,5 @@ test('with many thin pages on screen, a jump to a bookmark shows it as bookmarke
   expect(await listed(page)).toEqual(['Page 6', 'Page 21']);
   await entry(page, 'Page 21').click();
   await expectPageAtTop(page, 20);
-  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(toggle(page)).toHaveAccessibleName('Remove bookmark');
 });

@@ -79,6 +79,22 @@ describe('design tokens', () => {
     }
   });
 
+  it('the theme swatches show each theme’s own paper, as in the design’s Reading settings', () => {
+    const declared = block(tokensCss, ':root');
+    const token = (name: string) =>
+      design.color.tokens.find((candidate) => candidate.name === name) ?? { name, value: '' };
+    // The design's ReadingSettings source: Light and Dark take surface-raised, Sepia surface.
+    const swatches = { light: 'surface-raised', sepia: 'surface', dark: 'surface-raised' };
+    for (const [theme, name] of Object.entries(swatches)) {
+      expect(declared.get(`theme-swatch-${theme}`), theme).toBe(
+        expected(token(name), theme, first),
+      );
+    }
+    expect(declared.get('theme-swatch-light')).toBe('#fffdf9');
+    expect(declared.get('theme-swatch-sepia')).toBe('#f3ead6');
+    expect(declared.get('theme-swatch-dark')).toBe('#24211d');
+  });
+
   it('the fonts are the app’s own files', () => {
     for (const font of design.type.fonts) {
       const file = font.file.replace(/^fonts\//, '');

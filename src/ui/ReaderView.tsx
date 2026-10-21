@@ -6,21 +6,22 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
   type Ref,
 } from 'react';
-import { bookmarkId, bookmarkLabel, sortByPage, type Bookmark } from '../core/bookmarks';
+import { bookmarkId, bookmarkLabel, chapterAt, sortByPage, type Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
 import { excerptText } from '../core/share';
 import type { Note, NoteTarget } from '../core/notes';
+import type { PageLabels } from '../core/page-labels';
 import {
-  MAX_ZOOM,
-  MIN_ZOOM,
-  ZOOM_LEVELS,
+  fitModeOf,
   nearestZoomLevel,
+  zoomForFit,
   zoomIn,
-  zoomLabel,
   zoomOut,
+  type FitMode,
   type ReadingState,
   type Theme,
   type ZoomSetting,
@@ -42,15 +43,10 @@ import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
-import {
-  Button,
-  IconButton,
-  NARROW_QUERY,
-  ThemePicker,
-  Toast,
-  ToolButton,
-  useMediaQuery,
-} from './controls';
+import { Button, IconButton, NARROW_QUERY, Toast, useMediaQuery } from './controls';
+import { PagePill } from './PagePill';
+import { ReaderToolbar, type PanelTool } from './ReaderToolbar';
+import { ReadingSettings } from './ReadingSettings';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
 import { browserSpeaker, type Speaker } from './speech';
@@ -64,7 +60,13 @@ const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
-const DISPLAY_ID = 'display-menu';
+const SETTINGS_ID = 'reading-settings';
+const PANEL_IDS: Record<PanelTool, string> = {
+  contents: CONTENTS_ID,
+  bookmarks: BOOKMARKS_ID,
+  notes: NOTES_ID,
+  search: SEARCH_ID,
+};
 const APPLE = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
 const NO_VOICE_NOTES: VoiceNoteStore = {
@@ -74,9 +76,12 @@ const NO_VOICE_NOTES: VoiceNoteStore = {
 };
 /** Scrolling must pause this long before the reading place is saved. */
 const SAVE_DELAY_MS = 600;
-const ZOOM_CHOICES: readonly ZoomSetting[] = ['fit-width', 'fit-page', ...ZOOM_LEVELS];
+/** The page pill fades this long after scrolling stops (the design: about a second). */
+const PILL_DELAY_MS = 1000;
+/** Keys that scroll the pages, which fade the toolbar like the wheel does. */
+const SCROLL_KEYS = new Set([' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End']);
 
-type Panel = 'contents' | 'bookmarks' | 'notes' | 'search';
+type Panel = PanelTool;
 
 export interface ReaderHandle {
   requestNavigation(proceed: () => void): void;
@@ -103,7 +108,11 @@ interface ReaderViewProps {
   speaker?: Speaker;
   /** Where the reader puts its toolbar (the app's header), so the reader has one bar. */
   toolsSlot?: HTMLElement | null;
-  /** The theme, for the Display menu on narrow screens. */
+  /** Back to the library (the toolbar's first button). */
+  onLibrary?(): void;
+  /** Sync status for the toolbar; it shows itself only when it needs the reader. */
+  status?: ReactNode;
+  /** The theme, for Reading settings. */
   theme?: Theme;
   onThemeChange?(theme: Theme): void;
   /** Where this book was left, to open there (null: from the start, or found once it is saved). */
@@ -130,6 +139,8 @@ export function ReaderView({
   speaker: givenSpeaker,
   initialState = null,
   toolsSlot = null,
+  onLibrary,
+  status,
   theme = 'light',
   onThemeChange,
   ref,
@@ -146,22 +157,23 @@ export function ReaderView({
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
   const narrow = useMediaQuery(NARROW_QUERY);
-  const [displayOpen, setDisplayOpen] = useState(false);
-  const displayButtonRef = useRef<HTMLButtonElement>(null);
-  // The Display menu closes on a tap or click outside it (and on Escape, below).
-  useEffect(() => {
-    if (!displayOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const menu = displayButtonRef.current?.closest('.display-menu');
-      if (menu && event.target instanceof Node && !menu.contains(event.target)) {
-        setDisplayOpen(false);
-      }
-    };
-    document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
-  }, [displayOpen]);
+  const moreButtonRef = useRef<HTMLButtonElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [zoom, setZoom] = useState<ZoomSetting>(initialState?.zoom ?? 'fit-width');
+  /** The zoom now shown, in Width and Page modes too (Reading settings shows it). */
+  const [shownPercent, setShownPercent] = useState(100);
+  /** The page pill shows while the pages scroll; `settledPage` is the page it last settled on. */
+  const [pill, setPill] = useState({ visible: false, settledPage: 0 });
+  const [pageLabels, setPageLabels] = useState<PageLabels>(null);
+  /** The toolbar fades while the reader scrolls (phase 19). */
+  const [toolbarHidden, setToolbarHidden] = useState(false);
+  /** Whether the toolbar may fade now: nothing it opened, or that sits over the pages, is open. */
+  const canHideToolbar = useRef(false);
+  /** Work that waits until the first page is drawn (set below, where loadOutline is defined). */
+  const afterFirstPage = useRef<() => void>(() => undefined);
   /** Fixed at mount: the reader is keyed by book, so a new book gets a new ReaderView. */
   const opening = useRef(initialState);
   /** True once the reader scrolled or zoomed; a late-found saved place then no longer applies. */
@@ -197,6 +209,7 @@ export function ReaderView({
     const viewer = new Viewer(scroller, doc, {
       ...defaultViewerOptions,
       onPageChange: setCurrentPage,
+      onFirstPageDrawn: () => afterFirstPage.current(),
       zoom: opening.current?.zoom,
       initialPosition: opening.current?.position,
       initialCentre: opening.current?.centreX,
@@ -211,6 +224,17 @@ export function ReaderView({
     let timer: ReturnType<typeof setTimeout> | undefined;
     let lastScroll = 0;
     let dirty = false;
+    // The page pill: shown on the first scroll event, hidden once scrolling has paused.
+    let pillTimer: ReturnType<typeof setTimeout> | undefined;
+    const settlePill = () => {
+      const idle = performance.now() - lastScroll;
+      if (idle < PILL_DELAY_MS) {
+        pillTimer = setTimeout(settlePill, PILL_DELAY_MS - idle);
+        return;
+      }
+      pillTimer = undefined;
+      setPill({ visible: false, settledPage: viewer.currentPage });
+    };
     const save = () => {
       clearTimeout(timer);
       timer = undefined;
@@ -241,6 +265,10 @@ export function ReaderView({
       dirty = true;
       moved.current = true;
       timer ??= setTimeout(check, SAVE_DELAY_MS);
+      if (pillTimer === undefined) {
+        setPill((shown) => (shown.visible ? shown : { ...shown, visible: true }));
+        pillTimer = setTimeout(settlePill, PILL_DELAY_MS);
+      }
     };
     const saveAlways = () => {
       dirty = true;
@@ -256,6 +284,7 @@ export function ReaderView({
     return () => {
       // Saving on leaving happens in the layout effect below, while the pages are still attached.
       clearTimeout(timer);
+      clearTimeout(pillTimer);
       saveNow.current = () => undefined;
       scroller.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onHide);
@@ -282,6 +311,7 @@ export function ReaderView({
         if (cancelled || !state || !viewer || moved.current) return;
         viewer.setZoom(state.zoom);
         setZoom(state.zoom);
+        setShownPercent(viewer.zoomPercent);
         viewer.goTo(state.position);
       },
       (error: unknown) => {
@@ -299,7 +329,22 @@ export function ReaderView({
     moved.current = true;
     viewer.setZoom(next);
     setZoom(next);
+    setShownPercent(viewer.zoomPercent);
     saveNow.current();
+  }
+
+  function chooseFit(fit: FitMode) {
+    changeZoom(zoomForFit(fit, viewerRef.current?.zoomPercent ?? shownPercent));
+  }
+
+  function toggleSettings() {
+    if (!settingsOpen) setShownPercent(viewerRef.current?.zoomPercent ?? 100);
+    setSettingsOpen(!settingsOpen);
+  }
+
+  function closeSettings(returnFocus: boolean) {
+    setSettingsOpen(false);
+    if (returnFocus) settingsButtonRef.current?.focus();
   }
 
   function stepZoom(direction: 'in' | 'out') {
@@ -343,6 +388,7 @@ export function ReaderView({
 
   /** + (or =), - and 0 zoom while the pages have focus. Cmd/Ctrl + and - stay the browser's. */
   function onPagesKeyDown(event: ReactKeyboardEvent) {
+    if (SCROLL_KEYS.has(event.key)) hideToolbar();
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.key === '+' || event.key === '=') stepZoom('in');
     else if (event.key === '-') stepZoom('out');
@@ -386,7 +432,29 @@ export function ReaderView({
     return outlineRef.current.promise;
   }
 
+  // The chapter (toolbar) and the page labels (page pill) are read once the first page is drawn,
+  // so they never delay it.
+  useEffect(() => {
+    afterFirstPage.current = () => {
+      void loadOutline();
+      doc.pageLabels().then(
+        (labels) => {
+          if (!doc.destroyed) setPageLabels(labels);
+        },
+        (error: unknown) => {
+          // The pill then shows page numbers.
+          if (!doc.destroyed) console.error("Could not read the book's page labels", error);
+        },
+      );
+    };
+  });
+
   function buttonFor(panel: Panel) {
+    // On phones the panels open from More, so focus goes back there.
+    // (jsdom, in unit tests, has no matchMedia: a wide screen there.)
+    if (typeof window.matchMedia === 'function' && window.matchMedia(NARROW_QUERY).matches) {
+      return moreButtonRef;
+    }
     return panel === 'contents'
       ? contentsButtonRef
       : panel === 'bookmarks'
@@ -673,16 +741,16 @@ export function ReaderView({
   const requestNoteNavigation = written.request;
   const noteConfirmation = written.confirmation;
 
-  // Escape first hides a floating highlight button. Otherwise, while a panel is open, it closes the
-  // panel wherever focus is: in the panel, on a button, in the pages, or on the page body (in
-  // Safari a mouse click does not focus the button it clicks).
+  // Escape first closes Reading settings, then hides a floating highlight button. Otherwise, while
+  // a panel is open, it closes the panel wherever focus is: in the panel, on a button, in the
+  // pages, or on the page body (in Safari a mouse click does not focus the button it clicks).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (noteConfirmation) return;
-      if (displayOpen) {
-        setDisplayOpen(false);
-        displayButtonRef.current?.focus();
+      if (settingsOpen) {
+        setSettingsOpen(false);
+        settingsButtonRef.current?.focus();
         return;
       }
       if (dismissHighlightAction()) return;
@@ -694,126 +762,108 @@ export function ReaderView({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation, displayOpen]);
+  }, [openPanel, dismissHighlightAction, requestNoteNavigation, noteConfirmation, settingsOpen]);
 
-  const zoomControls = (
-    <div className="zoom-controls">
-      <IconButton
-        variant="filled"
-        icon="minus"
-        label="Zoom out"
-        disabled={zoom === MIN_ZOOM}
-        onClick={() => stepZoom('out')}
-      />
-      <select
-        className="picker"
-        aria-label="Zoom"
-        value={String(zoom)}
-        onChange={(event) => {
-          const value = event.currentTarget.value;
-          changeZoom(value === 'fit-width' || value === 'fit-page' ? value : Number(value));
-        }}
-      >
-        {(ZOOM_CHOICES.includes(zoom) ? ZOOM_CHOICES : [...ZOOM_CHOICES, zoom]).map((choice) => (
-          <option key={choice} value={String(choice)}>
-            {zoomLabel(choice)}
-          </option>
-        ))}
-      </select>
-      <IconButton
-        variant="filled"
-        icon="plus"
-        label="Zoom in"
-        disabled={zoom === MAX_ZOOM}
-        onClick={() => stepZoom('in')}
-      />
-    </div>
-  );
+  // The toolbar fades when the reader scrolls the pages (wheel, touch or keys; not when the app
+  // moves them), and comes back on a tap on the pages, a tap where it was, or keyboard focus in
+  // it. It never fades while something it opened, or something over the pages, is open.
+  const searchBarShown = narrow && searchCurrent !== null && openPanel !== 'search';
+  const toolbarHeld =
+    openPanel !== null ||
+    settingsOpen ||
+    menuOpen ||
+    marked.action !== null ||
+    listen.state.status !== 'idle' ||
+    voice.recording !== null ||
+    written.confirmation !== null ||
+    (searchBarShown && searchResults.length > 0);
+  // Something opening brings a faded toolbar back (state adjusted while rendering, not in an effect).
+  if (toolbarHeld && toolbarHidden) setToolbarHidden(false);
+  useEffect(() => {
+    canHideToolbar.current = !toolbarHeld;
+  }, [toolbarHeld]);
+
+  function hideToolbar() {
+    if (!canHideToolbar.current) return;
+    canHideToolbar.current = false;
+    setToolbarHidden(true);
+  }
+
+  function showToolbar() {
+    setToolbarHidden(false);
+  }
+
+  useEffect(() => {
+    if (toolbarHidden) return;
+    // Listening only while shown: once faded, the wheel and touch listeners are gone, so steady
+    // scrolling pays nothing for them (WebKit has little scroll headroom).
+    canHideToolbar.current = !toolbarHeld;
+    const scroller = scrollerRef.current;
+    const onInput = () => {
+      if (!canHideToolbar.current) return;
+      canHideToolbar.current = false;
+      setToolbarHidden(true);
+    };
+    scroller?.addEventListener('wheel', onInput, { passive: true });
+    scroller?.addEventListener('touchmove', onInput, { passive: true });
+    return () => {
+      scroller?.removeEventListener('wheel', onInput);
+      scroller?.removeEventListener('touchmove', onInput);
+    };
+    // toolbarHeld is read when the toolbar comes back; its own effect above follows changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolbarHidden]);
+
+  useEffect(() => {
+    if (!toolbarHidden || !toolsSlot) return;
+    const show = () => setToolbarHidden(false);
+    toolsSlot.addEventListener('pointerdown', show);
+    toolsSlot.addEventListener('focusin', show);
+    return () => {
+      toolsSlot.removeEventListener('pointerdown', show);
+      toolsSlot.removeEventListener('focusin', show);
+    };
+  }, [toolbarHidden, toolsSlot]);
+
+  const chapter =
+    outline.status === 'ready' ? chapterAt(currentPage, outline.items)?.title.trim() : undefined;
 
   const tools = (
-    <div className="reader-tools" role="toolbar" aria-label="Reader">
-      <ToolButton
-        ref={contentsButtonRef}
-        icon="contents"
-        label="Contents"
-        aria-expanded={openPanel === 'contents'}
-        aria-controls={openPanel === 'contents' ? CONTENTS_ID : undefined}
-        onClick={() => togglePanel('contents')}
-      />
-      <ToolButton
-        ref={bookmarksButtonRef}
-        icon="list"
-        label="Bookmarks"
-        aria-expanded={openPanel === 'bookmarks'}
-        aria-controls={openPanel === 'bookmarks' ? BOOKMARKS_ID : undefined}
-        onClick={() => togglePanel('bookmarks')}
-      />
-      <ToolButton
-        icon="bookmark"
-        filled={currentMark !== undefined}
-        label="Bookmark page"
-        className="bookmark-toggle"
-        aria-pressed={currentMark !== undefined}
-        // Not disabled while a change is saving: that would drop keyboard focus. Clicks are ignored
-        // instead. While the book isn't saved it is only marked disabled, so a tap can say why
-        // (iOS shows no tooltips; phase 05 review).
-        disabled={bookId !== null && !items}
-        aria-disabled={bookId === null ? true : undefined}
-        title={bookId === null ? UNSAVED_REASON : undefined}
-        onClick={() => {
-          if (bookId === null) setAnnotationError(UNSAVED_REASON);
-          else void toggleBookmark();
-        }}
-      />
-      <ToolButton
-        ref={notesButtonRef}
-        icon="note"
-        label="Notes"
-        aria-expanded={openPanel === 'notes'}
-        aria-controls={openPanel === 'notes' ? NOTES_ID : undefined}
-        onClick={() => togglePanel('notes')}
-      />
-      <ToolButton
-        icon="listen"
-        label="Listen"
-        aria-pressed={listen.state.status !== 'idle'}
-        onClick={() => {
-          if (listen.state.status === 'idle') void listen.start();
-          else listen.stop();
-        }}
-      />
-      <ToolButton
-        ref={searchButtonRef}
-        icon="search"
-        label="Search"
-        aria-expanded={openPanel === 'search'}
-        aria-controls={openPanel === 'search' ? SEARCH_ID : undefined}
-        onClick={() => togglePanel('search')}
-      />
-      {narrow ? (
-        <div className="display-menu">
-          <ToolButton
-            ref={displayButtonRef}
-            icon="text-settings"
-            label="Display"
-            aria-expanded={displayOpen}
-            aria-controls={displayOpen ? DISPLAY_ID : undefined}
-            onClick={() => setDisplayOpen((open) => !open)}
-          />
-          {displayOpen && (
-            <div id={DISPLAY_ID} className="display-popover" role="group" aria-label="Display">
-              {onThemeChange && <ThemePicker theme={theme} onChange={onThemeChange} />}
-              <div className="zoom-row">
-                <span className="zoom-caption">Zoom</span>
-                {zoomControls}
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        zoomControls
-      )}
-    </div>
+    <ReaderToolbar
+      title={title}
+      chapter={chapter || undefined}
+      compact={narrow}
+      hidden={toolbarHidden}
+      onLibrary={() => onLibrary?.()}
+      openPanel={openPanel}
+      panelIds={PANEL_IDS}
+      panelButtons={{
+        contents: contentsButtonRef,
+        bookmarks: bookmarksButtonRef,
+        notes: notesButtonRef,
+        search: searchButtonRef,
+      }}
+      onPanel={togglePanel}
+      listening={listen.state.status !== 'idle'}
+      onListen={() => {
+        if (listen.state.status === 'idle') void listen.start();
+        else listen.stop();
+      }}
+      settingsOpen={settingsOpen}
+      settingsId={SETTINGS_ID}
+      settingsButton={settingsButtonRef}
+      onSettings={toggleSettings}
+      bookmarked={currentMark !== undefined}
+      bookmarkDisabled={bookId !== null && !items}
+      bookmarkUnavailable={bookId === null ? UNSAVED_REASON : null}
+      onBookmark={() => {
+        if (bookId === null) setAnnotationError(UNSAVED_REASON);
+        else void toggleBookmark();
+      }}
+      moreButton={moreButtonRef}
+      onMenuChange={setMenuOpen}
+      status={status}
+    />
   );
 
   return (
@@ -877,8 +927,18 @@ export function ReaderView({
           tabIndex={0}
           role="region"
           aria-label="Book pages"
-          onClick={marked.onPagesClick}
+          onClick={(event) => {
+            showToolbar();
+            marked.onPagesClick(event);
+          }}
           onKeyDown={onPagesKeyDown}
+        />
+        <PagePill
+          pageIndex={currentPage}
+          pageCount={doc.pageCount}
+          labels={pageLabels}
+          visible={pill.visible}
+          settledPageIndex={pill.settledPage}
         />
         {listen.state.status !== 'idle' && (
           <div className="player-bar" role="toolbar" aria-label="Read aloud">
@@ -906,7 +966,7 @@ export function ReaderView({
             </select>
           </div>
         )}
-        {narrow && searchCurrent !== null && openPanel !== 'search' && searchResults.length > 0 && (
+        {searchBarShown && searchResults.length > 0 && (
           <div className="search-bar" role="toolbar" aria-label="Search matches">
             <IconButton icon="collapse" label="Previous match" onClick={() => stepSearch(-1)} />
             <span className="search-bar-count">
@@ -966,6 +1026,21 @@ export function ReaderView({
           removeUnavailableReason={written.unavailableReason}
         />
       </div>
+      {settingsOpen && (
+        <ReadingSettings
+          id={SETTINGS_ID}
+          theme={theme}
+          onTheme={onThemeChange}
+          zoomPercent={shownPercent}
+          canZoomOut={zoomOut(shownPercent) !== null}
+          canZoomIn={zoomIn(shownPercent) !== null}
+          onZoomOut={() => stepZoom('out')}
+          onZoomIn={() => stepZoom('in')}
+          fit={fitModeOf(zoom)}
+          onFit={chooseFit}
+          onDismiss={() => closeSettings(false)}
+        />
+      )}
       {readerNotice && <Toast key={readerNotice.key}>{readerNotice.text}</Toast>}
       {written.confirmation && (
         <ConfirmDialog

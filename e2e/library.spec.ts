@@ -93,5 +93,5 @@ test('the Library button closes the book and shows the list', async ({ page }) =
   await backToLibrary(page);
   await expect(library(page)).toBeVisible();
   await expect(page.locator('[data-page-index]')).toHaveCount(0);
-  await expect(page.getByTestId('book-info')).toHaveCount(0);
+  await expect(page.getByTestId('book-title')).toHaveCount(0);
 });

@@ -55,21 +55,21 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Nothing running.
+- Phase 19 built on `phase-19-reader-chrome` (stacked on `mac-webkit-baseline`; neither pushed). Unit 391, the changed
+  specs and sync pass; `scripts/verify.sh` has not passed yet: run 2 failed only on perf-webkit p95 (42 > 40; A/B
+  shows no regression, see build log), runs 3–4 stalled because the machine was overloaded (Chrome tabs, load 82).
 - Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). WebKit and the
   perf budgets run locally now (the cloud container could not run them). Never run perf in two
-  places at once.
+  places at once. Close heavy browser tabs before verify: WebKit tests stall under load.
 
 ## Next action
 
-1. Phase 19 (Reader chrome): plan posted to the user for approval (no code yet). Cut
-   `phase-19-reader-chrome` from `mac-webkit-baseline` (so local verify starts green), then write
-   harness/build/phase-19-reader-chrome.md and its contract. Design references:
-   harness/context/design-system/components/ReaderToolbar.md, ReadingSettings.md, PagePill.md,
-   SegmentedControl.md, and the README's "Screens, composed".
-2. Watch: the WebKit notes keyboard-focus test ("keyboard newline, save, cancel/delete confirmation
-   and jump keep usable focus") was flaky once in CI. Locally, library-view's "100 books" filter
-   check (< 100 ms) went over in 2 of 3 full WebKit runs under load (14–25 ms alone); unchanged.
+1. On a quiet machine: `scripts/verify.sh` on `phase-19-reader-chrome`; record the result.
+2. Evaluator review (harness/prompts/03-evaluate.md), fix blockers.
+3. Ask the user before pushing the branch (preview deploy), then `gh workflow run verify.yml --ref phase-19-reader-chrome`.
+4. Contract item 13 (devices) goes to harness/USER-CHECKLIST.md.
+5. Watch: WebKit steady-scroll p95 sits at 33–38 ms locally (budget 40) and one of its three samples is a ~2.4 s
+   freeze on every run (also on the baseline); library-view's "100 books" filter check is load-sensitive.
 
 ## Decisions worth remembering
 
@@ -114,17 +114,31 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 16:54 EDT
-- Branch: mac-webkit-baseline
-- HEAD: 6a30927 tests: verify passes on macOS WebKit; Mac Safari pickers drawn at full height
-- Uncommitted files: 1
-- Last verify: PASS at 2026-10-20 16:53 EDT (commit fea67a5)
+Snapshot 2026-10-20 20:18 EDT
+- Branch: phase-19-reader-chrome
+- HEAD: 0b9279c phase 19: plan, contract and context (approved by the user)
+- Uncommitted files: 41
+- Last verify: FAIL at 2026-10-20 20:17 EDT (commit 0b9279c)
 - Recent commits:
+    0b9279c phase 19: plan, contract and context (approved by the user)
+    13988a3 wip: handoff after the Mac WebKit baseline fix
     6a30927 tests: verify passes on macOS WebKit; Mac Safari pickers drawn at full height
     fea67a5 phase 18: complete; test-suite trim CI green (12 min wall); handoff for the local session
     5952687 tests: one loadControlled helper that waits for an activated service worker (WebKit could hang on serviceWorker.ready)
-    5f13b3a tests: per-engine CI jobs; notes on the trim in AGENTS.md, context and build log
-    58c85cf Merge branch 'phase-18-design-foundations' into test-suite-trim
 - Changed files:
+     M e2e/bookmarks.spec.ts
+     M e2e/comfort.spec.ts
+     M e2e/contents.spec.ts
+     M e2e/design-system.spec.ts
+     M e2e/design.spec.ts
+     M e2e/helpers.ts
+     M e2e/highlights.spec.ts
+     M e2e/library-view.spec.ts
+     M e2e/library.spec.ts
+     M e2e/notes.spec.ts
+     M e2e/open-pdf.spec.ts
+     M e2e/sync/devices.ts
+     M e2e/sync/sync.spec.ts
      M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->
