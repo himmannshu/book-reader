@@ -1940,3 +1940,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` at 3517cbb, run 2 → PASS: unit 404; browser 356 passed + 2 skipped; sync 29; perf 10 (chromium
   first 190 ms, jump 28, p95 16.7, canvas 67.1, search 878; webkit first 144, jump 76, p95 33, canvas 67.1, search
   870; blank 0 / 1.1 %). Budgets unchanged. Contract item 12 still needs the CI run (branch not pushed).
+
+### 2026-10-21 16:06 EDT | Phase 21 | Claude Code (Opus 5.5) | Pushed; full CI green
+- With the user's approval, pushed `phase-21-highlight-colours` (new on origin; a Cloudflare preview deploy) at 5749740.
+- `gh workflow run verify.yml --ref phase-21-highlight-colours` → run 39664582126
+  (https://github.com/himmannshu/book-reader/actions/runs/39664582126), head 5749740: success, both jobs
+  `verify (chromium)` and `verify (webkit)` passed (19:46–20:05 UTC). The push's quick-check run 39664572461: success.
+- Contract item 12 now has its evidence (local verify PASS at 3517cbb, entry above; CI green). Item 13, the user's
+  device check, is the one item left.
+- Noted: local `phase-20-panels-and-sheets` (b86cf33) is ahead of origin's (4d8203b); not pushed, not touched.

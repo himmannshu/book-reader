@@ -14,7 +14,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
   main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
 - Phases 19 and 20 Complete (user-checked, CI green) on stacked branches, not merged into main.
-- Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Not pushed.
+- Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Pushed 2026-10-21;
+  full CI green (run 39664582126). Only the user's device check (contract item 13) is left.
 - Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
   (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
 - Branch `docs-readme` holds the new README alone; merge it when the demo GIF is ready.
@@ -83,8 +84,7 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 ## Next action
 
 1. Phase 21: done locally (verify PASS at 3517cbb). No evaluator pass over the N6/N7 fixes (small; the user's call).
-2. Then ask the user before pushing `phase-21-highlight-colours` (a preview deploy) and running
-   `gh workflow run verify.yml --ref phase-21-highlight-colours`; record the run. Then the user's device check
+2. Pushed and CI green (run 39664582126, build log 16:06). Next: the user's device check
    (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
    the lists and More menus, the export, N3).
 3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–21 and the Mac WebKit fix).
@@ -139,17 +139,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 15:30 EDT
+Snapshot 2026-10-21 16:06 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
+- HEAD: 5749740 phase 21: N6, N7 fixes recorded; verify PASS
 - Uncommitted files: 2
 - Last verify: PASS at 2026-10-21 15:29 EDT (commit 3517cbb)
 - Recent commits:
+    5749740 phase 21: N6, N7 fixes recorded; verify PASS
     3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
     bf4db8e phase 21: evaluator recheck recorded (items 1-11 pass; N6-N8 new, non-blocking)
     8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
     de3e7c0 handoff: Claude Code 2026-10-21
-    c7e1c64 phase 21: review fixes recorded; verify PASS
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
