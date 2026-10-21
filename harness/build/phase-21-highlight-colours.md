@@ -1,6 +1,7 @@
 # Phase 21: Highlight colours
 
-- Status: Planned (awaiting the user's approval, 2026-10-21)
+- Status: In progress (plan approved by the user, 2026-10-21: every highlight in the Notes tab; Voice note
+  kept in the menu until phase 23)
 - Branch: phase-21-highlight-colours (cut from `phase-20-panels-and-sheets`; main has none of 19–20 yet)
 - Depends on: 20
 

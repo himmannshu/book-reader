@@ -1,9 +1,9 @@
 # Phase 21 context: highlight colours
 
 Material decisions only. Plan and contract: harness/build/phase-21-highlight-colours.md,
-harness/contracts/phase-21-contract.md. Plan posted to the user on 2026-10-21; not yet approved.
+harness/contracts/phase-21-contract.md. Plan approved by the user on 2026-10-21.
 
-## Judgment calls (proposed)
+## Judgment calls
 
 - Branch cut from `phase-20-panels-and-sheets` (main has none of phases 19–20).
 - Colour is an optional field on the highlight record; absent or unknown means yellow. No server or
@@ -13,7 +13,7 @@ harness/contracts/phase-21-contract.md. Plan posted to the user on 2026-10-21; n
 - Targets in the menu: 40 px as designed, 44 px on touch screens (the app's touch rule from phase 14).
 - Export names the colour of every highlight, yellow included, so the file reads the same everywhere.
 
-## Open for the user
+## Decisions by the user
 
-- Whether the Notes tab lists every highlight (recommended) or notes only.
-- Whether Voice note stays in the selection menu until phase 23 (recommended).
+- The Notes tab lists every highlight (with its colour, and its note if it has one).
+- Voice note stays in the selection menu until phase 23.
