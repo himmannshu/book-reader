@@ -17,6 +17,8 @@ import {
   pageNote,
   noteTexts,
   highlightText,
+  openNotes,
+  notesPanel,
 } from './devices';
 
 test('bookmarks, highlights and notes made on one device appear on another that has the same book', async ({
@@ -36,6 +38,36 @@ test('bookmarks, highlights and notes made on one device appear on another that 
   await expect.poll(() => bookmarkLabels(b)).toEqual(['Page 2']);
   await expect.poll(() => noteTexts(b)).toEqual(['Written on the Mac']);
   await expect.poll(() => b.locator('.highlight-box').count()).toBeGreaterThan(0);
+});
+
+test('a highlight’s colour, and a later change of colour, reach the other device', async ({
+  device,
+}) => {
+  const a = await device();
+  const b = await device();
+  await importBook(a, TEXT_BOOK);
+  await importBook(b, TEXT_BOOK);
+
+  await highlightText(a, 'Bravo two', 'Green');
+  await syncNow(a);
+  await syncNow(b);
+  await expect.poll(() => b.locator('.highlight-box--green').count()).toBeGreaterThan(0);
+
+  // Recoloured from the Notes tab's More menu (phase 21) on the first device.
+  await a.keyboard.press('Escape');
+  await openNotes(a);
+  await notesPanel(a).locator('.note-row').getByRole('button', { name: 'More actions' }).click();
+  await a
+    .getByRole('menu', { name: 'More actions' })
+    .getByRole('menuitemradio', { name: 'Blue' })
+    .click();
+  await expect(a.locator('.highlight-box--blue')).not.toHaveCount(0);
+  await syncNow(a);
+  await syncNow(b);
+  await expect.poll(() => b.locator('.highlight-box--blue').count()).toBeGreaterThan(0);
+  await expect(b.locator('.highlight-box--green')).toHaveCount(0);
+  await openNotes(b);
+  await expect(notesPanel(b).locator('mark')).toHaveClass(/br-mark--blue/);
 });
 
 test('a book added on one device is listed on the other, and importing it brings its annotations', async ({

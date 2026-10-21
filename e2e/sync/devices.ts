@@ -116,8 +116,8 @@ export async function noteTexts(page: Page): Promise<string[]> {
   return notesPanel(page).locator('.note-text').allTextContents();
 }
 
-/** Highlights the first line containing `text` on page 1 (as the notes tests do). */
-export async function highlightText(page: Page, text: string) {
+/** Highlights the first line containing `text` on page 1 (as the notes tests do), in `colour`. */
+export async function highlightText(page: Page, text: string, colour = 'Yellow') {
   const start = page.locator('[data-page-index="0"] .textLayer span', { hasText: text });
   await expect(start).toHaveCount(1);
   const before = await page.locator('.highlight-box').count();
@@ -128,6 +128,6 @@ export async function highlightText(page: Page, text: string) {
     document.getSelection()?.removeAllRanges();
     document.getSelection()?.addRange(range);
   });
-  await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
+  await page.getByRole('radio', { name: colour, exact: true }).click();
   await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
 }
