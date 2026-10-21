@@ -142,15 +142,18 @@ on the two questions below (Open PDF in the library only; the icon-only sync bad
 Contents, Bookmarks and Notes become tabs of one panel; Search has its own. On Mac and iPad the panel
 sits on the right; on iPhone it rises from the bottom.
 
-- [ ] Mac and iPad: Contents (toolbar) opens the panel on the right; the tabs show Bookmarks and Notes
+Checked by the user on 2026-10-21: "did the manual check, looks good". No change asked for on the two ×
+buttons in the search sheet.
+
+- [x] Mac and iPad: Contents (toolbar) opens the panel on the right; the tabs show Bookmarks and Notes
       with their counts; the page stays readable beside it; Close or Escape shuts it.
-- [ ] iPhone: More → Contents rises as a sheet over a dimmed page. Close it by dragging the grabber down,
+- [x] iPhone: More → Contents rises as a sheet over a dimmed page. Close it by dragging the grabber down,
       tapping the dimmed part, or Close. Check that its bottom clears Safari's bar and the home indicator.
-- [ ] Contents: chapters fold and unfold with the chevron; page numbers on the right (a book with roman
+- [x] Contents: chapters fold and unfold with the chevron; page numbers on the right (a book with roman
       front pages shows "iv"); the chapter you are in is highlighted when you open it.
-- [ ] Search (Cmd+F on the Mac): the count and up/down arrows sit in the field; results show "p. 12 ·
+- [x] Search (Cmd+F on the Mac): the count and up/down arrows sit in the field; results show "p. 12 ·
       chapter". On iPhone, are the field's clear × and the sheet's close × too close together?
-- [ ] Notes and Bookmarks rows show the page and the chapter; editing and deleting work, also on iPhone
+- [x] Notes and Bookmarks rows show the page and the chapter; editing and deleting work, also on iPhone
       (the "Delete note?" question appears above the sheet).
 
 <!-- Later phases append their sections below. -->

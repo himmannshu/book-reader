@@ -160,7 +160,7 @@
       "phase": "20",
       "description": "Contents, Bookmarks and Notes share one tabbed panel and Search has its own; panels dock beside the page on Mac and iPad and rise as bottom sheets on iPhone; the contents tree folds and shows the current chapter",
       "status": "passing",
-      "evidence": "2026-10-21 e2e/panels.spec.ts (tabs and counts, docked at 1280/820 px, sheets at 390/320 px closing by scrim, Escape, Close and drag incl. touch, focus into panels and kept in sheets, contents folding, page labels and current chapter, search field and results, row chapters) and unit tests (chapterPathAt, Tabs) pass locally (scripts/verify.sh PASS at d966d2b, author and evaluator) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39546956538 (chromium+webkit) on 4d8203b. Review PASS after two rounds of fixes (harness/code_review/phase-20-review.md). Real-device check pending (USER-CHECKLIST, phase 20)."
+      "evidence": "2026-10-21 e2e/panels.spec.ts (tabs and counts, docked at 1280/820 px, sheets at 390/320 px closing by scrim, Escape, Close and drag incl. touch, focus into panels and kept in sheets, contents folding, page labels and current chapter, search field and results, row chapters) and unit tests (chapterPathAt, Tabs) pass locally (scripts/verify.sh PASS at d966d2b, author and evaluator) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39546956538 (chromium+webkit) on 4d8203b. Review PASS after two rounds of fixes (harness/code_review/phase-20-review.md). 2026-10-21 the user checked it on their devices: \"looks good\"."
     }
   ]
 }
