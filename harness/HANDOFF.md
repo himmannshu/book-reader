@@ -5,7 +5,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (resumed 14:00; recheck done, N6/N7 fixed, verify PASS at 3517cbb).
+- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (phase 21 finished; phases 22 and 23
+  built under the standing instruction below; the roadmap in PLANS.md is fully built).
 - Local baseline: verify on main (fea67a5) failed 9 WebKit tests on macOS (first WebKit run on a
   Mac). Fixed on branch `mac-webkit-baseline` (6a30927, not pushed): verify PASS there, WebKit and
   perf included. Causes: harness/context/mac-webkit-baseline-context.md. One real app change:
@@ -16,6 +17,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Phases 19 and 20 Complete (user-checked, CI green) on stacked branches, not merged into main.
 - Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Pushed 2026-10-21;
   full CI green (run 39664582126). Only the user's device check (contract item 13) is left.
+- Phase 22 (library shelf) built on `phase-22-library-shelf` (from 21) and phase 23 (listen bar and voice notes) on
+  `phase-23-listen-bar-voice-notes` (from 22). Both local only (not pushed); only their device checks are left.
 - Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
   (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
 - Branch `docs-readme` holds the new README alone; merge it when the demo GIF is ready.
@@ -74,38 +77,30 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 21 (Highlight colours), plan approved 2026-10-21 (every highlight in the Notes tab; Voice note kept in the
-  menu until phase 23). Everything in the contract is built; nothing is half done in the code. HEAD c7e1c64.
-  - Done this session (evidence in harness/build-log.md, the two 2026-10-21 Phase 21 entries):
-    - Notes rows for every highlight (`annotationRows`, src/core/notes.ts) with a row More menu
-      (src/ui/RowMenu.tsx, also on bookmark rows); Notes count includes highlights (46d23fe).
-    - Earlier specs updated for the Yellow swatch and the More menus, each change listed (b936df2).
-    - Two-device recolour test, e2e/sync/sync.spec.ts (53ed3aa).
-    - Evaluator review (harness/code_review/phase-21-review.md) FAIL at fab20ab: B1 menu too wide on phones,
-      B2 Listen from here across a page break, B3 voice rows broken, B4 no Share on page notes. All fixed in
-      814f19d with tests seen red first; also N1 (docked panel), N4 (colour pressed mid-save), N5 (stale width).
-    - `scripts/verify.sh` PASS at 814f19d (unit 404, browser 352 + 2 skipped, sync 29, perf 10). Only harness
-      docs changed since.
-    - 14:00 session: verify at de3e7c0 failed only WebKit steady-scroll p95 (52, then 41 ms alone). Four alternating
-      perf runs against phase 20 all passed with the same spread (p20 32/38 ms, p21 38/32 ms): noise, not phase 21
-      (build log 14:00 entry).
-  - Evaluator recheck at 8113d9a (review file appendix): items 1–11 PASS, B1–B4/N1/N4/N5 fixed. Open: item 12 (no
-    green verify at HEAD yet: timing checks fail under load, pass alone; CI not run) and item 13 (device check).
-    New non-blocking N6 (Add note during a colour's save) and N7 (menu over a highlight left off screen after a
-    resize; it now closes, as on scroll) fixed in 3517cbb with tests seen red. N8 (ONE_ROW_EXTRA duplicates
-    app.css sizes) left. `scripts/verify.sh` PASS at 3517cbb (run 2; run 1 hit the known WebKit load stall).
-  - Left as they are (for the user's device check): N2 bookmark rows' More menu holds only Remove bookmark;
-    N3 Add note on a fresh selection then Cancel keeps the yellow highlight (recorded judgment call).
+- Nothing half done. HEAD is on `phase-23-listen-bar-voice-notes`; every branch is committed.
+- Phase 21 (Highlight colours): built, reviewed twice (harness/code_review/phase-21-review.md and its recheck
+  appendix), `scripts/verify.sh` PASS at 3517cbb, CI green (run 39664582126). N8 (ONE_ROW_EXTRA duplicates app.css
+  sizes) left; N2 and N3 are questions in the user's checklist.
+- Phase 22 (Library shelf redesign, build log 17:40): cards, chips with counts, grid/list (remembered), author from
+  the PDF's metadata kept with the local cover, More menu with in-card confirmations. Unit 420, browser suite, sync
+  29 all passing. Not reviewed by an evaluator; no full verify or CI (standing instruction).
+- Phase 23 (Listen bar and voice notes, build log 19:05): floating listen bar with previous/next sentence and a
+  speed button, voice note strip with a decoded waveform, recording strip, Record voice note in the note editor
+  (gone from the selection menu). Unit 425, browser suite 376 + 2 skipped passing. Not reviewed; no full verify,
+  perf or CI (standing instruction).
 
 ## Next action
 
-1. Phase 21: done locally (verify PASS at 3517cbb). No evaluator pass over the N6/N7 fixes (small; the user's call).
-2. Pushed and CI green (run 39664582126, build log 16:06). Next: the user's device check, listed under Phase 21
-   in harness/USER-CHECKLIST.md (with three questions: N3 Cancel, N2 bookmark More menu, N7 rotation).
-3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–21 and the Mac WebKit fix).
+1. User: device checks for phases 21, 22 and 23 (harness/USER-CHECKLIST.md, with their questions). Phases 22 and 23
+   need a push first for a preview (ask before pushing: each push deploys a preview and runs quick CI).
+2. When the user wants to merge: run `scripts/verify.sh` on `phase-23-listen-bar-voice-notes` (it holds 19–23) and
+   the full CI run on it, since 22 and 23 ran focused checks only. Optionally an evaluator review of 22 and 23.
+3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–23 and the Mac WebKit fix
+   on `mac-webkit-baseline`).
 4. Watch: WebKit steady-scroll p95 swings 32–52 ms on this Mac, on phase 20 as much as 21 (budget 40); a miss means
    rerun perf alone and check no other worktree is running perf. One ~2.4 s freeze sample on every run (also on the
    baseline). WebKit whole-book search ~1400 ms on phase 20 and 21 alike (was ~900; not budgeted, worth a look).
+   The library's 100-book filter on WebKit has thin headroom (up to ~90 ms against 100 on phase 21 and 22 alike).
 
 ## Decisions worth remembering
 
@@ -154,18 +149,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 18:14 EDT
-- Branch: phase-21-highlight-colours
-- HEAD: 5e9c064 phase 21: full CI green recorded (run 39664582126)
-- Uncommitted files: 2
+Snapshot 2026-10-21 18:57 EDT
+- Branch: phase-23-listen-bar-voice-notes
+- HEAD: de92e8a phase 23: listen bar (previous/next sentence, speed button) and voice note strip with waveform
+- Uncommitted files: 1
 - Last verify: PASS at 2026-10-21 15:29 EDT (commit 3517cbb)
 - Recent commits:
-    5e9c064 phase 21: full CI green recorded (run 39664582126)
-    5749740 phase 21: N6, N7 fixes recorded; verify PASS
-    3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
-    bf4db8e phase 21: evaluator recheck recorded (items 1-11 pass; N6-N8 new, non-blocking)
-    8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
+    de92e8a phase 23: listen bar (previous/next sentence, speed button) and voice note strip with waveform
+    22888be wip: phase 23: listen bar with previous/next sentence and a speed button
+    b3ca96b phase 23: plan, contract and context
+    debbf88 phase 22: library shelf redesign (cards, chips, grid/list, author from metadata)
+    657eefd wip: phase 22: shelf model, author from metadata, BookCard, chips, view toggle
 - Changed files:
      M harness/HANDOFF.md
-     M harness/USER-CHECKLIST.md
 <!-- AUTO:END -->
