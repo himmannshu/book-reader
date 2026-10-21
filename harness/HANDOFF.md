@@ -15,8 +15,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
   main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
 - 2026-10-21: the user asked to merge every phase into main. main fast-forwarded to phase 23 (19–23 and the Mac
-  WebKit fix from `mac-webkit-baseline`) and was pushed, which deployed production; the push's full CI run is the
-  check (build log). Phases 19 and 20 Complete (user-checked).
+  WebKit fix from `mac-webkit-baseline`) and was pushed, which deployed production; full CI green on it (run
+  39692207309). Phases 19 and 20 Complete (user-checked).
 - Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Pushed 2026-10-21;
   full CI green (run 39664582126). Only the user's device check (contract item 13) is left.
 - Phase 22 (library shelf) built on `phase-22-library-shelf` (from 21) and phase 23 (listen bar and voice notes) on
@@ -96,8 +96,8 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 1. User: device checks for phases 21, 22 and 23 (harness/USER-CHECKLIST.md, with their questions). All three are
    pushed; previews in the Cloudflare dashboard (Deployments, newest per branch).
-2. The full CI run on main's push (build log) is the first full check of 22 and 23. Optionally an evaluator review
-   of 22 and 23.
+2. Full CI green on main (run 39692207309), the first full check of 22 and 23. Optionally an evaluator review of
+   22 and 23.
 3. Merged into main on 2026-10-21 (fast-forward, pushed; production deployed). The phase branches can be deleted on
    GitHub when the user likes; `docs-readme` still waits for its demo GIF.
 4. Watch: WebKit steady-scroll p95 swings 32–52 ms on this Mac, on phase 20 as much as 21 (budget 40); a miss means
@@ -152,17 +152,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 18:57 EDT
-- Branch: phase-23-listen-bar-voice-notes
-- HEAD: de92e8a phase 23: listen bar (previous/next sentence, speed button) and voice note strip with waveform
-- Uncommitted files: 1
+Snapshot 2026-10-21 19:32 EDT
+- Branch: main
+- HEAD: 1bef9d9 merge phases 19-23 into main (fast-forward); recorded
+- Uncommitted files: 2
 - Last verify: PASS at 2026-10-21 15:29 EDT (commit 3517cbb)
 - Recent commits:
+    1bef9d9 merge phases 19-23 into main (fast-forward); recorded
+    1c70143 phases 22-23: checklist wording
+    16c3955 phases 22-23: pushes recorded
+    8b65a10 handoff: Claude Code 2026-10-21 (phases 22 and 23 built)
     de92e8a phase 23: listen bar (previous/next sentence, speed button) and voice note strip with waveform
-    22888be wip: phase 23: listen bar with previous/next sentence and a speed button
-    b3ca96b phase 23: plan, contract and context
-    debbf88 phase 22: library shelf redesign (cards, chips, grid/list, author from metadata)
-    657eefd wip: phase 22: shelf model, author from metadata, BookCard, chips, view toggle
 - Changed files:
      M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->

@@ -2026,3 +2026,6 @@ Contract evidence from this final canonical run (contract unchanged after approv
   39690555973, 39690558149).
 - Pushing main deploys production (Cloudflare Pages) and runs the full CI suite (chromium and webkit jobs); its
   result is recorded below when it finishes.
+- Full CI on main's push: run 39692207309 (https://github.com/himmannshu/book-reader/actions/runs/39692207309),
+  head 1bef9d9: success, `verify (chromium)` and `verify (webkit)` both passed (finished 23:31 UTC). This is the
+  first full check of phases 22 and 23, which ran focused checks only before.
