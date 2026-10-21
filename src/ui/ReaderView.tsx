@@ -20,7 +20,7 @@ import {
 import { highlightColor, type Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
 import { excerptText } from '../core/share';
-import type { Note, NoteTarget } from '../core/notes';
+import { annotationRows, type NoteTarget } from '../core/notes';
 import type { PageLabels } from '../core/page-labels';
 import {
   fitModeOf,
@@ -789,19 +789,8 @@ export function ReaderView({
     });
   }
 
-  function chooseNote(note: Note) {
-    written.request(() => {
-      const target = note.target;
-      const passage =
-        target.kind === 'highlight'
-          ? highlightList.find((highlight) => highlight.id === target.highlightId)
-          : undefined;
-      const rect = passage?.rects[0];
-      if (rect) viewerRef.current?.scrollToRect(rect);
-      else viewerRef.current?.scrollToPage(note.target.pageIndex);
-      if (window.matchMedia(NARROW_QUERY).matches) setOpenPanel(null);
-      scrollerRef.current?.focus({ preventScroll: true });
-    });
+  function chooseNote(target: NoteTarget) {
+    written.request(() => goToNoteTarget(target));
   }
 
   function removeHighlight(id: string) {
@@ -919,9 +908,10 @@ export function ReaderView({
     outline.status === 'ready' ? chapterAt(pageIndex, outline.items)?.title.trim() : undefined;
   const chapter = chapterFor(currentPage);
   const currentPath = outline.status === 'ready' ? chapterPathAt(currentPage, outline.items) : null;
+  // Every highlight is a row in Notes (phase 21), with or without a note.
   const notesCount =
     written.items !== null && voice.items !== null
-      ? written.items.length + voice.items.length
+      ? annotationRows(written.items, highlightList).length + voice.items.length
       : undefined;
   const presentation = narrow ? 'sheet' : 'side';
   /** The colour of the highlight the menu is for (none over a fresh selection). */
@@ -1035,6 +1025,10 @@ export function ReaderView({
                 currentPage={currentPage}
                 onOpen={openNote}
                 onChoose={chooseNote}
+                onRecolour={(id, color) => void marked.recolour(id, color)}
+                onRemoveHighlight={removeHighlight}
+                onCopy={(passage) => void copyPassage(passage)}
+                onShare={(passage) => void sharePassage(passage)}
                 onExport={() => void exportAnnotations()}
                 exportUnavailableReason={exportUnavailableReason}
                 chapterFor={chapterFor}

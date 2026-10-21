@@ -299,14 +299,14 @@ test('Notes lists every highlight with its colour, and each row has a More menu'
   // More: Change colour.
   await rows.nth(2).getByRole('button', { name: 'More actions' }).click();
   const more = page.getByRole('menu', { name: 'More actions' });
-  for (const name of ['Add note', 'Share', 'Copy', 'Delete']) {
+  for (const name of ['Add note', 'Share', 'Copy', 'Remove highlight']) {
     await expect(more.getByRole('menuitem', { name, exact: true })).toBeVisible();
   }
   await more.getByRole('menuitemradio', { name: 'Blue' }).click();
   await expect(rows.nth(2).locator('mark')).toHaveClass(/br-mark--blue/);
   await expect(page.locator('.highlight-box--blue')).not.toHaveCount(0);
 
-  // More: Copy, then Delete.
+  // More: Copy, then Remove highlight (Delete is for a note; this highlight has none).
   await rows.nth(2).getByRole('button', { name: 'More actions' }).click();
   await page
     .getByRole('menu', { name: 'More actions' })
@@ -316,7 +316,7 @@ test('Notes lists every highlight with its colour, and each row has a More menu'
   await rows.nth(2).getByRole('button', { name: 'More actions' }).click();
   await page
     .getByRole('menu', { name: 'More actions' })
-    .getByRole('menuitem', { name: 'Delete' })
+    .getByRole('menuitem', { name: 'Remove highlight' })
     .click();
   await expect(rows).toHaveCount(2);
   await expect(page.locator('.highlight-box--blue')).toHaveCount(0);

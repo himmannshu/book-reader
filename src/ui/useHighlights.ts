@@ -219,9 +219,12 @@ export function useHighlights({
           : shown,
       );
       offeredRange.current = null;
-      // The menu stays where it was, for the new highlight.
-      setAction(shown ? { ...shown, kind: 'remove', id: highlight.id } : null);
-      document.getSelection()?.removeAllRanges();
+      // The menu stays where it was, for the new highlight, unless the reader dismissed it or
+      // selected something else while it saved (then that newer selection is left alone).
+      if (shown && shownAction.current === shown) {
+        setAction({ ...shown, kind: 'remove', id: highlight.id });
+        document.getSelection()?.removeAllRanges();
+      }
       return highlight.id;
     } catch (error) {
       report(error, 'save');
@@ -309,6 +312,8 @@ export function useHighlights({
     if (!action) return false;
     if (actionsHaveFocus()) scroller.current?.focus({ preventScroll: true });
     offeredRange.current = null;
+    // At once, so a save finishing before the next render sees the menu was dismissed.
+    shownAction.current = null;
     setAction(null);
     return true;
   }

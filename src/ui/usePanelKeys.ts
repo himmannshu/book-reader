@@ -6,8 +6,8 @@ import { useEffect, useRef, type KeyboardEvent } from 'react';
  */
 export const onTab = () => document.activeElement?.getAttribute('role') === 'tab';
 
-/** The buttons a side panel's arrow keys move between, in document order. */
-export const PANEL_ENTRY = '.panel-entry:not(:disabled)';
+/** The buttons a side panel's arrow keys move between, in document order (rows' More buttons too). */
+export const PANEL_ENTRY = ':is(.panel-entry, .row-more):not(:disabled)';
 
 /**
  * Keyboard behaviour shared by the reader's side panels. Focus moves to the first entry once the

@@ -56,7 +56,8 @@ export function ThemePicker({ theme, onChange }: { theme: Theme; onChange(theme:
   );
 }
 
-const cx = (...names: (string | false | null | undefined)[]) => names.filter(Boolean).join(' ');
+export const cx = (...names: (string | false | null | undefined)[]) =>
+  names.filter(Boolean).join(' ');
 
 export interface SegmentOption<V extends string> {
   value: V;

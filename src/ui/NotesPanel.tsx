@@ -1,9 +1,22 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import type { Highlight } from '../core/highlights';
-import { validNoteText, type Note, type NoteTarget } from '../core/notes';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import {
+  HIGHLIGHT_COLORS,
+  highlightColor,
+  type Highlight,
+  type HighlightColor,
+} from '../core/highlights';
+import { annotationRows, validNoteText, type AnnotationRow, type NoteTarget } from '../core/notes';
 import type { useNotes } from './useNotes';
 import { PANEL_ENTRY, usePanelKeys } from './usePanelKeys';
 import { Button, EmptyState } from './controls';
+import { RowMenu, type RowMenuItem } from './RowMenu';
+import { COLOR_LABELS } from './SelectionActions';
+
+/** A passage a row's Copy or Share hands on. */
+export interface RowPassage {
+  quote: string;
+  pageIndex: number;
+}
 
 function NoteEditor({
   notes,
@@ -85,6 +98,10 @@ export function NotesPanel({
   currentPage,
   onOpen,
   onChoose,
+  onRecolour,
+  onRemoveHighlight,
+  onCopy,
+  onShare,
   onExport,
   exportUnavailableReason = null,
   children,
@@ -95,7 +112,13 @@ export function NotesPanel({
   highlights: readonly Highlight[];
   currentPage: number;
   onOpen(target: NoteTarget): void;
-  onChoose(note: Note): void;
+  /** Goes to a row's place in the book. */
+  onChoose(target: NoteTarget): void;
+  /** Changes a highlight's colour (phase 21). */
+  onRecolour?(id: string, color: HighlightColor): void;
+  onRemoveHighlight?(id: string): void;
+  onCopy?(passage: RowPassage): void;
+  onShare?(passage: RowPassage): void;
   /** Downloads the book's highlights and notes as Markdown (phase 12). */
   onExport?(): void;
   /** Why export can't run yet, shown under the button; null when it can. */
@@ -108,15 +131,90 @@ export function NotesPanel({
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
   );
+  // Every highlight has a row (the user's choice), with its note when it has one.
+  const rows = useMemo(
+    () => (notes.items === null ? null : annotationRows(notes.items, highlights)),
+    [notes.items, highlights],
+  );
   useEffect(() => {
     // A confirmed deletion can remove the focused row. Do not leave focus on the document body.
     if (!notes.editor && !notes.confirmation && document.activeElement === document.body)
       ref.current?.querySelector<HTMLButtonElement>(PANEL_ENTRY)?.focus();
-  }, [notes.items, notes.editor, notes.confirmation, ref]);
+  }, [rows, notes.editor, notes.confirmation, ref]);
   const quoteFor = (target: NoteTarget) =>
     target.kind === 'highlight'
       ? highlights.find((highlight) => highlight.id === target.highlightId)?.quote
       : undefined;
+
+  function menuFor(row: AnnotationRow): RowMenuItem[] {
+    const note = row.note;
+    const busy = notes.changing || notes.unavailableReason !== null;
+    if (row.kind === 'note') {
+      const quote = quoteFor(row.note.target);
+      return [
+        {
+          label: 'Edit note',
+          icon: 'note',
+          disabled: busy,
+          onSelect: () => onOpen(row.note.target),
+        },
+        ...(onCopy
+          ? [
+              {
+                label: 'Copy',
+                icon: 'copy' as const,
+                onSelect: () =>
+                  onCopy({ quote: quote ?? row.note.text, pageIndex: row.note.target.pageIndex }),
+              },
+            ]
+          : []),
+        { label: 'Delete', icon: 'delete', disabled: busy, onSelect: () => notes.remove(row.note) },
+      ];
+    }
+    const highlight = row.highlight;
+    const passage = { quote: highlight.quote, pageIndex: highlight.pageIndex };
+    const target: NoteTarget = {
+      kind: 'highlight',
+      pageIndex: highlight.pageIndex,
+      highlightId: highlight.id,
+    };
+    const items: RowMenuItem[] = [
+      {
+        label: note ? 'Edit note' : 'Add note',
+        icon: 'note',
+        disabled: busy,
+        onSelect: () => onOpen(target),
+      },
+    ];
+    if (onRecolour)
+      for (const color of HIGHLIGHT_COLORS)
+        items.push({
+          label: COLOR_LABELS[color],
+          color,
+          checked: highlightColor(highlight) === color,
+          disabled: busy,
+          onSelect: () => onRecolour(highlight.id, color),
+        });
+    if (onShare) items.push({ label: 'Share', icon: 'share', onSelect: () => onShare(passage) });
+    if (onCopy) items.push({ label: 'Copy', icon: 'copy', onSelect: () => onCopy(passage) });
+    // Delete removes the note; Remove highlight removes the highlight (and asks about its note).
+    if (note)
+      items.push({
+        label: 'Delete',
+        icon: 'delete',
+        disabled: busy,
+        onSelect: () => notes.remove(note),
+      });
+    if (onRemoveHighlight)
+      items.push({
+        label: 'Remove highlight',
+        icon: 'highlight',
+        disabled: busy,
+        onSelect: () => onRemoveHighlight(highlight.id),
+      });
+    return items;
+  }
+
   return (
     <nav
       id={id}
@@ -150,50 +248,60 @@ export function NotesPanel({
           quote={quoteFor(notes.editor.target)}
         />
       )}
-      {notes.items?.length === 0 && (
+      {rows?.length === 0 && (
         <EmptyState icon="note" compact>
           No notes yet.
         </EmptyState>
       )}
-      {notes.items && notes.items.length > 0 && (
+      {rows && rows.length > 0 && (
         <ul aria-label="Book notes">
-          {notes.items.map((note) => (
-            <li key={note.id} className="note-row" data-note-id={note.id}>
-              <button
-                type="button"
-                className="panel-entry note-jump"
-                onClick={() => onChoose(note)}
+          {rows.map((row) => {
+            const note = row.note;
+            const pageIndex =
+              row.kind === 'note' ? row.note.target.pageIndex : row.highlight.pageIndex;
+            const quote = row.kind === 'note' ? quoteFor(row.note.target) : row.highlight.quote;
+            const color = row.kind === 'highlight' ? highlightColor(row.highlight) : undefined;
+            const chapter = chapterFor?.(pageIndex);
+            return (
+              <li
+                key={row.kind === 'note' ? row.note.id : row.highlight.id}
+                className="note-row"
+                data-note-id={note?.id}
+                data-highlight-id={row.kind === 'highlight' ? row.highlight.id : undefined}
               >
-                <strong>
-                  {note.target.kind === 'page' ? 'Page note' : 'Highlight'} · Page{' '}
-                  {note.target.pageIndex + 1}
-                  {chapterFor?.(note.target.pageIndex) && ` · ${chapterFor(note.target.pageIndex)}`}
-                </strong>
-                {quoteFor(note.target) && (
-                  <span className="note-quote">“{quoteFor(note.target)}”</span>
-                )}
-                <span className="note-text">{note.text}</span>
-              </button>
-              <div className="note-buttons">
                 <button
                   type="button"
-                  className="panel-entry"
-                  onClick={() => onOpen(note.target)}
-                  disabled={notes.changing}
+                  className="panel-entry note-jump"
+                  onClick={() =>
+                    onChoose(
+                      row.kind === 'note'
+                        ? row.note.target
+                        : { kind: 'highlight', pageIndex, highlightId: row.highlight.id },
+                    )
+                  }
                 >
-                  Edit note
+                  <strong>
+                    {row.kind === 'note' && row.note.target.kind === 'page'
+                      ? 'Page note'
+                      : 'Highlight'}{' '}
+                    · Page {pageIndex + 1}
+                    {chapter && ` · ${chapter}`}
+                  </strong>
+                  {quote && (
+                    <span className="note-quote">
+                      {color ? (
+                        <mark className={`br-mark br-mark--${color}`}>{quote}</mark>
+                      ) : (
+                        `“${quote}”`
+                      )}
+                    </span>
+                  )}
+                  {note && <span className="note-text">{note.text}</span>}
                 </button>
-                <button
-                  type="button"
-                  className="panel-entry"
-                  onClick={() => notes.remove(note)}
-                  disabled={notes.changing}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
+                <RowMenu items={menuFor(row)} />
+              </li>
+            );
+          })}
         </ul>
       )}
       {children}

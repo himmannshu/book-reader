@@ -313,11 +313,36 @@ body {
   min-width: 0;
 }
 
-.bookmark-remove {
-  width: auto;
+/* A list row's More menu (phase 21), at the row's end. */
+.note-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.note-row .note-jump {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-menu {
+  position: relative;
   flex: none;
-  font-size: 0.8rem;
+}
+
+.row-more {
   color: var(--ink-muted);
+}
+
+.row-menu__list--up {
+  top: auto;
+  bottom: calc(100% + var(--space-1));
+}
+
+.row-menu__colors {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
 }
 
 .selection-actions {
@@ -781,10 +806,6 @@ body {
   .library-filter {
     min-height: 44px;
     min-width: 44px;
-  }
-
-  .bookmark-remove {
-    min-height: 44px;
   }
 }
 

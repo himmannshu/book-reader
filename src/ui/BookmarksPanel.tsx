@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Bookmark } from '../core/bookmarks';
 import { PANEL_ENTRY, usePanelKeys } from './usePanelKeys';
 import { EmptyState } from './controls';
+import { RowMenu } from './RowMenu';
 
 export const UNSAVED_REASON = 'Bookmarks need this book saved on this device.';
 
@@ -19,7 +20,7 @@ interface BookmarksPanelProps {
   onRemove(bookmark: Bookmark): Promise<boolean>;
 }
 
-/** The book's bookmarks in page order, each with a jump and a remove button. */
+/** The book's bookmarks in page order, each with a jump and a More menu (Remove bookmark). */
 export function BookmarksPanel({ id, bookmarks, onChoose, onRemove }: BookmarksPanelProps) {
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(bookmarks.status === 'ready');
   // After a removal, focus the entry that took its place, so the keyboard isn't left nowhere.
@@ -61,20 +62,20 @@ export function BookmarksPanel({ id, bookmarks, onChoose, onRemove }: BookmarksP
                 >
                   {bookmark.label}
                 </button>
-                <button
-                  type="button"
-                  className="panel-entry bookmark-remove"
-                  aria-label={`Remove bookmark ${bookmark.label}`}
-                  title="Remove bookmark"
-                  onClick={() => {
-                    refocusAt.current = index;
-                    void onRemove(bookmark).then((removed) => {
-                      if (!removed) refocusAt.current = null;
-                    });
-                  }}
-                >
-                  Remove
-                </button>
+                <RowMenu
+                  items={[
+                    {
+                      label: 'Remove bookmark',
+                      icon: 'delete',
+                      onSelect: () => {
+                        refocusAt.current = index;
+                        void onRemove(bookmark).then((removed) => {
+                          if (!removed) refocusAt.current = null;
+                        });
+                      },
+                    },
+                  ]}
+                />
               </li>
             ))}
           </ul>

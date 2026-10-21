@@ -10,7 +10,7 @@ export type SelectionAction =
   | { kind: 'create'; left: number; top: number; above: number }
   | { kind: 'remove'; id: string; left: number; top: number; above: number };
 
-const COLOR_LABELS: Record<HighlightColor, string> = {
+export const COLOR_LABELS: Record<HighlightColor, string> = {
   yellow: 'Yellow',
   green: 'Green',
   blue: 'Blue',
