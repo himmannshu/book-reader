@@ -55,22 +55,25 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Nothing running. Phase 19 Complete (user-checked 2026-10-20: "looks good to me"; full CI run 39533163830 green).
-  `phase-19-reader-chrome` is pushed up to c240000; the record commits after it are local (every push deploys).
-  It is stacked on `mac-webkit-baseline`; neither is merged into main.
+- Phase 20 built on `phase-20-panels-and-sheets` (stacked on `phase-19-reader-chrome`; not pushed). Review: FAIL (B1)
+  → fixed → recheck FAIL (B2) → fixed → recheck 2 PASS, conditional on CI (harness/code_review/phase-20-review.md).
+  `scripts/verify.sh` PASS at d966d2b (author and evaluator). Waiting on the user's approval to push (a preview
+  deploy) and run `gh workflow run verify.yml --ref phase-20-panels-and-sheets`; then item 13 (devices,
+  USER-CHECKLIST phase 20).
+- Phase 19 Complete (user-checked), not merged; `mac-webkit-baseline` not merged either.
 - Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
-  at once. Close heavy browser tabs before verify: WebKit tests stall under load (2026-10-20, load average 82).
+  at once. Close heavy browser tabs before verify: WebKit tests stall under load.
 
 ## Next action
 
-1. User: merge `mac-webkit-baseline`, then `phase-19-reader-chrome`, into main when ready (pushing main deploys
-   production; a fast-forward works, phase 19 contains the baseline).
-2. Phase 20 (Panels and sheets): write its phase file and contract, post the plan, wait for approval. Cut its
-   branch from `phase-19-reader-chrome` (or main once merged). Consider review R1 there (a tappable sync badge).
-3. Watch: WebKit steady-scroll p95 hit its 40 ms budget once in a full local run (31 alone) and one of its three
-   samples is a ~2.4 s freeze on every run (also on the baseline: worth a look of its own); chromium first page
-   235 of 250 in two full local runs (186–190 alone); load-sensitive tests (voice-notes chromium, library-view
-   100 books, design zoomed reopen) fail now and then under full-suite load.
+1. With the user's approval: push `phase-20-panels-and-sheets`, run the full CI workflow on it, record the run.
+2. User: device checks for phase 20; merges into main (pushing main deploys production).
+3. Then phase 21 (Highlight colours): plan and contract for approval. It includes the AnnotationRow More menu
+   (Change colour, Share, Copy) deferred from phase 20 by the user's choice.
+4. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
+   freeze on every run (also on the baseline: worth a look of its own); load-sensitive tests (voice-notes chromium,
+   library-view 100 books, design zoomed reopen); WebKit whole-book search measured 1391 ms once (893 in the
+   evaluator's run; not budgeted).
 
 ## Decisions worth remembering
 
@@ -115,21 +118,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 22:56 EDT
-- Branch: phase-19-reader-chrome
-- HEAD: f58fbea phase 19: full CI green (run 39533163830); F-021 passing; device check pending
-- Uncommitted files: 5
-- Last verify: PASS at 2026-10-20 21:12 EDT (commit 7a039dc)
+Snapshot 2026-10-21 00:29 EDT
+- Branch: phase-20-panels-and-sheets
+- HEAD: d966d2b phase 20: focus goes into a panel even when it is empty; Tab stays in phone sheets
+- Uncommitted files: 3
+- Last verify: PASS at 2026-10-21 00:27 EDT (commit d966d2b)
 - Recent commits:
-    f58fbea phase 19: full CI green (run 39533163830); F-021 passing; device check pending
-    c240000 phase 19: review recheck PASS (conditional on CI); user checklist; handoff
-    7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
-    0d6bddc phase 19: verify passes locally (WebKit and perf included)
-    2abcef8 wip: phase 19: remove the unused ToolButton; NARROW_QUERY comment
+    d966d2b phase 20: focus goes into a panel even when it is empty; Tab stays in phone sheets
+    089fd2f phase 20: review fixes (chapter in note rows; sheet keeps keyboard focus; contents as lists; N3-N5)
+    9fd4434 phase 20: tabbed panel, search panel, docked and sheet panels, contents tree
+    7d953c1 phase 20: plan approved by the user
+    c978ac1 phase 20: plan, contract and context (awaiting the user's approval)
 - Changed files:
-     M PLANS.md
      M harness/HANDOFF.md
      M harness/USER-CHECKLIST.md
-     M harness/build-log.md
-     M harness/features.json
+     M harness/code_review/phase-20-review.md
 <!-- AUTO:END -->

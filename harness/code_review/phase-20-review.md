@@ -199,3 +199,58 @@ behavioural and were red first), Product depth 4, Design 4. All except contract 
   last, for Shift+Tab). Tested with plain Tab from the search field in both engines.
 - The two × buttons on the phone (search Clear and panel Close) are left for the iPhone check, as suggested.
 - `scripts/verify.sh` → PASS (build log).
+
+## Recheck 2 (evaluator, Claude Code Opus 5.5, 2026-10-21)
+
+- Rechecked: HEAD d966d2b ("focus goes into a panel even when it is empty; Tab stays in phone sheets"), diffed
+  against 089fd2f. Only `src/ui/controls.tsx` (SidePanel) changed in app code, and panels.spec gained 53 lines with
+  none removed. Same machine. Probes ran in Chromium and WebKit against the production build after verify, one
+  thing at a time.
+- `scripts/verify.sh` → **PASS**: unit 396/396; browser 328 passed + 2 skipped; sync 27/27; perf 10/10
+  (chromium first 210 ms, jump 21, p95 16.8, search 876; webkit first 142, jump 73, p95 34, search 893; canvas
+  67.1 / 67.1; blank 0 / 1.1 %). Budgets unchanged. WebKit search was 893 ms here, so the 1391 ms in the author's run
+  did not repeat.
+
+### Verdict: PASS (conditional on the full CI run, item 12, and the user's device check, item 13)
+
+### Evidence
+
+| Check | Chromium | WebKit |
+|---|---|---|
+| B2: 390 px, outline-12-pages, no bookmarks: Bookmarks tab, Escape, then More → Contents again | focus on the `Bookmarks 0` tab (in the panel) | same |
+| B2: 390 px, basic-3-pages (no outline), More → Contents | focus on the `Contents` tab | same |
+| B2: 1280 px, basic-3-pages, click Contents | focus on the `Contents` tab; Escape returns it to the toolbar's Contents | same |
+| A panel with entries still focuses its entry (Contents → `Part One`, Search → the field) | yes | yes |
+| N1: Tab / Shift+Tab ×5 in the empty Bookmarks sheet and the no-outline Contents sheet | alternates Close ↔ selected tab, never leaves | same with Option+Tab. Plain Tab and Shift+Tab also stay in |
+| N1: plain Tab / Shift+Tab ×6 from the search field (Safari default) | stays in: Clear, Close, field | stays in: Close or Clear and the field |
+| N1: plain Tab / Shift+Tab ×8 from the note editor, with a draft typed | goes through Save, Cancel, Record, Export, Close, the Notes tab, Add note and the textarea, all inside. The draft is kept | stays inside (Save, Cancel, Close, the Notes tab, the textarea, Export). The draft is kept |
+| Arrow keys on the tabs still keep focus on the tabs (Contents → Bookmarks → Notes) | yes | yes |
+| Earlier probes (B1 rows, focus after scrim, Close and drag, Cmd+F and Escape on phone, last tab remembered, 320/390 px with no sideways scroll, resize across 720 px, docked panel) | 27/27 pass, unchanged results | same |
+
+Contract item 8 → **PASS**. Items 1–11 all pass now. Item 12 is pending: local verify passes, but the branch is
+not pushed and has no CI run. Item 13 (device check) is pending.
+
+### Rubric after Recheck 2
+
+| Criterion | Score | Threshold |
+|---|---|---|
+| Contract fidelity | 5 (items 1–11 observed. Items 12 and 13 are pending by process: CI needs a push the user must approve, and the device check is the user's) | 5 |
+| Functionality | 4 | 4 |
+| Robustness | 4 | 4 |
+| Code quality | 4 | 3 |
+| Test quality | 4 | 3 |
+| Product depth | 4 | 3 |
+| Design | 4 | 3 |
+
+### Still open (non-blocking)
+
+- Run CI on the branch (`gh workflow run verify.yml --ref phase-20-panels-and-sheets`, after the user approves the
+  push) and do the user's device check. During it, look at the sheet height and the two × buttons in the search
+  sheet on the iPhone.
+- Code note: SidePanel's focus effect runs only when `title` changes. If a tab's content shows a focusable entry
+  later (for example, the outline finishing loading after the panel opened), the content's own effect does not take
+  focus from a tab (`onTab()`). In that window, focus stays on the selected tab instead of moving to the current
+  chapter. I could not trigger it, because the outline is loaded long before a person can open the panel. Focus
+  stays inside the panel either way.
+- The WebKit plain-Tab cycle visits the panel's buttons in an uneven order: the wrap sends focus to the first or
+  last stop, and Safari's own Tab then skips buttons. It never leaves the sheet, which is what the contract asks for.
