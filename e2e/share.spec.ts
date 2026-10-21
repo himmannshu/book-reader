@@ -27,7 +27,7 @@ async function highlightAndChoose(page: Page, words: string) {
     document.getSelection()?.removeAllRanges();
     document.getSelection()?.addRange(range);
   }, words);
-  await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+  await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
   await expect(page.locator('.highlight-box')).toHaveCount(1);
   const box = await page.locator('.highlight-box').first().boundingBox();
   if (!box) throw new Error('no highlight');

@@ -148,12 +148,12 @@ test.describe('fading', () => {
       document.getSelection()?.removeAllRanges();
       document.getSelection()?.addRange(range);
     });
-    await expect(page.getByRole('button', { name: 'Highlight', exact: true })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Yellow', exact: true })).toBeVisible();
     await wheel(page, 200);
     await page.waitForTimeout(300);
     await expect(toolbar(page)).toHaveAttribute('data-hidden', 'false');
     await page.evaluate(() => document.getSelection()?.removeAllRanges());
-    await expect(page.getByRole('button', { name: 'Highlight', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: 'Yellow', exact: true })).toHaveCount(0);
 
     await page.setViewportSize({ width: 390, height: 760 });
     await toolbar(page).getByRole('button', { name: 'More' }).click();

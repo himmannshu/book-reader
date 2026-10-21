@@ -483,7 +483,7 @@ test.describe('opening the right tab', () => {
       document.getSelection()?.removeAllRanges();
       document.getSelection()?.addRange(range);
     });
-    await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+    await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
     const box = await page.locator('.highlight-box').first().boundingBox();
     if (!box) throw new Error('no highlight');
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

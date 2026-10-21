@@ -27,6 +27,19 @@ function entry(page: Page, label: string) {
   return panel(page).getByRole('button', { name: label, exact: true });
 }
 
+/** A bookmark row's More button (phase 21: Remove bookmark is in its menu). */
+function more(page: Page, label: string) {
+  return panel(page)
+    .locator('.bookmark-row')
+    .filter({ has: page.getByRole('button', { name: label, exact: true }) })
+    .getByRole('button', { name: 'More actions' });
+}
+
+const removeItem = (page: Page) =>
+  page
+    .getByRole('menu', { name: 'More actions' })
+    .getByRole('menuitem', { name: 'Remove bookmark' });
+
 /** The labels listed in the Bookmarks panel, top to bottom. */
 async function listed(page: Page): Promise<string[]> {
   return panel(page).locator('.bookmark-jump').allTextContents();
@@ -130,7 +143,8 @@ test('a removed bookmark stays removed after a reload', async ({ page }) => {
 
   // From the panel.
   await openPanel(page);
-  await panel(page).getByRole('button', { name: 'Remove bookmark Page 5 · Chapter 2' }).click();
+  await more(page, 'Page 5 · Chapter 2').click();
+  await removeItem(page).click();
   await expect.poll(() => listed(page)).toEqual(['Page 2 · Chapter 1', 'Page 9 · Chapter 3']);
   // By un-toggling the page in view.
   await scrollToPage(page, 8);
@@ -176,11 +190,9 @@ test('Bookmarks works from the keyboard, and Escape returns focus to the button'
   await page.keyboard.press('Enter');
   await keyboardToTab(page, browserName, 'Bookmarks');
   await expect(entry(page, 'Page 2 · Chapter 1')).toBeFocused();
-  // Arrow keys move through each entry and its Remove button, in order.
+  // Arrow keys move through each entry and its More button, in order.
   await page.keyboard.press('ArrowDown');
-  await expect(
-    panel(page).getByRole('button', { name: 'Remove bookmark Page 2 · Chapter 1' }),
-  ).toBeFocused();
+  await expect(more(page, 'Page 2 · Chapter 1')).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await expect(entry(page, 'Page 9 · Chapter 3')).toBeFocused();
   await page.keyboard.press('Enter');
@@ -205,7 +217,9 @@ test('removing a bookmark with the keyboard keeps focus in the list', async ({
   await keyboardToTab(page, browserName, 'Bookmarks');
   await expect(entry(page, 'Page 2 · Chapter 1')).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('Enter'); // Remove "Page 2 · Chapter 1"
+  await page.keyboard.press('Enter'); // More, for "Page 2 · Chapter 1"
+  await expect(removeItem(page)).toBeFocused();
+  await page.keyboard.press('Enter'); // Remove bookmark
   await expect(entry(page, 'Page 9 · Chapter 3')).toBeFocused();
   expect(await listed(page)).toEqual(['Page 9 · Chapter 3']);
 });

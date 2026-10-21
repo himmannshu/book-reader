@@ -259,7 +259,7 @@ test.describe('on the page', () => {
         .evaluate((span) => getComputedStyle(span, '::selection').backgroundColor);
       expect(selection).toBe(await token(page, 'selection'));
     }
-    await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+    await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
     const yellow = await token(page, 'hl-yellow');
     await expect(page.locator('.highlight-box').first()).toHaveCSS('background-color', yellow);
 

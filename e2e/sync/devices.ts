@@ -128,6 +128,6 @@ export async function highlightText(page: Page, text: string) {
     document.getSelection()?.removeAllRanges();
     document.getSelection()?.addRange(range);
   });
-  await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+  await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
   await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
 }

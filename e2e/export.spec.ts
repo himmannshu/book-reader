@@ -33,7 +33,7 @@ async function highlightWords(page: Page, pageIndex: number, text: string) {
     { pageIndex, text },
   );
   const before = await page.locator('.highlight-box').count();
-  await page.getByRole('button', { name: 'Highlight', exact: true }).click();
+  await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
   await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
 }
 

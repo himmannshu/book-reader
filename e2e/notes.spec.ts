@@ -16,6 +16,21 @@ const editor = (page: Page) => page.getByRole('textbox', { name: 'Note text' });
 const row = (page: Page, text: string) =>
   page.locator('.note-row').filter({ has: page.locator('.note-text', { hasText: text }) });
 
+/** Runs one of a row's actions, which live in its More menu (phase 21). */
+async function rowAction(page: Page, text: string, name: string, touch = false) {
+  const more = row(page, text).getByRole('button', { name: 'More actions' });
+  const item = page
+    .getByRole('menu', { name: 'More actions' })
+    .getByRole('menuitem', { name, exact: true });
+  if (touch) {
+    await more.tap();
+    await item.tap();
+  } else {
+    await more.click();
+    await item.click();
+  }
+}
+
 async function stored<T>(page: Page, store = 'notes'): Promise<T[]> {
   return page.evaluate(async (name) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -86,7 +101,7 @@ async function highlight(
     document.getSelection()?.removeAllRanges();
     document.getSelection()?.addRange(range);
   }, to);
-  const button = page.getByRole('button', { name: 'Highlight', exact: true });
+  const button = page.getByRole('radio', { name: 'Yellow', exact: true });
   if (touch) await button.tap();
   else await button.click();
   await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
@@ -223,7 +238,7 @@ test('one note per target; blank edits and Cancel preserve the saved multiline U
   await expect(page.getByRole('button', { name: 'Save note' })).toBeDisabled();
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(await stored<Note>(page)).toEqual([original]);
-  await row(page, 'Original').getByRole('button', { name: 'Edit note' }).click();
+  await rowAction(page, 'Original', 'Edit note');
   await save(page, 'Edited\n中文 🌻');
   const records = await stored<Note>(page);
   expect(records).toHaveLength(1);
@@ -243,10 +258,10 @@ test('note-only deletion can cancel, confirms permanently, and keeps its highlig
   page,
 }) => {
   await passageNote(page, 'Passage to delete');
-  await row(page, 'Passage to delete').getByRole('button', { name: 'Delete', exact: true }).click();
+  await rowAction(page, 'Passage to delete', 'Delete');
   await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel' }).click();
   await expect(row(page, 'Passage to delete')).toHaveCount(1);
-  await row(page, 'Passage to delete').getByRole('button', { name: 'Delete', exact: true }).click();
+  await rowAction(page, 'Passage to delete', 'Delete');
   await page
     .getByRole('alertdialog')
     .getByRole('button', { name: 'Delete note', exact: true })
@@ -256,7 +271,9 @@ test('note-only deletion can cancel, confirms permanently, and keeps its highlig
   expect(await stored<Highlight>(page, 'highlights')).toHaveLength(1);
   await reopen(page);
   await openPanel(page, 'Notes');
-  await expect(notesPanel(page)).toContainText('No notes yet.');
+  // The highlight keeps its row in Notes (phase 21: every highlight is listed), without a note.
+  await expect(notesPanel(page).locator('.note-row[data-highlight-id]')).toHaveCount(1);
+  await expect(notesPanel(page).locator('.note-text')).toHaveCount(0);
   await expect(page.locator('.highlight-box')).toHaveCount(1);
 });
 
@@ -294,14 +311,14 @@ test(
   async ({ page }) => {
     await pageNote(page, 'Saved page');
     await passageNote(page, 'Saved passage');
-    await row(page, 'Saved page').getByRole('button', { name: 'Edit note' }).click();
+    await rowAction(page, 'Saved page', 'Edit note');
     await editor(page).fill('Draft retained');
     for (const navigate of [
       // Closing the panel, and switching to another of its tabs (phase 20).
       () => pressTool(page, 'Contents'),
       () => page.getByRole('tab', { name: 'Contents' }).click(),
       () => page.keyboard.press('Escape'),
-      () => row(page, 'Saved passage').getByRole('button', { name: 'Edit note' }).click(),
+      () => rowAction(page, 'Saved passage', 'Edit note'),
       () => row(page, 'Saved passage').locator('.note-jump').click(),
       // Opening a file is in the library only (phase 19), so leaving for it is the guarded step.
       () => page.getByRole('button', { name: 'Library', exact: true }).click(),
@@ -370,15 +387,25 @@ test('keyboard newline, save, cancel/delete confirmation and jump keep usable fo
   await expect(editor(page)).toHaveCount(0);
   await page.keyboard.press('ArrowDown');
   await expect(row(page, 'Line one').locator('.note-jump')).toBeFocused();
+  // The row's actions are in its More menu (phase 21): the arrow keys reach its button.
+  const more = row(page, 'Line one').getByRole('button', { name: 'More actions' });
+  await page.keyboard.press('ArrowDown');
+  await expect(more).toBeFocused();
+  await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('reader')).toBeFocused();
-  await row(page, 'Line one').getByRole('button', { name: 'Delete', exact: true }).focus();
+  await more.focus();
+  await page.keyboard.press('Enter');
+  const menu = page.getByRole('menu', { name: 'More actions' });
+  await expect(menu.getByRole('menuitem', { name: 'Edit note' })).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(menu.getByRole('menuitem', { name: 'Delete' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('alertdialog').getByRole('button', { name: 'Cancel' })).toBeFocused();
   await page.keyboard.press('Escape');
-  await expect(
-    row(page, 'Line one').getByRole('button', { name: 'Delete', exact: true }),
-  ).toBeFocused();
+  await expect(more).toBeFocused();
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('End');
   await page.keyboard.press('Enter');
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Enter');
@@ -527,7 +554,7 @@ for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
       await tapPanel(page, 'Notes');
       await page.getByRole('button', { name: 'Add note to this page' }).tap();
       await save(page, 'Touch page', true);
-      await row(page, 'Touch page').getByRole('button', { name: 'Edit note' }).tap();
+      await rowAction(page, 'Touch page', 'Edit note', true);
       await save(page, 'Touch page edited', true);
       await row(page, 'Touch page edited').locator('.note-jump').tap();
       await expect(page.getByTestId('reader')).toBeFocused();
@@ -538,7 +565,7 @@ for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
       await clickHighlight(page, true);
       await page.getByRole('button', { name: 'Add note', exact: true }).tap();
       await save(page, 'Touch passage', true);
-      await row(page, 'Touch passage').getByRole('button', { name: 'Edit note' }).tap();
+      await rowAction(page, 'Touch passage', 'Edit note', true);
       const screenshot = testInfo.outputPath('notes-editor.png');
       await page.screenshot({ path: screenshot });
       await testInfo.attach('Notes editor on touch viewport', {
@@ -554,7 +581,7 @@ for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
       await expect(page.getByTestId('reader')).toBeFocused();
       if (!(await notesPanel(page).count())) await tapPanel(page, 'Notes');
       for (const text of ['Touch passage edited', 'Touch page edited']) {
-        await row(page, text).getByRole('button', { name: 'Delete', exact: true }).tap();
+        await rowAction(page, text, 'Delete', true);
         await page.getByRole('alertdialog').getByRole('button', { name: 'Delete note' }).tap();
         await expect(row(page, text)).toHaveCount(0);
       }

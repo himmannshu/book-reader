@@ -148,7 +148,7 @@ function expectAligned(actual: Box[], expected: Box[], tolerance = 2) {
 }
 
 function highlightButton(page: Page) {
-  return page.getByRole('button', { name: 'Highlight', exact: true });
+  return page.getByRole('radio', { name: 'Yellow', exact: true });
 }
 
 function removeButton(page: Page) {
@@ -178,6 +178,10 @@ async function highlight(page: Page, from: Spot, to?: Spot) {
   await selectText(page, from, to);
   await highlightButton(page).click();
   await expect.poll(() => page.locator('.highlight-box').count()).toBeGreaterThan(before);
+  // The menu stays for the new highlight (phase 21); close it, as a reader moving on would.
+  await expect(removeButton(page)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(removeButton(page)).toHaveCount(0);
 }
 
 /** Resizes the window and waits until the pages are laid out and their text rebuilt at the new size. */
@@ -229,7 +233,9 @@ test('selecting text and pressing Highlight highlights exactly that text', async
   await expect(page.locator('.highlight-box')).toHaveCount(1);
   expectAligned(await highlightBoxes(page), expected);
   expect(await page.evaluate(() => document.getSelection()?.isCollapsed)).toBe(true);
-  await expect(highlightButton(page)).toHaveCount(0);
+  // The menu stays for the new highlight (phase 21), its colour ringed.
+  await expect(highlightButton(page)).toHaveAttribute('aria-checked', 'true');
+  await expect(removeButton(page)).toBeVisible();
 });
 
 test('repeated presses while saving create only one highlight', async ({ page }) => {
@@ -240,7 +246,7 @@ test('repeated presses while saving create only one highlight', async ({ page })
     button.click();
     button.click();
   });
-  await expect(highlightButton(page)).toHaveCount(0);
+  await expect(removeButton(page)).toBeVisible();
   expect(await stored(page)).toHaveLength(1);
   await expect(page.locator('.highlight-box')).toHaveCount(1);
 
@@ -341,7 +347,8 @@ for (const deviceName of ['iPhone 13', 'iPad (gen 7)']) {
       await expect(page.locator('.highlight-box')).toHaveCount(1);
       expect((await stored(page)).map((h) => h.quote)).toEqual([words.text]);
       expectAligned(await highlightBoxes(page), await textBoxes(page, words));
-      await expect(highlightButton(page)).toHaveCount(0);
+      // The menu stays for the new highlight (phase 21), its colour ringed.
+      await expect(highlightButton(page)).toHaveAttribute('aria-checked', 'true');
 
       await reloadAndReopen(page);
       await expect(page.locator('.highlight-box')).toHaveCount(1);
@@ -470,7 +477,7 @@ test('stored highlights hold PDF points and the quote, whatever the window size'
   expect(records).toHaveLength(2);
   for (const record of records) {
     expect(Object.keys(record).sort()).toEqual(
-      ['bookId', 'createdAt', 'id', 'pageIndex', 'quote', 'rects'].sort(),
+      ['bookId', 'color', 'createdAt', 'id', 'pageIndex', 'quote', 'rects'].sort(),
     );
     expect(record.pageIndex).toBe(0);
     expect(record.quote).toBe(charlie.text);
@@ -504,8 +511,9 @@ test('clicking a highlight offers Remove; only pressing it removes the highlight
   await expect(removeButton(page)).toHaveCount(0);
   await clickHighlight(page, 0);
   await expect(removeButton(page)).toBeVisible();
-  const [alpha] = await textBoxes(page, { page: 0, text: 'Alpha one' });
-  await page.mouse.click((alpha?.right ?? 0) + 40, alpha?.top ?? 0);
+  // Below the highlight: the menu sits above it (phase 21).
+  const [charlie] = await textBoxes(page, { page: 0, text: 'Charlie three' });
+  await page.mouse.click((charlie?.right ?? 0) + 40, charlie?.top ?? 0);
   await expect(removeButton(page)).toHaveCount(0);
   await expect(page.locator('.highlight-box')).toHaveCount(2);
 
@@ -577,6 +585,11 @@ test('Highlight and Remove work from the keyboard; Escape hides them', async ({ 
   await highlightButton(page).focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.highlight-box')).toHaveCount(1);
+  // The menu stays for the new highlight (phase 21); Escape hides it and focus goes to the pages.
+  await expect(highlightButton(page)).toHaveAttribute('aria-checked', 'true');
+  await expect(highlightButton(page)).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(removeButton(page)).toHaveCount(0);
   await expect(page.getByTestId('reader')).toBeFocused();
 
   await clickHighlight(page);
