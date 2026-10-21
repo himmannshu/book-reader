@@ -1731,3 +1731,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
   (heavy-600-v1: chromium first 235 ms, jump 26, p95 16.8, canvas 67.1, search 874; webkit first 150, jump 83, p95 31
   [samples 31, 2419, 30], canvas 67.1, search 914; blank 0 / 1 %). Budgets unchanged. Chromium first page 235 against
   250 is closer than this branch's run 2 (186) and the baseline (194): for the reviewer to check.
+
+### 2026-10-20 21:10 EDT | Phase 19 | Claude Code (Opus 5.5) | Review FAIL (B1, B2) fixed; verify PASS
+- Evaluator: harness/code_review/phase-19-review.md, FAIL: B1 (320 px: the sync badge covered Library), B2 (focus
+  after a click outside Reading settings); N1–N8. Fixes and answers in its author appendix.
+- New and changed tests: reader-chrome sync badge (404/401/500, 320 px Library tap), highlight and More menus hold
+  the toolbar, zoom focus at 25 %, reopen announcement, outside-click focus; library-view covers test now logs cover
+  writes (stricter than the original); reading-state step unit test. Mutation checks: B1 test fails without the CSS
+  fix; holds test fails without the highlight-menu hold; covers test fails if the cover worker runs while reading.
+- `scripts/verify.sh` → PASS: unit 392; browser 295 passed + 1 skipped; sync 27; perf 10 (chromium first 235 ms,
+  jump 27, p95 16.7, canvas 67.1, search 877; webkit first 159, jump 54, p95 40 [samples 40, 2429, 31], canvas 67.1,
+  search 888; blank 0 / 1.1 %). Budgets unchanged. WebKit p95 sits on its budget and chromium first page at 235
+  of 250 in full runs (190 when perf runs alone, reviewer): watch both.

@@ -140,6 +140,30 @@ test.describe('fading', () => {
     await expect(toolbar(page)).toHaveAttribute('data-hidden', 'false');
   });
 
+  test('never hides while the highlight menu or the More menu is open', async ({ page }) => {
+    const first = page.locator('[data-page-index="0"] .textLayer span').first();
+    await expect(first).toBeAttached();
+    await first.evaluate((span) => {
+      const range = document.createRange();
+      range.selectNodeContents(span);
+      document.getSelection()?.removeAllRanges();
+      document.getSelection()?.addRange(range);
+    });
+    await expect(page.getByRole('button', { name: 'Highlight', exact: true })).toBeVisible();
+    await wheel(page, 200);
+    await page.waitForTimeout(300);
+    await expect(toolbar(page)).toHaveAttribute('data-hidden', 'false');
+    await page.evaluate(() => document.getSelection()?.removeAllRanges());
+    await expect(page.getByRole('button', { name: 'Highlight', exact: true })).toHaveCount(0);
+
+    await page.setViewportSize({ width: 390, height: 760 });
+    await toolbar(page).getByRole('button', { name: 'More' }).click();
+    await expect(page.getByRole('menu', { name: 'More' })).toBeVisible();
+    await wheel(page);
+    await page.waitForTimeout(300);
+    await expect(toolbar(page)).toHaveAttribute('data-hidden', 'false');
+  });
+
   test('a panel opening brings a faded toolbar back', async ({ page }) => {
     await wheel(page);
     await expect(toolbar(page)).toHaveAttribute('data-hidden', 'true');
@@ -217,6 +241,20 @@ test.describe('Reading settings', () => {
     await expect(value).toHaveText(`${widthPercent}%`);
   });
 
+  test('the zoom buttons keep keyboard focus at the smallest and largest zoom', async ({
+    page,
+  }) => {
+    await settingsButton(page).click();
+    const out = settings(page).getByRole('button', { name: 'Zoom out' });
+    await out.focus();
+    for (let i = 0; i < 10; i++) await page.keyboard.press('Enter');
+    await expect(settings(page).getByTestId('zoom-value')).toHaveText('25%');
+    await expect(out).toHaveAttribute('aria-disabled', 'true');
+    await expect(out).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(settings(page).getByTestId('zoom-value')).toHaveText('25%');
+  });
+
   test('closes with Escape or a click outside, and focus goes back to its button', async ({
     page,
   }) => {
@@ -227,12 +265,21 @@ test.describe('Reading settings', () => {
     await expect(settingsButton(page)).toBeFocused();
     await expect(settingsButton(page)).toHaveAttribute('aria-expanded', 'false');
 
+    // A click on something that takes no focus (the title): focus goes back to the button.
+    await settingsButton(page).click();
+    await expect(settings(page)).toBeVisible();
+    await page.getByTestId('book-title').click();
+    await expect(settings(page)).toHaveCount(0);
+    await expect(settingsButton(page)).toBeFocused();
+
+    // A click on the pages: focus stays in the pages, where the click put it.
     await settingsButton(page).click();
     await expect(settings(page)).toBeVisible();
     const box = await page.getByTestId('reader').boundingBox();
     if (!box) throw new Error('no reader');
     await page.mouse.click(box.x + 20, box.y + box.height - 20);
     await expect(settings(page)).toHaveCount(0);
+    await expect(page.getByTestId('reader')).toBeFocused();
   });
 });
 
@@ -252,6 +299,23 @@ test.describe('page pill', () => {
     await expect.poll(() => pillText(page)).toBe('Page 2 of 4 · 50%');
     await expect(pill(page)).toHaveAttribute('data-visible', 'false', { timeout: 3000 });
     await expect(page.getByTestId('page-announcement')).toHaveText('Page 2 of 4 · 50%');
+  });
+
+  test('announces the page a book reopens at, before any scrolling', async ({ page }) => {
+    await importBook(page, 'text-4-pages.pdf');
+    await page.getByTestId('reader').evaluate((reader) => {
+      const slot = reader.querySelector<HTMLElement>('[data-page-index="2"]');
+      reader.scrollTop = slot?.offsetTop ?? 0;
+    });
+    await expect(page.getByTestId('page-announcement')).toHaveText('Page 3 of 4 · 75%');
+    await toolbar(page).getByRole('button', { name: 'Library' }).click();
+    await page
+      .getByRole('list', { name: 'Your books' })
+      .getByRole('button', { name: 'text-4-pages', exact: true })
+      .click();
+    await expect(pageSlot(page, 2)).toHaveAttribute('data-state', 'rendered');
+    // At once, not only once the opening scroll has settled.
+    expect(await page.getByTestId('page-announcement').textContent()).toBe('Page 3 of 4 · 75%');
   });
 
   test('uses the book’s own page labels', async ({ page }) => {
@@ -319,5 +383,61 @@ test.describe('phones', () => {
     expect(Math.round((box?.x ?? 1) + (box?.width ?? 0))).toBe(390);
     expect(Math.round(box?.x ?? 1)).toBe(0);
     expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(760);
+  });
+});
+
+// Sync in the reader (phase 19): a badge only when sync needs the reader. /api/sync is stubbed;
+// the service worker is blocked so the stub sees every request.
+test.describe('sync status in the reader', () => {
+  test.use({ serviceWorkers: 'block' });
+  const badge = (page: Page) => toolbar(page).locator('.br-badge');
+
+  test('says when sync needs the reader, and stays out of the way otherwise', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    // Local previews have no sync (404): nothing shows.
+    await page.goto('/');
+    await importBook(page, 'text-4-pages.pdf');
+    await expect(badge(page)).toHaveCount(0);
+
+    for (const [status, words] of [
+      [401, 'Sign in to sync'],
+      [500, 'Sync failed'],
+    ] as const) {
+      await page.route('**/api/sync', (route) => route.fulfill({ status, body: '' }));
+      await page.reload();
+      await page
+        .getByRole('list', { name: 'Your books' })
+        .getByRole('button', { name: 'text-4-pages', exact: true })
+        .click();
+      await expect(badge(page)).toHaveText(words);
+      await expect(badge(page)).toBeVisible();
+      await page.unroute('**/api/sync');
+    }
+  });
+
+  test('on a 320 px phone the badge leaves the Library button free to tap', async ({ page }) => {
+    await page.route('**/api/sync', (route) => route.fulfill({ status: 401, body: '' }));
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.goto('/');
+    await importBook(page, 'text-4-pages.pdf');
+    await expect(badge(page)).toBeVisible();
+    const hit = await toolbar(page)
+      .getByRole('button', { name: 'Library' })
+      .evaluate((button) => {
+        const box = button.getBoundingClientRect();
+        const there = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+        return there === button || button.contains(there);
+      });
+    expect(hit).toBe(true);
+    expect(
+      await page.getByTestId('book-title').evaluate((title) => title.getBoundingClientRect().width),
+    ).toBeGreaterThan(0);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+    await toolbar(page).getByRole('button', { name: 'Library' }).click();
+    await expect(page.getByRole('list', { name: 'Your books' })).toBeVisible();
   });
 });

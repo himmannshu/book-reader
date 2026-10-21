@@ -67,7 +67,7 @@ export function SyncStatusLine({
             aria-hidden="true"
           >
             <Icon name={status.state === 'offline' ? 'offline' : 'alert'} size={13} />
-            {badge}
+            <span className="br-badge__text">{badge}</span>
           </span>
         )}
       </span>

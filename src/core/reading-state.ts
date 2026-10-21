@@ -20,8 +20,11 @@ export const MAX_ZOOM = ZOOM_LEVELS[ZOOM_LEVELS.length - 1] ?? 400;
 
 /** CSS pixels per PDF point at 100%: a point is 1/72 inch and a CSS pixel 1/96 inch. */
 const ACTUAL_SIZE_SCALE = 96 / 72;
-/** Zooms this close to a level count as that level when stepping. */
-const LEVEL_TOLERANCE = 0.5;
+/**
+ * Stepping skips a level within this share of the zoom shown: from fit page at 66.4%, Zoom in
+ * goes to 75%, not to a 67% that looks like nothing happened (phase 19 review).
+ */
+const STEP_TOLERANCE = 0.02;
 
 export function scaleForPercent(percent: number): number {
   return (percent / 100) * ACTUAL_SIZE_SCALE;
@@ -34,12 +37,12 @@ export function zoomPercent(scale: number): number {
 
 /** The next level above the zoom now shown, or null at the largest. */
 export function zoomIn(currentPercent: number): number | null {
-  return ZOOM_LEVELS.find((level) => level > currentPercent + LEVEL_TOLERANCE) ?? null;
+  return ZOOM_LEVELS.find((level) => level > currentPercent * (1 + STEP_TOLERANCE)) ?? null;
 }
 
 /** The next level below the zoom now shown, or null at the smallest. */
 export function zoomOut(currentPercent: number): number | null {
-  return ZOOM_LEVELS.findLast((level) => level < currentPercent - LEVEL_TOLERANCE) ?? null;
+  return ZOOM_LEVELS.findLast((level) => level < currentPercent * (1 - STEP_TOLERANCE)) ?? null;
 }
 
 /** The level closest to a zoom reached by pinching (closest by ratio, so 118% → 125%). */

@@ -1194,12 +1194,12 @@ body:has(.player-bar, .search-bar) .br-toast {
   pointer-events: none;
 }
 
+/* The tools keep their width; only the title gives way (phase 19 review B1). */
 .br-toolbar__lead,
 .br-toolbar__trail {
   display: flex;
   align-items: center;
   gap: 2px;
-  min-width: 0;
 }
 
 .br-toolbar__trail {
@@ -1304,6 +1304,22 @@ body:has(.player-bar, .search-bar) .br-toast {
 .br-badge--danger {
   background: var(--danger-soft);
   color: var(--danger);
+}
+
+/* On phones the toolbar has no room for the words: the badge keeps its icon (the words are
+   announced, and are in its tooltip). */
+.br-toolbar.is-compact .br-badge {
+  height: 28px;
+  padding: 0 7px;
+}
+
+.br-toolbar.is-compact .br-badge__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* Segmented control: the selected option is lifted and edged, not told apart by colour alone. */
@@ -1414,6 +1430,11 @@ body:has(.player-bar, .search-bar) .br-toast {
   justify-content: space-between;
 }
 
+.br-zoom .br-iconbtn[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .br-zoom__val {
   font-size: 17px;
   font-weight: 600;
@@ -1430,6 +1451,14 @@ body:has(.player-bar, .search-bar) .br-toast {
     padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     box-shadow: var(--shadow-sheet);
+  }
+}
+
+/* With the Reading settings sheet up, messages show under the toolbar, not over the sheet. */
+@media (max-width: 699px) {
+  body:has(.br-settings) .br-toast {
+    top: calc(env(safe-area-inset-top) + var(--toolbar-height) + var(--space-2));
+    bottom: auto;
   }
 }
 

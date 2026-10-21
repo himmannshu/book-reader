@@ -81,12 +81,13 @@ export function ReadingSettings({
       <div className="br-settings__group">
         <h3 className="caption br-settings__label">Zoom</h3>
         <div className="br-zoom">
+          {/* aria-disabled, not disabled, at the ends: a disabled button would drop keyboard focus. */}
           <IconButton
             icon="zoom-out"
             label="Zoom out"
             variant="filled"
-            disabled={!canZoomOut}
-            onClick={onZoomOut}
+            aria-disabled={!canZoomOut}
+            onClick={() => canZoomOut && onZoomOut()}
           />
           <span className="br-zoom__val" data-testid="zoom-value" aria-live="polite">
             {Math.round(zoomPercent)}%
@@ -95,8 +96,8 @@ export function ReadingSettings({
             icon="zoom-in"
             label="Zoom in"
             variant="filled"
-            disabled={!canZoomIn}
-            onClick={onZoomIn}
+            aria-disabled={!canZoomIn}
+            onClick={() => canZoomIn && onZoomIn()}
           />
         </div>
       </div>

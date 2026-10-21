@@ -253,17 +253,49 @@ test('no cover is drawn while a book is open, even when opening one book after a
   page,
 }) => {
   await importBook(page, 'basic-3-pages.pdf');
+  // Every cover written from now on, with its book and when.
+  await page.evaluate(() => {
+    const log: { bookId: string; at: number }[] = [];
+    (window as unknown as { coverWrites: typeof log }).coverWrites = log;
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (this: IDBObjectStore, value, key) {
+      if (this.name === 'covers') {
+        log.push({ bookId: (value as { bookId: string }).bookId, at: performance.now() });
+      }
+      return put.call(this, value, key);
+    };
+  });
   // Open the next book right away, as when importing several in a row. Open PDF is in the library
   // only (phase 19), so this passes through it, and the first book may draw its cover as it
-  // closes (phase 11). Nothing more may be drawn once the next book is open.
+  // closes (phase 11). The book being opened never gets one while it is open, and nothing at all
+  // is drawn once it shows.
   await openFixture(page, 'text-4-pages.pdf');
   await expect(page.getByRole('status')).toHaveText('Saved on this device.');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  const whenOpened = await storedCovers(page);
-  expect(whenOpened).toBeLessThanOrEqual(1);
+  const shownAt = await page.evaluate(() => performance.now());
   // Longer than the worker's idle delay: nothing may happen while reading.
   await page.waitForTimeout(2500);
-  expect(await storedCovers(page)).toBe(whenOpened);
+  const writes = await page.evaluate(
+    () => (window as unknown as { coverWrites: { bookId: string; at: number }[] }).coverWrites,
+  );
+  const ids = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('book-reader');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const books = await new Promise<{ id: string; title: string }[]>((resolve, reject) => {
+      const request = db.transaction('books').objectStore('books').getAll();
+      request.onsuccess = () => resolve(request.result as { id: string; title: string }[]);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return Object.fromEntries(books.map((book) => [book.title, book.id]));
+  });
+  expect(writes.filter((write) => write.at >= shownAt)).toEqual([]);
+  expect(writes.map((write) => write.bookId).filter((id) => id !== ids['basic-3-pages'])).toEqual(
+    [],
+  );
 
   await backToLibrary(page);
   await expect.poll(() => storedCovers(page), { timeout: 15_000 }).toBe(2);

@@ -166,7 +166,10 @@ export function ReaderView({
   /** The zoom now shown, in Width and Page modes too (Reading settings shows it). */
   const [shownPercent, setShownPercent] = useState(100);
   /** The page pill shows while the pages scroll; `settledPage` is the page it last settled on. */
-  const [pill, setPill] = useState({ visible: false, settledPage: 0 });
+  const [pill, setPill] = useState({
+    visible: false,
+    settledPage: initialState?.position.pageIndex ?? 0,
+  });
   const [pageLabels, setPageLabels] = useState<PageLabels>(null);
   /** The toolbar fades while the reader scrolls (phase 19). */
   const [toolbarHidden, setToolbarHidden] = useState(false);
@@ -342,9 +345,23 @@ export function ReaderView({
     setSettingsOpen(!settingsOpen);
   }
 
-  function closeSettings(returnFocus: boolean) {
+  /**
+   * Closes Reading settings and gives focus back to its button. After a click outside, focus stays
+   * where the click put it (the pages, a control); only a click on something that takes no focus
+   * sends it back to the button. That is known once the browser has handled the click.
+   */
+  function closeSettings(afterClick: boolean) {
     setSettingsOpen(false);
-    if (returnFocus) settingsButtonRef.current?.focus();
+    if (!afterClick) {
+      settingsButtonRef.current?.focus();
+      return;
+    }
+    setTimeout(() => {
+      const focused = document.activeElement;
+      if (focused === null || focused === document.body) {
+        settingsButtonRef.current?.focus({ preventScroll: true });
+      }
+    }, 0);
   }
 
   function stepZoom(direction: 'in' | 'out') {
@@ -938,7 +955,9 @@ export function ReaderView({
           pageCount={doc.pageCount}
           labels={pageLabels}
           visible={pill.visible}
-          settledPageIndex={pill.settledPage}
+          // While the pages are still, the current page is the settled one (a book reopened
+          // further in says so at once); mid-scroll, the page it last settled on.
+          settledPageIndex={pill.visible ? pill.settledPage : currentPage}
         />
         {listen.state.status !== 'idle' && (
           <div className="player-bar" role="toolbar" aria-label="Read aloud">
@@ -1038,7 +1057,7 @@ export function ReaderView({
           onZoomIn={() => stepZoom('in')}
           fit={fitModeOf(zoom)}
           onFit={chooseFit}
-          onDismiss={() => closeSettings(false)}
+          onDismiss={() => closeSettings(true)}
         />
       )}
       {readerNotice && <Toast key={readerNotice.key}>{readerNotice.text}</Toast>}

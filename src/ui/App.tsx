@@ -530,7 +530,7 @@ export function App({
           <ThemePicker theme={theme} onChange={chooseTheme} />
           <label className="br-btn br-btn--primary br-btn--md open-button" title="Open PDF">
             <Icon name="import" />
-            <span className="tool-label">Open PDF</span>
+            <span>Open PDF</span>
             <input
               className="visually-hidden"
               type="file"

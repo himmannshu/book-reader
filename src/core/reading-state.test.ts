@@ -49,6 +49,12 @@ describe('zoomIn / zoomOut', () => {
     expect(zoomOut(100.4)).toBe(90);
   });
 
+  it('skip a level that would barely change the page (within 2%), such as fit page at 66.4%', () => {
+    expect(zoomIn(66.4)).toBe(75);
+    expect(zoomOut(67.6)).toBe(50);
+    expect(zoomIn(65)).toBe(67);
+  });
+
   it('return null at the ends', () => {
     expect(zoomIn(MAX_ZOOM)).toBeNull();
     expect(zoomIn(MAX_ZOOM + 50)).toBeNull();
