@@ -1006,6 +1006,7 @@ export function ReaderView({
                 onChoose={chooseNote}
                 onExport={() => void exportAnnotations()}
                 exportUnavailableReason={exportUnavailableReason}
+                chapterFor={chapterFor}
               >
                 <VoiceNotes
                   voice={voice}
@@ -1018,6 +1019,7 @@ export function ReaderView({
                       : undefined
                   }
                   onGoTo={goToNoteTarget}
+                  chapterFor={chapterFor}
                 />
               </NotesPanel>
             )}

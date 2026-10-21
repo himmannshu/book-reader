@@ -397,6 +397,27 @@ export function SidePanel({
     if (event.type === 'pointerup' && current.by >= SHEET_CLOSE_DRAG_PX) onClose();
   }
 
+  // A sheet covers the reader: Tab (and Shift+Tab) wrap around inside it, so the keyboard never
+  // reaches the controls under the scrim (phase 20 review N1).
+  function onKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!sheet || event.key !== 'Tab' || !panel.current) return;
+    const focusable = [
+      ...panel.current.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input, textarea, select, audio[controls], [tabindex]:not([tabindex="-1"])',
+      ),
+    ].filter((element) => element.getClientRects().length > 0);
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) return;
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   const dragHandlers = sheet
     ? {
         onPointerDown,
@@ -414,6 +435,7 @@ export function SidePanel({
         id={id}
         className={cx('br-panel', `br-panel--${presentation}`)}
         aria-label={title}
+        onKeyDown={onKeyDown}
       >
         {sheet && <span className="br-panel__grabber" aria-hidden="true" {...dragHandlers} />}
         <div className="br-panel__head" {...dragHandlers}>

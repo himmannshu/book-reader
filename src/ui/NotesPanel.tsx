@@ -88,6 +88,7 @@ export function NotesPanel({
   onExport,
   exportUnavailableReason = null,
   children,
+  chapterFor,
 }: {
   id: string;
   notes: ReturnType<typeof useNotes>;
@@ -101,6 +102,8 @@ export function NotesPanel({
   exportUnavailableReason?: string | null;
   /** More sections after the notes (voice notes, phase 15). */
   children?: ReactNode;
+  /** The chapter a page belongs to, for each row's metadata line (phase 20). */
+  chapterFor?(pageIndex: number): string | undefined;
 }) {
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
@@ -164,6 +167,7 @@ export function NotesPanel({
                 <strong>
                   {note.target.kind === 'page' ? 'Page note' : 'Highlight'} · Page{' '}
                   {note.target.pageIndex + 1}
+                  {chapterFor?.(note.target.pageIndex) && ` · ${chapterFor(note.target.pageIndex)}`}
                 </strong>
                 {quoteFor(note.target) && (
                   <span className="note-quote">“{quoteFor(note.target)}”</span>

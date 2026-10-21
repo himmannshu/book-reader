@@ -21,6 +21,7 @@ export function VoiceNotes({
   unavailableReason,
   quoteFor,
   onGoTo,
+  chapterFor,
 }: {
   voice: ReturnType<typeof useVoiceNotes>;
   currentPage: number;
@@ -28,6 +29,8 @@ export function VoiceNotes({
   unavailableReason: string | null;
   quoteFor(target: NoteTarget): string | undefined;
   onGoTo(target: NoteTarget): void;
+  /** The chapter a page belongs to, for each row's metadata line (phase 20). */
+  chapterFor?(pageIndex: number): string | undefined;
 }) {
   const recording = voice.recording;
   return (
@@ -73,6 +76,7 @@ export function VoiceNotes({
                 <strong>
                   {note.target.kind === 'page' ? 'Page' : 'Highlight'} · Page{' '}
                   {note.target.pageIndex + 1} · {formatDuration(note.durationMs)}
+                  {chapterFor?.(note.target.pageIndex) && ` · ${chapterFor(note.target.pageIndex)}`}
                 </strong>
                 {quote && <span className="note-quote">“{quote}”</span>}
                 <audio

@@ -76,7 +76,8 @@ export function SearchPanel({
   // inside it, pinned above the results. Enter goes to the next match, Shift+Enter to the previous;
   // Escape clears the field, and a second Escape (the reader's) closes the panel.
   return (
-    <section id={id} className="search-panel" aria-label="Search">
+    // No name of its own: it sits in the Search side panel, which names it (review N5).
+    <section id={id} className="search-panel">
       <form
         role="search"
         className="br-search"
@@ -108,6 +109,18 @@ export function SearchPanel({
             }
           }}
         />
+        {query !== '' && (
+          <IconButton
+            icon="close"
+            label="Clear search"
+            size="sm"
+            onClick={() => {
+              setQuery('');
+              onSearch('');
+              input.current?.focus();
+            }}
+          />
+        )}
         {results.length > 0 && (
           <>
             <span className="br-search__count" data-testid="search-count" aria-live="polite">

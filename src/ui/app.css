@@ -721,8 +721,6 @@ body {
 /* Voice notes (phase 15). */
 .voice-notes {
   margin-top: var(--space-4);
-  border-top: 1px solid var(--line);
-  padding-top: var(--space-2);
 }
 
 .voice-row audio {
@@ -1415,6 +1413,11 @@ body:has(.player-bar, .search-bar) .br-toast {
     top: calc(env(safe-area-inset-top) + var(--toolbar-height) + var(--space-2));
     bottom: auto;
   }
+
+  /* A panel sheet's scrim covers the toolbar too: messages go to the very top, clear of a tall sheet. */
+  body:has(.br-panel--sheet) .br-toast {
+    top: calc(env(safe-area-inset-top) + var(--space-2));
+  }
 }
 
 /* The page pill floats at the bottom centre while the pages move. */
@@ -1495,6 +1498,8 @@ body:has(.player-bar, .search-bar, .br-toast) .br-pagepill {
   left: 0;
   z-index: 26;
   max-height: 88vh;
+  /* The visible height in Safari, whose bars come and go (phase 20 review N4). */
+  max-height: 88dvh;
   padding-bottom: env(safe-area-inset-bottom);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: var(--shadow-sheet);
@@ -1701,6 +1706,12 @@ body:has(.player-bar, .search-bar, .br-toast) .br-pagepill {
   /* 16 px: iOS zooms the page into smaller fields. */
   font-size: 16px;
   outline: none;
+}
+
+.br-search__input::-webkit-search-cancel-button {
+  /* The field has its own Clear button. */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .br-search__count {

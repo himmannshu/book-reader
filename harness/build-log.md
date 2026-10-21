@@ -1793,3 +1793,13 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` → PASS (first run): unit 396; browser 317 passed + 1 skipped; sync 27; perf 10 (chromium first
   194 ms, jump 18, p95 16.7, canvas 67.1, search 883; webkit first 142, jump 88, p95 36 [samples 36, 2431, 31], canvas
   67.1, search 895; blank 0 / 1.1 %). Budgets unchanged.
+
+### 2026-10-21 00:40 EDT | Phase 20 | Claude Code (Opus 5.5) | Review FAIL (B1) fixed, N1–N5 addressed; verify PASS
+- Evaluator: harness/code_review/phase-20-review.md, FAIL on B1 (note rows had no chapter, contract item 7); its own
+  `scripts/verify.sh` passed. Fixes and answers in the review's author appendix.
+- Tests added: note/voice row chapter (red before the fix), Tab wrap in the sheet (fails without the change), touch
+  drag (Chromium), 320 px sideways on every tab, page labels in the contents, search Clear button. Changed in this
+  phase's own spec: tree roles → list and buttons (N2). Fixture `labels-8-pages` regenerated with an outline.
+- `scripts/verify.sh` → PASS: unit 396; browser 324 passed + 2 skipped (the touch drag skips in WebKit); sync 27;
+  perf 10 (chromium first 187 ms, jump 20, p95 16.8, canvas 67.1, search 888; webkit first 142, jump 54, p95 31
+  [samples 31, 2435, 31], canvas 67.1, search 878; blank 0 / 1.1 %). Budgets unchanged.

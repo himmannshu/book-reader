@@ -7,7 +7,7 @@ const toolbar = (page: Page) => page.getByRole('toolbar', { name: 'Reader' });
 const panel = (page: Page, name: string) => page.getByRole('complementary', { name });
 const anyPanel = (page: Page) => page.locator('.br-panel');
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Reader panels' });
-const tree = (page: Page) => page.getByRole('tree', { name: 'Contents' });
+const tree = (page: Page) => page.getByRole('list', { name: 'Contents' });
 
 async function openContents(page: Page) {
   const contents = toolbar(page).getByRole('button', { name: 'Contents', exact: true });
@@ -142,11 +142,8 @@ test.describe('contents tree', () => {
     await expect(chapterOne).toBeVisible();
     await tree(page).getByRole('button', { name: 'Collapse Part One' }).click();
     await expect(chapterOne).toHaveCount(0);
-    await expect(
-      tree(page)
-        .getByRole('treeitem', { name: /Part One/ })
-        .first(),
-    ).toHaveAttribute('aria-expanded', 'false');
+    // The chevron's name says what a press does now.
+    await expect(tree(page).getByRole('button', { name: 'Collapse Part One' })).toHaveCount(0);
     await tree(page).getByRole('button', { name: 'Expand Part One' }).click();
     await expect(chapterOne).toBeVisible();
     // Page numbers on the right of each title.
@@ -175,9 +172,17 @@ test.describe('contents tree', () => {
     await openContents(page);
     const current = tree(page).locator('[aria-current="location"]');
     await expect(current).toHaveCount(1);
-    await expect(current.getByRole('button', { name: /^Chapter 3/ })).toBeVisible();
-    await expect(current.getByRole('button', { name: /^Chapter 3/ })).toBeInViewport();
+    await expect(current).toHaveAccessibleName('Chapter 3');
+    await expect(current).toBeInViewport();
   });
+});
+
+test('the contents shows the book’s own page labels', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await importBook(page, 'labels-8-pages.pdf');
+  await openContents(page);
+  await expect(tree(page).locator('.br-toc__page')).toHaveText(['i', '1']);
 });
 
 test.describe('search panel', () => {
@@ -214,6 +219,14 @@ test.describe('search panel', () => {
     await search.getByRole('button', { name: 'Previous match' }).click();
     await expect(count).toHaveText('1 of 8');
 
+    // The field's own Clear button empties it and keeps the cursor there.
+    await search.getByRole('button', { name: 'Clear search' }).click();
+    await expect(field).toHaveValue('');
+    await expect(field).toBeFocused();
+    await expect(search.getByRole('button', { name: 'Clear search' })).toHaveCount(0);
+    await field.fill('page');
+    await expect(results).toHaveCount(8);
+
     // Escape clears the field first, then closes the panel.
     await field.focus();
     await page.keyboard.press('Escape');
@@ -234,20 +247,48 @@ test.describe('phones: bottom sheets', () => {
   test('the panel rises as a sheet, with a grabber over a scrim, and nothing scrolls sideways', async ({
     page,
   }) => {
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 760 });
+      await openContents(page);
+      await expect(anyPanel(page)).toHaveClass(/br-panel--sheet/);
+      const box = await anyPanel(page).boundingBox();
+      expect(Math.round(box?.x ?? 1), `${width}`).toBe(0);
+      expect(Math.round(box?.width ?? 0), `${width}`).toBe(width);
+      expect(Math.round((box?.y ?? 0) + (box?.height ?? 0)), `${width}`).toBe(760);
+      expect(box?.height ?? 0, `${width}`).toBeLessThanOrEqual(760 * 0.88 + 1);
+      await expect(anyPanel(page).locator('.br-panel__grabber')).toBeVisible();
+      await expect(page.locator('.br-scrim')).toBeVisible();
+      for (const tab of ['Bookmarks', 'Notes', 'Contents']) {
+        await tabs(page)
+          .getByRole('tab', { name: new RegExp(`^${tab}`) })
+          .click();
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+          ),
+          `${width} ${tab}`,
+        ).toBe(true);
+      }
+      await page.keyboard.press('Escape');
+    }
+  });
+
+  test('a finger dragging the grabber down closes the sheet', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Touch input is driven through Chromium DevTools');
     await openContents(page);
-    await expect(anyPanel(page)).toHaveClass(/br-panel--sheet/);
-    const box = await anyPanel(page).boundingBox();
-    expect(Math.round(box?.x ?? 1)).toBe(0);
-    expect(Math.round(box?.width ?? 0)).toBe(390);
-    expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(760);
-    expect(box?.height ?? 0).toBeLessThanOrEqual(760 * 0.88 + 1);
-    await expect(anyPanel(page).locator('.br-panel__grabber')).toBeVisible();
-    await expect(page.locator('.br-scrim')).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-      ),
-    ).toBe(true);
+    const grabber = await anyPanel(page).locator('.br-panel__grabber').boundingBox();
+    if (!grabber) throw new Error('no grabber');
+    const x = grabber.x + grabber.width / 2;
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', y: number) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x, y }],
+      });
+    await touch('touchStart', grabber.y + 2);
+    for (let y = grabber.y + 20; y <= grabber.y + 260; y += 40) await touch('touchMove', y);
+    await touch('touchEnd', grabber.y + 260);
+    await expect(anyPanel(page)).toHaveCount(0);
   });
 
   test('closes with the scrim, Escape, Close, a drag down, and after a choice', async ({
@@ -292,6 +333,24 @@ test.describe('phones: bottom sheets', () => {
       .click();
     await expect(anyPanel(page)).toHaveCount(0);
     await expectPageAtTop(page, 4);
+  });
+
+  test('the keyboard stays in the sheet: Tab and Shift+Tab wrap around inside it', async ({
+    page,
+    browserName,
+  }) => {
+    await openContents(page);
+    const option = browserName === 'webkit' ? 'Alt+' : '';
+    const inSheet = () =>
+      page.evaluate(() => document.querySelector('.br-panel')?.contains(document.activeElement));
+    for (let i = 0; i < 14; i++) {
+      await page.keyboard.press(`${option}Tab`);
+      expect(await inSheet(), `Tab ${i + 1}`).toBe(true);
+    }
+    for (let i = 0; i < 14; i++) {
+      await page.keyboard.press(`${option}Shift+Tab`);
+      expect(await inSheet(), `Shift+Tab ${i + 1}`).toBe(true);
+    }
   });
 
   test('More holds Contents and Search; the compact toolbar starts below 720 px', async ({
@@ -364,5 +423,46 @@ test.describe('opening the right tab', () => {
       'aria-selected',
       'true',
     );
+  });
+});
+
+test.describe('rows', () => {
+  test('note and voice note rows give the page and the chapter', async ({ page }) => {
+    // A 440 Hz tone stands in for the microphone (as in voice-notes.spec.ts).
+    await page.addInitScript(() => {
+      MediaDevices.prototype.getUserMedia = async () => {
+        const context = new AudioContext();
+        const tone = context.createOscillator();
+        const output = context.createMediaStreamDestination();
+        tone.connect(output);
+        tone.start();
+        return output.stream;
+      };
+    });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+    await importBook(page, 'outline-12-pages.pdf');
+    await page.getByTestId('reader').evaluate((reader) => {
+      const slot = reader.querySelector<HTMLElement>('[data-page-index="5"]');
+      reader.scrollTop = slot?.offsetTop ?? 0;
+    });
+    await expect(page.getByTestId('chapter')).toHaveText('Chapter 2');
+    await openContents(page);
+    await tabs(page)
+      .getByRole('tab', { name: /^Notes/ })
+      .click();
+    await page.getByRole('button', { name: 'Add note to this page' }).click();
+    await page.getByLabel('Note text').fill('In the second chapter');
+    await page.getByRole('button', { name: 'Save note' }).click();
+    await expect(page.locator('.note-row').first()).toContainText('Page note · Page 6 · Chapter 2');
+
+    if (!(await page.evaluate(() => typeof MediaRecorder !== 'undefined'))) return;
+    await page.getByRole('button', { name: 'Record voice note on this page' }).click();
+    await expect(page.getByText(/^Recording on page/)).toBeVisible();
+    await page.waitForTimeout(1200);
+    await page.getByRole('button', { name: 'Stop and save' }).click();
+    const voice = page.getByRole('list', { name: 'Book voice notes' }).getByRole('listitem');
+    await expect(voice).toHaveCount(1);
+    await expect(voice.first()).toContainText(/^Page · Page 6 · 0:0\d · Chapter 2/);
   });
 });

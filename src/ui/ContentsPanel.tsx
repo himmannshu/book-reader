@@ -24,9 +24,10 @@ interface ContentsPanelProps {
 }
 
 /**
- * The book's table of contents as a tree (phase 20, the design's TocList): parents fold with a
- * chevron, titles always jump, page numbers on the right, the chapter being read marked and
- * scrolled into view. Focus moves to it (or the first entry) on open.
+ * The book's table of contents (phase 20, the design's TocList): nested lists whose parents fold
+ * with a chevron button, titles that always jump, page numbers on the right, and the chapter being
+ * read marked and scrolled into view. Focus moves to it (or the first entry) on open. Plain lists
+ * and buttons, not tree roles: the arrow keys move between entries (usePanelKeys).
  */
 export function ContentsPanel({
   id,
@@ -44,7 +45,7 @@ export function ContentsPanel({
   useEffect(() => {
     if (!ready) return;
     const link = ref.current?.querySelector<HTMLButtonElement>(
-      '[aria-current="location"] > .br-toc__row .br-toc__link',
+      '.br-toc__link[aria-current="location"]',
     );
     if (!link) return;
     link.scrollIntoView({ block: 'nearest' });
@@ -53,8 +54,8 @@ export function ContentsPanel({
 
   const render = (items: readonly OutlineItem[], parent: readonly number[]) => (
     <ul
+      id={parent.length === 0 ? undefined : `${id}-${outlineKey(parent)}`}
       className="br-toc"
-      role={parent.length === 0 ? 'tree' : 'group'}
       aria-label={parent.length === 0 ? 'Contents' : undefined}
     >
       {items.map((item, index) => {
@@ -64,22 +65,19 @@ export function ContentsPanel({
         const open = parentOf && !collapsed.has(key);
         const isCurrent = key === currentKey;
         return (
-          <li
-            key={key}
-            role="treeitem"
-            aria-expanded={parentOf ? open : undefined}
-            aria-current={isCurrent ? 'location' : undefined}
-            aria-label={item.title}
-          >
+          <li key={key}>
             <div
               className={`br-toc__row${isCurrent ? ' is-current' : ''}`}
               style={{ ['--br-depth' as string]: parent.length }}
             >
               {parentOf ? (
+                // The name says what a press does (as the bookmark toggle's does), so no
+                // aria-expanded on top of it.
                 <button
                   type="button"
                   className="br-toc__twisty"
                   aria-label={`${open ? 'Collapse' : 'Expand'} ${item.title}`}
+                  aria-controls={open ? `${id}-${key}` : undefined}
                   onClick={() => onToggle(key)}
                 >
                   <Icon name={open ? 'expand' : 'forward'} size={16} />
@@ -90,6 +88,7 @@ export function ContentsPanel({
               <button
                 type="button"
                 className="panel-entry br-toc__link"
+                aria-current={isCurrent ? 'location' : undefined}
                 disabled={item.pageIndex === null}
                 title={item.pageIndex === null ? 'This entry does not point to a page' : undefined}
                 onClick={() => {

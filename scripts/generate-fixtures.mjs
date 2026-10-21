@@ -220,11 +220,16 @@ const manifest = {
     );
     return { ...entry, lines };
   })(),
-  // Page labels (phase 19): roman-numbered front matter, then 1 to 5.
+  // Page labels (phase 19): roman-numbered front matter, then 1 to 5. An outline too, for the
+  // labels in the contents (phase 20).
   'labels-8-pages': await makePdf(
     'labels-8-pages',
     Array.from({ length: 8 }, () => LETTER),
     (doc) => {
+      addOutline(doc, [
+        { title: 'Preface', to: 0 },
+        { title: 'Chapter One', to: 3 },
+      ]);
       doc.catalog.set(
         PDFName.of('PageLabels'),
         doc.context.obj({
