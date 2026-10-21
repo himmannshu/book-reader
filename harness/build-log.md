@@ -1812,3 +1812,15 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` → PASS: unit 396; browser 328 passed + 2 skipped; sync 27; perf 10 (chromium first 184 ms,
   jump 16, p95 16.8, canvas 67.1, search 869; webkit first 142, jump 53, p95 33 [samples 31, 2411, 33], canvas 67.1,
   search 1391 (not budgeted; ~900 in earlier runs, to watch); blank 0 / 1.1 %). Budgets unchanged.
+
+### 2026-10-21 01:00 EDT | Phase 20 | Claude Code (Opus 5.5) | Pushed with the user's approval; full CI red on one new test
+- The user approved pushing `phase-20-panels-and-sheets` (a preview deploy) and the full CI run. Pushed 88274c3.
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39544790958 on 88274c3 → failure: `verify (chromium)`
+  success (unit 396, browser 169, sync 15, perf 5); `verify (webkit)` failed at browser tests, 155 passed, 1 failed on
+  both attempts: panels.spec "Add note on a page opens Notes; rows are divided by hairlines" (Linux WebKit). Call log:
+  the Highlight button was "not stable", then "detached from the DOM", and never came back. Push run 39544787266:
+  quick checks success; Cloudflare Pages preview built.
+- Cause (test): it selected text straight after closing the docked panel; the pages widen and are laid out again, and
+  on CI's slow WebKit the new text layer replaced the selected text. Not reproduced on the Mac (24/24 under load
+  before and after). Fix: wait for the full page width and a text layer of that width before selecting. panels.spec
+  passes in both engines locally. Needs another push and CI run (user's approval).

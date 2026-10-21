@@ -458,8 +458,25 @@ test.describe('opening the right tab', () => {
     await expect(anyPanel(page)).toHaveCount(0);
 
     // A highlight's Add note opens the Notes tab.
+    // Closing the docked panel widens the pages, and they and their text are laid out again: select
+    // once that is done (CI's WebKit is slow enough to replace the selected text otherwise).
+    const fullWidth = await page
+      .getByTestId('reader')
+      .evaluate((reader) => Math.min(reader.clientWidth - 48, 900));
+    await expect
+      .poll(async () => Math.round((await pageSlot(page, 0).boundingBox())?.width ?? 0))
+      .toBe(fullWidth);
     const first = page.locator('[data-page-index="0"] .textLayer span').first();
     await expect(first).toBeAttached();
+    await expect
+      .poll(() =>
+        first.evaluate((span) => {
+          const layer = span.closest('.textLayer')?.getBoundingClientRect();
+          const slot = span.closest('[data-page-index]')?.getBoundingClientRect();
+          return Math.round(layer?.width ?? 0) === Math.round(slot?.width ?? -1);
+        }),
+      )
+      .toBe(true);
     await first.evaluate((span) => {
       const range = document.createRange();
       range.selectNodeContents(span);
