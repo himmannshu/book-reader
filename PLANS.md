@@ -45,7 +45,7 @@ reasoning behind these choices is in harness/context/architecture-decisions.md.
 | 20 | Panels and sheets | Contents, Bookmarks and Notes share one tabbed panel, and Search has its own; panels dock beside the page on Mac and iPad and rise as bottom sheets on iPhone; the contents tree folds and shows the current chapter | 19 | Complete (user-checked 2026-10-21; not merged) |
 | 21 | Highlight colours | A selection menu offers four highlight colours, a note, copy, share and listen from here; the colour is kept, synced and shown in lists and exports | 20 | In progress (built, CI green; user's device check pending) |
 | 22 | Library shelf redesign | The library shows the designed book cards in a grid or a list, with author, status badges, filter chips with counts and a designed empty state | 18 | In progress (built 2026-10-21; user's device check pending) |
-| 23 | Listen bar and voice notes | Read aloud uses the floating listen bar (previous and next sentence, speed), and voice notes record and play in the designed strip with a waveform | 20 | Not started |
+| 23 | Listen bar and voice notes | Read aloud uses the floating listen bar (previous and next sentence, speed), and voice notes record and play in the designed strip with a waveform | 20 | In progress (built 2026-10-21; user's device check pending) |
 
 Phases 18–23 apply the "Book Reader" design system made in Claude Design (2026-10-20):
 https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z. Phase 18 copies its reference (tokens, guidelines,

@@ -1983,3 +1983,31 @@ Contract evidence from this final canonical run (contract unchanged after approv
   cover worker runs only while the library shows), CI (deferred by the user).
 - Visual check (dev server): grid and list at 800 px, grid at 375 px in Dark (three covers a row, no sideways
   scroll, chips and More 44 px), 320 px (every card's menu on screen).
+
+### 2026-10-21 19:05 EDT | Phase 23 | Claude Code (Opus 5.5) | Built (listen bar and voice notes); focused checks PASS
+- Standing instruction of 2026-10-21: plan, contract and context approved by the agent (b3ca96b). Branch
+  `phase-23-listen-bar-voice-notes` from `phase-22-library-shelf`.
+- Built: `SPEEDS` and `nextSpeed` moved to src/core/read-aloud.ts; `waveformLevels` (src/core/voice-notes.ts);
+  `useReadAloud` gains `skip(±1)` (one sentence on or back, across pages, skipping pages without text; while
+  paused it moves the place and the mark only) and `cycleRate`; ListenBar.tsx (Reading aloud/Paused, "p. N ·
+  chapter" from the book's page labels, previous/next sentence, accent play/pause, speed button, Stop reading;
+  status hidden under 480 px); VoiceNotePlayer.tsx (accent play/pause, 28-bar waveform decoded once per session
+  with OfflineAudioContext, played part in accent, "0:01 / 0:02"; the audio element is hidden); the recording
+  strip (danger-soft, pulsing dot, "Recording on page N · 0:01", Stop = "Stop and save", Cancel = "Cancel
+  recording"), also in the floating Recording bar; Record voice note in the note editor (page and highlight
+  notes, through the same unsaved-note request as other steps); Voice note removed from the selection menu.
+- Red first: unit tests for `nextSpeed` and `waveformLevels` (5 seen failing, then green); e2e listen-bar tests
+  (parts and place, next/previous across the page 1→2 break while reading and paused, the speed cycle) seen
+  failing in both engines (the 390 px phone test passed on the old bar too: a guard); e2e voice-note tests (the
+  recording strip, the row strip with play/pause, waveform and time, Record voice note in the editor and no
+  Voice note in the menu) seen failing in both engines, then green. One of my new tests pressed Stop at once,
+  which makes an empty recording (rejected by design); it now waits 800 ms like the other tests.
+- Earlier specs changed (controls moved; no check loosened): listen.spec "page 2" → "p. 2", "Paused on page" →
+  "Paused", the Speed list → two presses of the speed button (1× → 1.25× → 1.5×); voice-notes.spec, the
+  highlight's voice note is recorded from Add note → Record voice note; panels.spec measures the strip instead of
+  the (now hidden) audio element.
+- Visual check (Playwright screenshots, fake speech and microphone, Chromium): listen bar at 1280 and 390 px,
+  the recording strip in the docked panel, a voice note row at 390 px.
+- Checks (scope per the standing instruction): unit 425 passed; lint, format, types clean; `npm run test:e2e` 376
+  passed + 2 skipped. Not run: `scripts/verify.sh`, perf and sync (no viewer, rendering or sync change; voice notes
+  are local), CI (deferred by the user).

@@ -41,8 +41,6 @@ interface SelectionActionsProps {
   onShare?(): void;
   /** Reads aloud from the sentence where the passage starts. */
   onListen?(): void;
-  /** Records a voice note on the chosen highlight (phase 15; kept here until phase 23). */
-  onVoiceNote?(id: string): void;
   noteUnavailableReason?: string | null;
   removeUnavailableReason?: string | null;
   /** The pages, which the menu stays inside (not over a docked panel). Default: its whole area. */
@@ -72,7 +70,6 @@ export function SelectionActions({
   onCopy,
   onShare,
   onListen,
-  onVoiceNote,
   noteUnavailableReason = null,
   removeUnavailableReason = null,
   bounds,
@@ -167,14 +164,6 @@ export function SelectionActions({
               label={noteLabel}
               disabled={(existing ? noteUnavailableReason : unsavedReason) !== null}
               onClick={onNote}
-            />
-          )}
-          {existing && onVoiceNote && (
-            <IconButton
-              icon="mic"
-              label="Voice note"
-              disabled={noteUnavailableReason !== null}
-              onClick={() => onVoiceNote(action.id)}
             />
           )}
           {onCopy && <IconButton icon="copy" label="Copy" onClick={onCopy} />}

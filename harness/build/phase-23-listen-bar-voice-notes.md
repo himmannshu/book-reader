@@ -1,6 +1,7 @@
 # Phase 23: Listen bar and voice notes
 
-- Status: In progress (plan approved by the agent under the user's standing instruction of 2026-10-21)
+- Status: Built 2026-10-21; user's device check pending (plan approved by the agent under the user's
+  standing instruction of 2026-10-21)
 - Branch: phase-23-listen-bar-voice-notes (cut from `phase-22-library-shelf`)
 - Depends on: 20
 

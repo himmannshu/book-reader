@@ -536,7 +536,8 @@ test.describe('rows', () => {
     await expect(voice.first()).toContainText(/^Page · Page 6 · 0:0\d · Chapter 2/);
     // Stacked: the line above, the player under it, and the buttons under that (review B3, phase 21).
     const line = await voice.first().locator('strong').boundingBox();
-    const player = await voice.first().locator('audio').boundingBox();
+    // The player is the VoiceNote strip since phase 23 (its audio element is hidden).
+    const player = await voice.first().locator('.br-voice').boundingBox();
     const buttons = await voice.first().locator('.note-buttons').boundingBox();
     expect(player?.y ?? 0).toBeGreaterThanOrEqual((line?.y ?? 0) + (line?.height ?? 0) - 0.5);
     expect(buttons?.y ?? 0).toBeGreaterThanOrEqual((player?.y ?? 0) + (player?.height ?? 0) - 0.5);

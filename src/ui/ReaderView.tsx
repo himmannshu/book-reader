@@ -1033,6 +1033,11 @@ export function ReaderView({
                 onExport={() => void exportAnnotations()}
                 exportUnavailableReason={exportUnavailableReason}
                 chapterFor={chapterFor}
+                onRecordVoice={recordVoiceNote}
+                voiceUnavailableReason={
+                  voiceUnavailableReason ??
+                  (voice.recording || voice.busy ? 'A voice note is being recorded.' : null)
+                }
               >
                 <VoiceNotes
                   voice={voice}
@@ -1104,15 +1109,21 @@ export function ReaderView({
         {voice.recording && openPanel !== 'notes' && (
           // The Notes panel was closed mid-recording: keep it visible (phase 15 review).
           <div className="player-bar recording-bar" role="toolbar" aria-label="Recording">
-            <span className="recording-dot" aria-hidden="true" />
+            <span className="br-voice__dot" aria-hidden="true" />
             <span className="player-status">
-              Recording voice note · <Elapsed since={voice.recording.startedAt} />
+              Recording · <Elapsed since={voice.recording.startedAt} />
             </span>
-            <Button variant="primary" size="sm" onClick={() => void voice.save()}>
-              Stop and save
+            <Button
+              variant="danger"
+              size="sm"
+              icon="stop"
+              aria-label="Stop and save"
+              onClick={() => void voice.save()}
+            >
+              Stop
             </Button>
-            <Button size="sm" onClick={voice.cancel}>
-              Cancel recording
+            <Button size="sm" variant="ghost" aria-label="Cancel recording" onClick={voice.cancel}>
+              Cancel
             </Button>
           </div>
         )}
@@ -1148,15 +1159,6 @@ export function ReaderView({
           onCopy={() => void copyPassage(menuPassage())}
           onShare={() => void sharePassage(menuPassage())}
           onListen={() => listenFrom(menuPassage())}
-          onVoiceNote={(id) => {
-            const highlight = highlightList.find((item) => item.id === id);
-            if (highlight)
-              recordVoiceNote({
-                kind: 'highlight',
-                pageIndex: highlight.pageIndex,
-                highlightId: id,
-              });
-          }}
           noteLabel={
             marked.action?.kind === 'remove' &&
             written.items?.some(

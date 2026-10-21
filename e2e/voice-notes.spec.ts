@@ -107,7 +107,9 @@ test.describe('with a microphone', () => {
     const box = await page.locator('.highlight-box').first().boundingBox();
     if (!box) throw new Error('no highlight');
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    await page.getByRole('button', { name: 'Voice note', exact: true }).click();
+    // Voice note moved from the selection menu into the note editor (phase 23).
+    await page.getByRole('button', { name: 'Add note', exact: true }).click();
+    await page.getByRole('button', { name: 'Record voice note', exact: true }).click();
     await expect(page.getByText(/^Recording on a highlight on page 1/)).toBeVisible();
     await page.waitForTimeout(1200);
     await page.getByRole('button', { name: 'Stop and save' }).click();
@@ -148,6 +150,92 @@ test.describe('with a microphone', () => {
       page.getByRole('button', { name: 'Record voice note on this page' }),
     ).toBeVisible();
     await expect(voiceList(page)).toHaveCount(0);
+  });
+});
+
+test.describe('the voice note strip (phase 23)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(fakeMicrophone);
+    await page.goto('/');
+    await importBook(page, 'text-4-pages.pdf');
+  });
+
+  test('recording shows the strip: Recording, where, the time, Stop and Cancel', async ({
+    page,
+  }) => {
+    test.skip(!(await canRecord(page)), 'This test browser has no MediaRecorder');
+    await openNotes(page);
+    await page.getByRole('button', { name: 'Record voice note on this page' }).click();
+    const strip = page.locator('.voice-notes .br-voice.is-recording');
+    await expect(strip).toBeVisible();
+    await expect(strip).toContainText(/^Recording on page 1 · 0:0\d/);
+    await expect(strip.locator('.br-voice__dot')).toBeVisible();
+    await expect(strip.getByRole('button', { name: 'Stop and save' })).toHaveText('Stop');
+    await expect(strip.getByRole('button', { name: 'Cancel recording' })).toBeVisible();
+    await page.waitForTimeout(800);
+    await strip.getByRole('button', { name: 'Stop and save' }).click();
+    await expect(voiceList(page)).toHaveCount(1);
+  });
+
+  test('a row plays and pauses from its strip, with a waveform of the recording and the time', async ({
+    page,
+  }) => {
+    test.skip(!(await canRecord(page)), 'This test browser has no MediaRecorder');
+    await openNotes(page);
+    await record(page, 1500);
+    const row = voiceList(page).first();
+    const strip = row.locator('.br-voice');
+    await expect(strip).toBeVisible();
+    await expect(strip.locator('.br-voice__time')).toHaveText(/^0:0[12]$/);
+    const bars = strip.locator('.br-voice__bar');
+    await expect(bars).toHaveCount(28);
+    // The tone is loud from start to end: the bars stand well above the flat line.
+    await expect
+      .poll(() => bars.evaluateAll((all) => Math.max(...all.map((bar) => bar.clientHeight))))
+      .toBeGreaterThan(12);
+    await strip.getByRole('button', { name: 'Play voice note' }).click();
+    await expect(strip.getByRole('button', { name: 'Pause voice note' })).toBeVisible();
+    await expect.poll(() => strip.locator('.br-voice__bar.is-played').count()).toBeGreaterThan(0);
+    await expect(strip.locator('.br-voice__time')).toContainText(' / ');
+    await strip.getByRole('button', { name: 'Pause voice note' }).click();
+    await expect(strip.getByRole('button', { name: 'Play voice note' })).toBeVisible();
+  });
+
+  test('Record voice note is in the note editor; the selection menu has no Voice note', async ({
+    page,
+  }) => {
+    test.skip(!(await canRecord(page)), 'This test browser has no MediaRecorder');
+    // A page note's editor.
+    await openNotes(page);
+    await page.getByRole('button', { name: 'Add note to this page', exact: true }).click();
+    await page.getByRole('button', { name: 'Record voice note', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Note text' })).toHaveCount(0);
+    await expect(page.getByText(/^Recording on page 1/)).toBeVisible();
+    await page.getByRole('button', { name: 'Cancel recording' }).click();
+
+    // A highlight's: the menu over it has no Voice note; its note editor has Record voice note.
+    await page
+      .locator('[data-page-index="0"] .textLayer span', { hasText: 'Charlie three' })
+      .evaluate((span) => {
+        const node = span.firstChild;
+        if (!(node instanceof Text)) throw new Error('no text');
+        const range = document.createRange();
+        range.setStart(node, 0);
+        range.setEnd(node, 'Charlie three'.length);
+        document.getSelection()?.removeAllRanges();
+        document.getSelection()?.addRange(range);
+      });
+    await page.getByRole('radio', { name: 'Yellow', exact: true }).click();
+    const menu = page.getByRole('toolbar', { name: 'Highlight' });
+    await expect(menu.getByRole('button', { name: 'Remove highlight' })).toBeVisible();
+    await expect(menu.getByRole('button', { name: 'Voice note', exact: true })).toHaveCount(0);
+    await menu.getByRole('button', { name: 'Add note', exact: true }).click();
+    await page.getByRole('button', { name: 'Record voice note', exact: true }).click();
+    await expect(page.getByText(/^Recording on a highlight on page 1/)).toBeVisible();
+    await page.waitForTimeout(800);
+    await page.getByRole('button', { name: 'Stop and save' }).first().click();
+    await expect(voiceList(page)).toHaveCount(1);
+    await expect(voiceList(page).first()).toContainText('“Charlie three”');
   });
 });
 

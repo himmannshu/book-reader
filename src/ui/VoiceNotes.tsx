@@ -3,6 +3,7 @@ import type { NoteTarget } from '../core/notes';
 import { formatDuration, MAX_VOICE_NOTE_MS } from '../core/voice-notes';
 import type { useVoiceNotes } from './useVoiceNotes';
 import { Button } from './controls';
+import { VoiceNotePlayer } from './VoiceNotePlayer';
 
 /** The running time of a recording, updated a few times a second. */
 export function Elapsed({ since }: { since: number }) {
@@ -37,19 +38,26 @@ export function VoiceNotes({
     <section className="voice-notes" aria-label="Voice notes">
       <h3>Voice notes</h3>
       {recording ? (
-        <div className="voice-recording" role="status">
-          <span className="recording-dot" aria-hidden="true" />
-          <span>
+        // The design's recording strip (phase 23): the word Recording is always there, so the
+        // state never depends on the red alone.
+        <div className="br-voice is-recording" role="status">
+          <span className="br-voice__dot" aria-hidden="true" />
+          <span className="br-voice__label">
             Recording {recording.target.kind === 'page' ? 'on page' : 'on a highlight on page'}{' '}
-            {recording.target.pageIndex + 1} · <Elapsed since={recording.startedAt} /> of{' '}
-            {formatDuration(MAX_VOICE_NOTE_MS)}
+            {recording.target.pageIndex + 1} · <Elapsed since={recording.startedAt} />
+            <span className="visually-hidden"> of {formatDuration(MAX_VOICE_NOTE_MS)}</span>
           </span>
-          <div className="note-buttons">
-            <Button variant="primary" onClick={() => void voice.save()}>
-              Stop and save
-            </Button>
-            <Button onClick={voice.cancel}>Cancel recording</Button>
-          </div>
+          <Button
+            variant="danger"
+            icon="stop"
+            aria-label="Stop and save"
+            onClick={() => void voice.save()}
+          >
+            Stop
+          </Button>
+          <Button variant="ghost" aria-label="Cancel recording" onClick={voice.cancel}>
+            Cancel
+          </Button>
         </div>
       ) : (
         <button
@@ -79,11 +87,11 @@ export function VoiceNotes({
                   {chapterFor?.(note.target.pageIndex) && ` · ${chapterFor(note.target.pageIndex)}`}
                 </strong>
                 {quote && <span className="note-quote">“{quote}”</span>}
-                <audio
-                  controls
-                  preload="metadata"
-                  src={note.url}
-                  aria-label={`Voice note on page ${note.target.pageIndex + 1}`}
+                <VoiceNotePlayer
+                  url={note.url}
+                  audio={note.audio}
+                  durationMs={note.durationMs}
+                  label={`Voice note on page ${note.target.pageIndex + 1}`}
                 />
                 <div className="note-buttons">
                   <button type="button" className="panel-entry" onClick={() => onGoTo(note.target)}>

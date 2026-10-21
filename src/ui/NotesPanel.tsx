@@ -21,9 +21,14 @@ export interface RowPassage {
 function NoteEditor({
   notes,
   quote,
+  onRecordVoice,
+  voiceUnavailableReason,
 }: {
   notes: ReturnType<typeof useNotes>;
   quote: string | undefined;
+  /** Records a voice note for the editor's target instead (phase 23). */
+  onRecordVoice?(target: NoteTarget): void;
+  voiceUnavailableReason: string | null;
 }) {
   const input = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
@@ -86,6 +91,16 @@ function NoteEditor({
             Delete note
           </Button>
         )}
+        {onRecordVoice && (
+          <Button
+            icon="mic"
+            disabled={notes.changing || voiceUnavailableReason !== null}
+            title={voiceUnavailableReason ?? undefined}
+            onClick={() => onRecordVoice(editor.target)}
+          >
+            Record voice note
+          </Button>
+        )}
       </div>
     </form>
   );
@@ -106,6 +121,8 @@ export function NotesPanel({
   exportUnavailableReason = null,
   children,
   chapterFor,
+  onRecordVoice,
+  voiceUnavailableReason = null,
 }: {
   id: string;
   notes: ReturnType<typeof useNotes>;
@@ -127,6 +144,10 @@ export function NotesPanel({
   children?: ReactNode;
   /** The chapter a page belongs to, for each row's metadata line (phase 20). */
   chapterFor?(pageIndex: number): string | undefined;
+  /** Records a voice note from the note editor (phase 23). */
+  onRecordVoice?(target: NoteTarget): void;
+  /** Why voice notes can't be recorded now, or null. */
+  voiceUnavailableReason?: string | null;
 }) {
   const { ref, onKeyDown } = usePanelKeys<HTMLElement>(
     notes.items !== null && notes.editor === null,
@@ -248,6 +269,8 @@ export function NotesPanel({
           key={JSON.stringify(notes.editor.target)}
           notes={notes}
           quote={quoteFor(notes.editor.target)}
+          onRecordVoice={onRecordVoice}
+          voiceUnavailableReason={voiceUnavailableReason}
         />
       )}
       {rows?.length === 0 && (

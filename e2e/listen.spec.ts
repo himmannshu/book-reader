@@ -122,8 +122,12 @@ test.describe('with speech', () => {
     await page.getByRole('button', { name: 'Listen', exact: true }).click();
     await expect.poll(async () => (await spoken(page)).length).toBeGreaterThanOrEqual(1);
     // The speed button steps 1× → 1.25× → 1.5× (phase 23; it was a list before).
-    await bar(page).getByRole('button', { name: /^Speed / }).click();
-    await bar(page).getByRole('button', { name: /^Speed / }).click();
+    await bar(page)
+      .getByRole('button', { name: /^Speed / })
+      .click();
+    await bar(page)
+      .getByRole('button', { name: /^Speed / })
+      .click();
     await expect.poll(() => page.evaluate(() => window.spoken.at(-1)?.rate)).toBe(1.5);
   });
 });

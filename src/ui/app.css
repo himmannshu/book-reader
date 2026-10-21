@@ -1020,32 +1020,87 @@ body {
   margin-top: var(--space-4);
 }
 
-.voice-row audio {
-  display: block;
-  width: 100%;
-  margin: var(--space-2) 0;
-}
-
-.voice-recording {
+/* The design's VoiceNote strip (phase 23): playing a note, and recording one. */
+.br-voice {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
-  margin: var(--space-2);
-  font-size: var(--text-s);
+  gap: var(--space-3);
+  min-height: 48px;
+  margin: var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  box-sizing: border-box;
 }
 
-.recording-dot {
+.br-voice audio {
+  display: none;
+}
+
+.br-voice.is-recording {
+  flex-wrap: wrap;
+  padding-left: var(--space-4);
+  background: var(--danger-soft);
+}
+
+.br-voice__dot {
+  flex: none;
   width: 10px;
   height: 10px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--danger);
-  animation: recording-pulse 1.2s ease-in-out infinite;
+  animation: br-pulse 1.2s ease-in-out infinite;
 }
 
-@keyframes recording-pulse {
+.br-voice__label {
+  flex: 1;
+  min-width: 8em;
+  font-size: var(--text-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.br-voice__wave {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
+  min-width: 0;
+}
+
+.br-voice__bar {
+  flex: 1;
+  max-width: 3px;
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.br-voice__bar.is-played {
+  background: var(--accent);
+}
+
+.br-voice__time {
+  font-size: 13px;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.recording-bar {
+  background: var(--danger-soft);
+}
+
+@keyframes br-pulse {
   50% {
     opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .br-voice__dot {
+    animation: none;
   }
 }
 
@@ -1119,7 +1174,9 @@ body {
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-raised), 0 0 0 1px var(--line);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 1px var(--line);
 }
 
 .br-listen__info {

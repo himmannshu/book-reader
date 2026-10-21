@@ -201,4 +201,20 @@ ask the agent to push when you want to check it on devices.
 - [ ] Your real books: does the author look right? (It comes from the PDF's own metadata, which some PDFs
       fill badly; the title still comes from the file name.)
 
+## Phase 23: Listen bar and voice notes (branch `phase-23-listen-bar-voice-notes`)
+
+Reading aloud gets the designed floating bar; voice notes get the designed strip with a waveform. Not pushed
+yet (no preview); ask the agent to push when you want to check it on devices.
+
+- [ ] Listen (headphones in the toolbar): a bar floats at the bottom with "Reading aloud", the page and chapter,
+      previous sentence, a big play/pause, next sentence, the speed (1×) and ×. On iPhone only the controls show.
+- [ ] Next and previous sentence jump by one sentence, also onto the next or previous page; while paused they move
+      the highlighted sentence, and play continues from there.
+- [ ] The speed button steps 1× → 1.25× → 1.5× → 2× → 0.75× and the voice changes speed at once.
+- [ ] Record a voice note (Notes panel, or Add note → Record voice note in the note editor, for a page or a
+      highlight): a pink strip says Recording, where, and the time, with Stop and Cancel.
+- [ ] A voice note row shows a play button, a waveform of what you said, and its length; playing fills the
+      waveform as it goes and shows "0:02 / 0:05". Pause stops it.
+- [ ] The menu over a selection no longer has Voice note. Is recording from the note editor easy enough?
+
 <!-- Later phases append their sections below. -->
