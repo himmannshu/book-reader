@@ -11,6 +11,10 @@ export interface HighlightRect {
   height: number;
 }
 
+/** The design's highlight colours (phase 21). Yellow is the default. */
+export const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink'] as const;
+export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number];
+
 export interface Highlight {
   /** Random; a page can hold many highlights. */
   id: string;
@@ -24,6 +28,17 @@ export interface Highlight {
   quote: string;
   /** Milliseconds since the epoch. */
   createdAt: number;
+  /** Absent on highlights saved before phase 21; read it with highlightColor. */
+  color?: HighlightColor;
+}
+
+/**
+ * A highlight's colour: yellow when it was saved before colours, or carries one this version does
+ * not know (from a newer device).
+ */
+export function highlightColor(highlight: Pick<Highlight, 'color'>): HighlightColor {
+  const color = highlight.color;
+  return color !== undefined && HIGHLIGHT_COLORS.includes(color) ? color : 'yellow';
 }
 
 /** A rectangle on screen, in CSS pixels (as from getBoundingClientRect). */

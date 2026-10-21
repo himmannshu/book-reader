@@ -1,7 +1,7 @@
 // Reading the open book aloud (phase 16): sentence by sentence from where the reader is, the
 // spoken sentence marked and followed on the page. Pause keeps the place; stop clears it.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { sentenceAt, splitSentences } from '../core/read-aloud';
+import { passageSentence, sentenceAt, splitSentences } from '../core/read-aloud';
 import { findMatches } from '../core/search';
 import type { PdfDoc } from '../engine/types';
 import type { Viewer } from '../viewer/viewer';
@@ -108,6 +108,24 @@ export function useReadAloud({
     }
   }, [viewer, speaker, pageText, read, onError]);
 
+  /** Starts at the sentence where a passage starts (phase 21, Listen from here). */
+  const startAt = useCallback(
+    async (pageIndex: number, passage: string) => {
+      if (!speaker.supported) {
+        onError("Listening isn't available in this browser.");
+        return;
+      }
+      try {
+        const text = await pageText(pageIndex);
+        void read(pageIndex, passageSentence(text, passage));
+      } catch (error) {
+        console.error('Reading aloud failed', error);
+        onError("The book couldn't be read aloud. Try again.");
+      }
+    },
+    [speaker, pageText, read, onError],
+  );
+
   const pause = useCallback(() => {
     run.current++;
     speaker.stop();
@@ -148,5 +166,5 @@ export function useReadAloud({
     [speaker],
   );
 
-  return { state, rate, start, pause, resume, stop, changeRate };
+  return { state, rate, start, startAt, pause, resume, stop, changeRate };
 }

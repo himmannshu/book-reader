@@ -68,7 +68,11 @@ describe('exportMarkdown', () => {
         '',
         '> First, near the top.',
         '',
+        '*Yellow highlight*',
+        '',
         '> Second, lower on the page.',
+        '',
+        '*Yellow highlight*',
         '',
         '**Note:** Why the second?  ',
         'Two lines.',
@@ -78,6 +82,8 @@ describe('exportMarkdown', () => {
         '### Page 6',
         '',
         '> Third, in chapter two.',
+        '',
+        '*Yellow highlight*',
         '',
       ].join('\n'),
     );
@@ -93,7 +99,22 @@ describe('exportMarkdown', () => {
     });
     expect(markdown).toContain('1 highlight, 0 notes.');
     expect(markdown).not.toMatch(/^## /m);
-    expect(markdown).toContain('### Page 3\n\n> Only one.\n');
+    expect(markdown).toContain('### Page 3\n\n> Only one.\n\n*Yellow highlight*\n');
+  });
+
+  it('names each highlight’s colour under its passage (phase 21)', () => {
+    const markdown = exportMarkdown({
+      title: 'Colours',
+      outline: [],
+      exportedAt,
+      highlights: [
+        { ...highlight('g', 0, 10, 'Green words.'), color: 'green' },
+        { ...highlight('p', 0, 30, 'Pink words.'), color: 'pink' },
+      ],
+      notes: [],
+    });
+    expect(markdown).toContain('> Green words.\n\n*Green highlight*\n');
+    expect(markdown).toContain('> Pink words.\n\n*Pink highlight*\n');
   });
 
   it('escapes Markdown in quotes, so the passage reads as written', () => {

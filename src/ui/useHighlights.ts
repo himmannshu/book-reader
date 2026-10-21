@@ -3,7 +3,7 @@ import {
   normalizeQuote,
   sortByPosition,
   type Highlight,
-  type ScreenRect,
+  type HighlightColor,
 } from '../core/highlights';
 import type { HighlightStore } from '../storage/types';
 import type { Viewer } from '../viewer/viewer';
@@ -13,17 +13,28 @@ import type { SelectionAction } from './SelectionActions';
 export const HIGHLIGHT_UNSAVED_REASON = 'Highlights need this book saved on this device.';
 export const HIGHLIGHTS_UNREADABLE = "This book's highlights couldn't be read.";
 
-/** Rough size of the floating button, to keep it inside the reader. */
+/** Rough width of the menu, to keep it inside the reader. */
 const BUTTON_WIDTH = 170;
 const MARGIN = 8;
 
-/** A spot inside the reader body `area`, below a screen box and kept on screen. */
-function below(rect: ScreenRect, gap: number, area: DOMRect | undefined) {
-  if (!area) return { left: rect.left, top: rect.top + rect.height + gap };
+/** The screen span the menu must not cover: a selection or a highlight (CSS px). */
+interface Anchor {
+  left: number;
+  top: number;
+  bottom: number;
+}
+
+/**
+ * Where the menu may go inside the reader body `area`: `top` just below the anchor and `above`
+ * just above it (SelectionActions picks one once it knows its height), kept on screen sideways.
+ */
+function spot(anchor: Anchor, gap: number, area: DOMRect | undefined) {
+  if (!area) return { left: anchor.left, top: anchor.bottom + gap, above: anchor.top - gap };
   const maxLeft = Math.max(MARGIN, area.width - BUTTON_WIDTH - MARGIN);
   return {
-    left: Math.min(Math.max(rect.left - area.left, MARGIN), maxLeft),
-    top: rect.top + rect.height - area.top + gap,
+    left: Math.min(Math.max(anchor.left - area.left, MARGIN), maxLeft),
+    top: anchor.bottom - area.top + gap,
+    above: anchor.top - area.top - gap,
   };
 }
 
@@ -123,7 +134,12 @@ export function useHighlights({
       const end = range && viewer.current?.selectionEnd(range);
       if (range && end) {
         offeredRange.current = range.cloneRange();
-        setAction({ kind: 'create', ...below(end, 6, body.current?.getBoundingClientRect()) });
+        const anchor = {
+          left: end.left,
+          top: range.getBoundingClientRect().top,
+          bottom: end.top + end.height,
+        };
+        setAction({ kind: 'create', ...spot(anchor, 6, body.current?.getBoundingClientRect()) });
       } else if (!actionsHaveFocus()) {
         offeredRange.current = null;
         setAction((shown) => (shown?.kind === 'create' ? null : shown));
@@ -168,16 +184,20 @@ export function useHighlights({
     onError(annotationMessage(error, 'highlight', action));
   }
 
-  async function highlightSelection() {
-    if (saving.current) return;
+  /**
+   * Highlights the selection in `color` (phase 21). The menu stays, now for the new highlight, so a
+   * note can follow. Resolves to the new highlight's id, or null when nothing was saved.
+   */
+  async function highlightSelection(color: HighlightColor = 'yellow'): Promise<string | null> {
+    if (saving.current) return null;
     const range = pageTextSelection(viewer.current) ?? offeredRange.current;
-    if (bookId === null || !items || !range) return;
+    if (bookId === null || !items || !range) return null;
     const rects = viewer.current?.selectionRects(range);
     const quote = normalizeQuote(viewer.current?.selectionText(range) ?? '');
     const first = rects?.[0];
     if (!rects || !first || !quote) {
       setAction(null);
-      return;
+      return null;
     }
     const highlight: Highlight = {
       id: newId(),
@@ -186,7 +206,9 @@ export function useHighlights({
       rects,
       quote,
       createdAt: now(),
+      color,
     };
+    const shown = shownAction.current;
     saving.current = true;
     onError(null);
     try {
@@ -196,15 +218,49 @@ export function useHighlights({
           ? { bookId, items: sortByPosition([...shown.items, highlight]) }
           : shown,
       );
-      document.getSelection()?.removeAllRanges();
       offeredRange.current = null;
-      setAction(null);
-      scroller.current?.focus({ preventScroll: true });
+      // The menu stays where it was, for the new highlight.
+      setAction(shown ? { ...shown, kind: 'remove', id: highlight.id } : null);
+      document.getSelection()?.removeAllRanges();
+      return highlight.id;
     } catch (error) {
       report(error, 'save');
+      return null;
     } finally {
       saving.current = false;
     }
+  }
+
+  /** Gives a highlight another colour (phase 21): an ordinary edit, synced like any other. */
+  async function recolour(id: string, color: HighlightColor): Promise<boolean> {
+    const highlight = items?.find((item) => item.id === id);
+    if (!highlight || highlight.color === color) return Boolean(highlight);
+    const changed = { ...highlight, color };
+    onError(null);
+    try {
+      await store.put(changed);
+      setLoaded((shown) =>
+        shown && 'items' in shown
+          ? {
+              bookId: shown.bookId,
+              items: shown.items.map((item) => (item.id === id ? changed : item)),
+            }
+          : shown,
+      );
+      return true;
+    } catch (error) {
+      report(error, 'save');
+      return false;
+    }
+  }
+
+  /** The selected page text and the page it starts on (Copy, Share, Listen over a selection). */
+  function selectedPassage(): { quote: string; pageIndex: number } | null {
+    const range = pageTextSelection(viewer.current) ?? offeredRange.current;
+    if (!range) return null;
+    const quote = normalizeQuote(viewer.current?.selectionText(range) ?? '');
+    const first = viewer.current?.selectionRects(range)?.[0];
+    return quote && first ? { quote, pageIndex: first.pageIndex } : null;
   }
 
   async function removeHighlight(id: string) {
@@ -231,12 +287,18 @@ export function useHighlights({
     if (selection && !selection.isCollapsed) return;
     const id = viewer.current?.highlightAt(event.clientX, event.clientY) ?? null;
     if (id) {
-      const spot = below(
-        { left: event.clientX - 40, top: event.clientY, width: 0, height: 0 },
-        12,
-        body.current?.getBoundingClientRect(),
-      );
-      setAction({ kind: 'remove', id, ...spot });
+      // Around the whole highlight (all its lines), so the menu never covers its words.
+      const lines = [
+        ...(scroller.current?.querySelectorAll(
+          `.highlight-box[data-highlight-id="${CSS.escape(id)}"]`,
+        ) ?? []),
+      ].map((box) => box.getBoundingClientRect());
+      const anchor = {
+        left: event.clientX - 40,
+        top: Math.min(event.clientY, ...lines.map((line) => line.top)),
+        bottom: Math.max(event.clientY, ...lines.map((line) => line.bottom)),
+      };
+      setAction({ kind: 'remove', id, ...spot(anchor, 6, body.current?.getBoundingClientRect()) });
     } else {
       setAction((shown) => (shown?.kind === 'remove' ? null : shown));
     }
@@ -256,6 +318,8 @@ export function useHighlights({
     action,
     unavailableReason,
     highlightSelection,
+    recolour,
+    selectedPassage,
     removeHighlight,
     onPagesClick,
     dismiss,

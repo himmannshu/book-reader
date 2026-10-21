@@ -143,6 +143,19 @@ body {
   border-radius: 2px;
 }
 
+/* Each colour's translucent fill (phase 21); yellow is the default above. */
+.highlight-box--green {
+  background: var(--hl-green);
+}
+
+.highlight-box--blue {
+  background: var(--hl-blue);
+}
+
+.highlight-box--pink {
+  background: var(--hl-pink);
+}
+
 .library {
   width: 100%;
   max-width: 720px;
@@ -317,8 +330,115 @@ body {
   max-width: calc(100% - 16px);
 }
 
-.selection-actions .br-btn {
-  box-shadow: var(--shadow-raised);
+/* The menu over a selection (phase 21, the design's HighlightMenu): swatches, then actions. */
+.br-hlmenu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow:
+    var(--shadow-raised),
+    0 0 0 1px var(--line);
+}
+
+.br-hlmenu__swatches {
+  display: flex;
+}
+
+.br-hlmenu__sep {
+  align-self: stretch;
+  width: 1px;
+  margin: var(--space-1) var(--space-1);
+  background: var(--line);
+}
+
+.br-swatch {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* The paint: a solid swatch, ringed so yellow holds on light paper. */
+.br-swatch::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.br-swatch--yellow::before {
+  background: var(--swatch-yellow);
+}
+
+.br-swatch--green::before {
+  background: var(--swatch-green);
+}
+
+.br-swatch--blue::before {
+  background: var(--swatch-blue);
+}
+
+.br-swatch--pink::before {
+  background: var(--swatch-pink);
+}
+
+/* The chosen colour is ringed in ink. */
+.br-swatch.is-selected::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-full);
+}
+
+.br-swatch:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+@media (pointer: coarse), (max-width: 719px) {
+  .br-swatch {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+
+  .br-swatch::before {
+    inset: 12px;
+  }
+
+  .br-swatch.is-selected::after {
+    inset: 7px;
+  }
+}
+
+/* A highlight's passage in the lists, with its colour behind the words, as on the page. */
+.br-mark {
+  padding: 0 1px;
+  border-radius: var(--radius-xs);
+  color: var(--ink);
+  background: var(--hl-yellow);
+}
+
+.br-mark--green {
+  background: var(--hl-green);
+}
+
+.br-mark--blue {
+  background: var(--hl-blue);
+}
+
+.br-mark--pink {
+  background: var(--hl-pink);
 }
 
 .selection-note {

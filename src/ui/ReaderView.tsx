@@ -17,7 +17,7 @@ import {
   sortByPage,
   type Bookmark,
 } from '../core/bookmarks';
-import type { Highlight } from '../core/highlights';
+import { highlightColor, type Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
 import { excerptText } from '../core/share';
 import type { Note, NoteTarget } from '../core/notes';
@@ -69,7 +69,7 @@ import { SPEEDS, useReadAloud } from './useReadAloud';
 import { Elapsed, VoiceNotes } from './VoiceNotes';
 import { useSearch } from './useSearch';
 import { downloadText } from './download';
-import { shareText } from './share';
+import { copyText, shareText } from './share';
 
 const CONTENTS_ID = 'contents-panel';
 const BOOKMARKS_ID = 'bookmarks-panel';
@@ -739,8 +739,16 @@ export function ReaderView({
   /** A short confirmation over the pages (phase 17), like the app's own notice. */
   const [readerNotice, setReaderNotice] = useState<{ text: string; key: number } | null>(null);
 
-  async function shareHighlight(id: string) {
-    const passage = highlightList.find((highlight) => highlight.id === id);
+  /** The passage the menu is for: the selected text, or the chosen highlight (phase 21). */
+  function menuPassage(): { quote: string; pageIndex: number } | null {
+    const action = marked.action;
+    if (!action) return null;
+    if (action.kind === 'create') return marked.selectedPassage();
+    const chosen = highlightList.find((highlight) => highlight.id === action.id);
+    return chosen ? { quote: chosen.quote, pageIndex: chosen.pageIndex } : null;
+  }
+
+  async function sharePassage(passage: { quote: string; pageIndex: number } | null) {
     if (!passage) return;
     marked.dismiss();
     setAnnotationError(null);
@@ -753,6 +761,25 @@ export function ReaderView({
       console.error('Could not share the passage', error);
       setAnnotationError("This passage couldn't be shared or copied here.");
     }
+  }
+
+  async function copyPassage(passage: { quote: string } | null) {
+    if (!passage) return;
+    setAnnotationError(null);
+    try {
+      await copyText(passage.quote);
+      setReaderNotice({ text: 'Copied the passage.', key: now() });
+    } catch (error) {
+      console.error('Could not copy the passage', error);
+      setAnnotationError("This passage couldn't be copied here.");
+    }
+  }
+
+  function listenFrom(passage: { quote: string; pageIndex: number } | null) {
+    if (!passage) return;
+    marked.dismiss();
+    listen.stop();
+    void listen.startAt(passage.pageIndex, passage.quote);
   }
 
   function openNote(target: NoteTarget) {
@@ -897,6 +924,10 @@ export function ReaderView({
       ? written.items.length + voice.items.length
       : undefined;
   const presentation = narrow ? 'sheet' : 'side';
+  /** The colour of the highlight the menu is for (none over a fresh selection). */
+  const chosenId = marked.action?.kind === 'remove' ? marked.action.id : null;
+  const chosenHighlight = highlightList.find((item) => item.id === chosenId);
+  const chosenColor = chosenHighlight ? highlightColor(chosenHighlight) : undefined;
 
   const tools = (
     <ReaderToolbar
@@ -1100,15 +1131,36 @@ export function ReaderView({
         )}
         <SelectionActions
           action={marked.action}
+          color={chosenColor}
           unsavedReason={marked.unavailableReason}
-          onHighlight={() => void marked.highlightSelection()}
-          onRemove={removeHighlight}
-          onNote={(id) => {
-            const highlight = highlightList.find((item) => item.id === id);
-            if (highlight)
-              openNote({ kind: 'highlight', pageIndex: highlight.pageIndex, highlightId: id });
+          onColor={(color) => {
+            const action = marked.action;
+            if (action?.kind === 'remove') void marked.recolour(action.id, color);
+            else void marked.highlightSelection(color);
           }}
-          onShare={(id) => void shareHighlight(id)}
+          onRemove={removeHighlight}
+          onNote={() => {
+            const action = marked.action;
+            if (action?.kind === 'remove') {
+              const highlight = highlightList.find((item) => item.id === action.id);
+              if (highlight)
+                openNote({
+                  kind: 'highlight',
+                  pageIndex: highlight.pageIndex,
+                  highlightId: action.id,
+                });
+              return;
+            }
+            // A note needs a highlight to belong to: make a yellow one first.
+            const passage = marked.selectedPassage();
+            void marked.highlightSelection('yellow').then((id) => {
+              if (id && passage)
+                openNote({ kind: 'highlight', pageIndex: passage.pageIndex, highlightId: id });
+            });
+          }}
+          onCopy={() => void copyPassage(menuPassage())}
+          onShare={() => void sharePassage(menuPassage())}
+          onListen={() => listenFrom(menuPassage())}
           onVoiceNote={(id) => {
             const highlight = highlightList.find((item) => item.id === id);
             if (highlight)

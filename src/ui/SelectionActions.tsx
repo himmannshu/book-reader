@@ -1,23 +1,41 @@
-import { useLayoutEffect, useRef, type SyntheticEvent } from 'react';
-import { Button } from './controls';
+import { useLayoutEffect, useRef, type KeyboardEvent, type SyntheticEvent } from 'react';
+import { HIGHLIGHT_COLORS, type HighlightColor } from '../core/highlights';
+import { IconButton } from './controls';
 
-/** What the floating button offers, and where (CSS px inside the reader body). */
+/**
+ * What the menu offers, and where (CSS px inside the reader body): `top` is just below the
+ * selection or highlight, `above` just above it. The menu goes above when it fits there.
+ */
 export type SelectionAction =
-  | { kind: 'create'; left: number; top: number }
-  | { kind: 'remove'; id: string; left: number; top: number };
+  | { kind: 'create'; left: number; top: number; above: number }
+  | { kind: 'remove'; id: string; left: number; top: number; above: number };
+
+const COLOR_LABELS: Record<HighlightColor, string> = {
+  yellow: 'Yellow',
+  green: 'Green',
+  blue: 'Blue',
+  pink: 'Pink',
+};
 
 interface SelectionActionsProps {
   action: SelectionAction | null;
+  /** The chosen highlight's colour (absent over a fresh selection). */
+  color?: HighlightColor;
   /** Why highlights can't be saved, or null when they can. Shown, not only as a tooltip. */
   unsavedReason: string | null;
-  onHighlight(): void;
+  /** Over a selection: highlight it in this colour. Over a highlight: recolour it. */
+  onColor(color: HighlightColor): void;
   onRemove(id: string): void;
-  onNote?(id: string): void;
+  /** Over a selection: highlight it (yellow) and open its note. Over a highlight: open its note. */
+  onNote?(): void;
   noteLabel?: string;
-  /** Records a voice note on the chosen highlight (phase 15). */
+  onCopy?(): void;
+  /** Shares the passage with another app (phase 17). */
+  onShare?(): void;
+  /** Reads aloud from the sentence where the passage starts. */
+  onListen?(): void;
+  /** Records a voice note on the chosen highlight (phase 15; kept here until phase 23). */
   onVoiceNote?(id: string): void;
-  /** Shares the chosen highlight's passage with another app (phase 17). */
-  onShare?(id: string): void;
   noteUnavailableReason?: string | null;
   removeUnavailableReason?: string | null;
 }
@@ -26,39 +44,55 @@ interface SelectionActionsProps {
 // dispatches the tap's click; useHighlights keeps a range copy if touch focus clears selection.
 const keepSelection = (event: SyntheticEvent) => event.preventDefault();
 
-/** The floating "Highlight" button under a selection, or "Remove highlight" for a chosen one. */
+/**
+ * The menu over a text selection or a chosen highlight (phase 21, the design's HighlightMenu):
+ * colour swatches, a note, copy, share and listen from here, and Remove highlight on a highlight.
+ */
 export function SelectionActions({
   action,
+  color,
   unsavedReason,
-  onHighlight,
+  onColor,
   onRemove,
   onNote,
   noteLabel = 'Add note',
-  onVoiceNote,
+  onCopy,
   onShare,
+  onListen,
+  onVoiceNote,
   noteUnavailableReason = null,
   removeUnavailableReason = null,
 }: SelectionActionsProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const hasNoteAction = onNote !== undefined;
+  const reason =
+    action?.kind === 'create' ? unsavedReason : noteUnavailableReason || removeUnavailableReason;
   useLayoutEffect(() => {
     const element = ref.current;
     const area = element?.offsetParent;
     if (!action || !element || !(area instanceof HTMLElement)) return;
-    // Notes add a second action. Measure the actual menu (including any error reason) only while
-    // shown, so a highlight near an edge never puts an action outside the reader.
+    // Above the selection when it fits, else below: never over the selected words. Measure the
+    // actual menu (with any reason under it) so it stays inside the reader.
     const box = element.getBoundingClientRect();
+    const top = action.above - box.height >= 8 ? action.above - box.height : action.top;
     element.style.left = `${Math.max(8, Math.min(action.left, area.clientWidth - box.width - 8))}px`;
-    element.style.top = `${Math.max(8, Math.min(action.top, area.clientHeight - box.height - 8))}px`;
-  }, [
-    action,
-    unsavedReason,
-    noteUnavailableReason,
-    removeUnavailableReason,
-    noteLabel,
-    hasNoteAction,
-  ]);
+    element.style.top = `${Math.max(8, Math.min(top, area.clientHeight - box.height - 8))}px`;
+  }, [action, reason, noteLabel, color]);
   if (!action) return null;
+
+  const existing = action.kind === 'remove';
+  function onSwatchKey(event: KeyboardEvent<HTMLButtonElement>) {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (step === undefined) return;
+    event.preventDefault();
+    const radios = [
+      ...(event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+        '[role="radio"]',
+      ) ?? []),
+    ];
+    const at = radios.indexOf(event.currentTarget);
+    radios[(at + step + radios.length) % radios.length]?.focus();
+  }
+
   return (
     <div
       ref={ref}
@@ -66,37 +100,59 @@ export function SelectionActions({
       style={{ left: action.left, top: action.top }}
       onMouseDown={keepSelection}
     >
-      {action.kind === 'create' ? (
-        <>
-          <Button variant="primary" disabled={unsavedReason !== null} onClick={onHighlight}>
-            Highlight
-          </Button>
-          {unsavedReason && <p className="selection-note">{unsavedReason}</p>}
-        </>
-      ) : (
-        <>
-          {onNote && (
-            <Button disabled={noteUnavailableReason !== null} onClick={() => onNote(action.id)}>
-              {noteLabel}
-            </Button>
-          )}
-          {onVoiceNote && (
-            <Button
-              disabled={noteUnavailableReason !== null}
-              onClick={() => onVoiceNote(action.id)}
-            >
-              Voice note
-            </Button>
-          )}
-          {onShare && <Button onClick={() => onShare(action.id)}>Share</Button>}
-          <Button disabled={removeUnavailableReason !== null} onClick={() => onRemove(action.id)}>
-            Remove highlight
-          </Button>
-          {(noteUnavailableReason || removeUnavailableReason) && (
-            <p className="selection-note">{noteUnavailableReason || removeUnavailableReason}</p>
-          )}
-        </>
-      )}
+      <div className="br-hlmenu" role="toolbar" aria-label="Highlight">
+        <div className="br-hlmenu__swatches" role="radiogroup" aria-label="Highlight colour">
+          {HIGHLIGHT_COLORS.map((option, index) => {
+            const chosen = existing && color === option;
+            // One Tab stop: the chosen colour, or the first over a fresh selection.
+            const stop = existing && color ? chosen : index === 0;
+            return (
+              <button
+                key={option}
+                type="button"
+                role="radio"
+                aria-checked={chosen}
+                aria-label={COLOR_LABELS[option]}
+                title={COLOR_LABELS[option]}
+                tabIndex={stop ? 0 : -1}
+                className={`br-swatch br-swatch--${option}${chosen ? ' is-selected' : ''}`}
+                disabled={existing ? removeUnavailableReason !== null : unsavedReason !== null}
+                onClick={() => onColor(option)}
+                onKeyDown={onSwatchKey}
+              />
+            );
+          })}
+        </div>
+        <span className="br-hlmenu__sep" aria-hidden="true" />
+        {onNote && (
+          <IconButton
+            icon="note"
+            label={noteLabel}
+            disabled={(existing ? noteUnavailableReason : unsavedReason) !== null}
+            onClick={onNote}
+          />
+        )}
+        {existing && onVoiceNote && (
+          <IconButton
+            icon="mic"
+            label="Voice note"
+            disabled={noteUnavailableReason !== null}
+            onClick={() => onVoiceNote(action.id)}
+          />
+        )}
+        {onCopy && <IconButton icon="copy" label="Copy" onClick={onCopy} />}
+        {onShare && <IconButton icon="share" label="Share" onClick={onShare} />}
+        {onListen && <IconButton icon="listen" label="Listen from here" onClick={onListen} />}
+        {existing && (
+          <IconButton
+            icon="delete"
+            label="Remove highlight"
+            disabled={removeUnavailableReason !== null}
+            onClick={() => onRemove(action.id)}
+          />
+        )}
+      </div>
+      {reason && <p className="selection-note">{reason}</p>}
     </div>
   );
 }

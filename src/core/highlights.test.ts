@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HIGHLIGHT_COLORS,
   highlightAt,
+  highlightColor,
   joinTextPieces,
   normalizeQuote,
   sortByPosition,
@@ -172,5 +174,26 @@ describe('highlightAt', () => {
       ],
     };
     expect(highlightAt([spanning], 1, 100, 165)?.id).toBe('both');
+  });
+});
+
+describe('highlightColor', () => {
+  const base: Highlight = {
+    id: 'h',
+    bookId: 'b',
+    pageIndex: 0,
+    rects: [],
+    quote: 'q',
+    createdAt: 1,
+  };
+
+  it('offers the design’s four colours, yellow first', () => {
+    expect([...HIGHLIGHT_COLORS]).toEqual(['yellow', 'green', 'blue', 'pink']);
+  });
+
+  it('is the highlight’s colour, and yellow for one saved before colours or with an unknown one', () => {
+    expect(highlightColor({ ...base, color: 'blue' })).toBe('blue');
+    expect(highlightColor(base)).toBe('yellow');
+    expect(highlightColor({ ...base, color: 'purple' } as unknown as Highlight)).toBe('yellow');
   });
 });

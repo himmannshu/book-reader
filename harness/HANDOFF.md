@@ -55,19 +55,26 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Nothing running. Phases 19 and 20 Complete (user-checked 2026-10-20 and 2026-10-21; full CI green: runs
-  39533163830 and 39546956538). `phase-20-panels-and-sheets` is pushed up to 4d8203b; the record commits after it
-  are local (every push deploys). It contains `mac-webkit-baseline` and phase 19; none is merged into main.
-- Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
-  at once. Close heavy browser tabs before verify: WebKit tests stall under load.
+- Phase 21 (Highlight colours) in progress on `phase-21-highlight-colours` (plan approved 2026-10-21: every highlight
+  in the Notes tab; Voice note kept in the menu until phase 23). Stopped mid-build (usage limit), committed as wip.
+  Done: colour model (`highlightColor`, `HIGHLIGHT_COLORS`), export colour lines, `passageSentence` + read-aloud
+  `startAt`, `copyText`, the HighlightMenu (SelectionActions.tsx: swatches, note, copy, share, listen, voice note,
+  remove; above/below placement), recolour and colour-on-create in useHighlights, per-colour fills (viewer class +
+  CSS), `.br-mark--*` and swatch CSS, `annotationRows` in src/core/notes.ts (unit-tested). e2e/highlight-colours.spec:
+  7 of 8 pass in Chromium; the Notes-list test is red (lists not built yet).
+- NOT done: NotesPanel rows from `annotationRows` (highlight rows with `br-mark--<colour>`, note text; a More menu
+  per row: Add/Edit note, colour radios, Share, Copy, Delete (the note), Remove highlight; page notes: Edit note,
+  Copy, Delete); bookmark rows' More menu; notes count to include highlights; a sync e2e test for a recolour;
+  updating existing specs that press the old "Highlight" button (now the "Yellow" radio) and row buttons now in
+  More (record each); full verify; evaluator; CI (push needs the user's approval); device check.
+- Note: in e2e/highlight-colours.spec "Notes lists every highlight…" expects 'Delete' on a highlight row without a
+  note; change it to 'Remove highlight' (decided: 'Delete' removes the note, 'Remove highlight' the highlight).
 
 ## Next action
 
 1. User: merge into main when ready (pushing main deploys production; a fast-forward to
    `phase-20-panels-and-sheets` brings the Mac WebKit fix and phases 19–20).
-2. Phase 21 (Highlight colours): write its phase file and contract, post the plan, wait for approval. It includes the
-   AnnotationRow More menu (Change colour, Share, Copy) deferred from phase 20 by the user's choice. Cut its branch
-   from `phase-20-panels-and-sheets` (or main once merged).
+2. Finish phase 21 from "NOT done" above (In flight).
 3. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
    freeze on every run (also on the baseline: worth a look of its own); load-sensitive tests (voice-notes chromium,
    library-view 100 books, design zoomed reopen); WebKit whole-book search measured 1391 ms once (not budgeted).
@@ -115,21 +122,31 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 01:19 EDT
-- Branch: phase-20-panels-and-sheets
-- HEAD: 9e606a4 wip: handoff numbering
-- Uncommitted files: 5
+Snapshot 2026-10-21 01:45 EDT
+- Branch: phase-21-highlight-colours
+- HEAD: 896ab97 phase 21: plan approved by the user
+- Uncommitted files: 18
 - Last verify: PASS at 2026-10-21 00:27 EDT (commit d966d2b)
 - Recent commits:
+    896ab97 phase 21: plan approved by the user
+    921a4da phase 21: plan, contract and context (awaiting the user's approval)
+    b86cf33 phase 20: complete (user-checked on devices)
     9e606a4 wip: handoff numbering
     3fdcc64 phase 20: full CI green (run 39546956538); F-022 passing; device check pending
-    4d8203b tests: phase 20 Add-note test waits for the relayout after the panel closes (CI WebKit)
-    88274c3 phase 20: review recheck 2 PASS (conditional on CI); user checklist; handoff
-    d966d2b phase 20: focus goes into a panel even when it is empty; Tab stays in phone sheets
 - Changed files:
-     M PLANS.md
      M harness/HANDOFF.md
-     M harness/USER-CHECKLIST.md
-     M harness/build-log.md
-     M harness/features.json
+     M src/core/export.test.ts
+     M src/core/export.ts
+     M src/core/highlights.test.ts
+     M src/core/highlights.ts
+     M src/core/notes.test.ts
+     M src/core/notes.ts
+     M src/core/read-aloud.test.ts
+     M src/core/read-aloud.ts
+     M src/ui/ReaderView.tsx
+     M src/ui/SelectionActions.test.tsx
+     M src/ui/SelectionActions.tsx
+     M src/ui/app.css
+     M src/ui/share.ts
+     M src/ui/useHighlights.ts
 <!-- AUTO:END -->

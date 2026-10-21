@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_CHUNK, sentenceAt, splitSentences } from './read-aloud';
+import { MAX_CHUNK, passageSentence, sentenceAt, splitSentences } from './read-aloud';
 
 const texts = (text: string) => splitSentences(text).map((s) => text.slice(s.start, s.end));
 
@@ -52,5 +52,21 @@ describe('sentenceAt', () => {
     expect(sentenceAt(sentences, text.length, 0)).toBe(0);
     expect(sentenceAt(sentences, text.length, 0.5)).toBe(2);
     expect(sentenceAt(sentences, text.length, 1)).toBe(3);
+  });
+});
+
+describe('passageSentence', () => {
+  const text = 'Alpha one ends here. Bravo two\nruns across a line. Charlie three is last.';
+
+  it('is the sentence where a passage starts, also across a line break', () => {
+    expect(passageSentence(text, 'Bravo two runs across')).toBe(1);
+    expect(passageSentence(text, 'three is last.')).toBe(2);
+    // A passage starting mid-sentence still starts with that sentence.
+    expect(passageSentence(text, 'ends here. Bravo')).toBe(0);
+  });
+
+  it('starts at the top when the passage is not found in the page text', () => {
+    expect(passageSentence(text, 'Not on this page')).toBe(0);
+    expect(passageSentence('', 'anything')).toBe(0);
   });
 });

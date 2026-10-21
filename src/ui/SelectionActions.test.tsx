@@ -2,53 +2,67 @@ import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { SelectionActions } from './SelectionActions';
 
-describe('SelectionActions', () => {
-  it('offers Highlight for a selection, without dropping the selection on press', () => {
-    const onHighlight = vi.fn();
+const fresh = { kind: 'create', left: 10, top: 20, above: 0 } as const;
+
+describe('SelectionActions (the highlight menu, phase 21)', () => {
+  it('offers the four colours for a selection, without dropping the selection on press', () => {
+    const onColor = vi.fn();
     render(
       <SelectionActions
-        action={{ kind: 'create', left: 10, top: 20 }}
+        action={fresh}
         unsavedReason={null}
-        onHighlight={onHighlight}
+        onColor={onColor}
         onRemove={() => {}}
       />,
     );
-    const button = screen.getByRole('button', { name: 'Highlight' });
-    const pointerDown = createEvent.pointerDown(button);
-    fireEvent(button, pointerDown);
+    const colours = screen.getByRole('radiogroup', { name: 'Highlight colour' });
+    expect(
+      [...colours.querySelectorAll('[role="radio"]')].map((radio) =>
+        radio.getAttribute('aria-label'),
+      ),
+    ).toEqual(['Yellow', 'Green', 'Blue', 'Pink']);
+    const green = screen.getByRole('radio', { name: 'Green' });
+    expect(green).toHaveAttribute('aria-checked', 'false');
+    const pointerDown = createEvent.pointerDown(green);
+    fireEvent(green, pointerDown);
     // Cancelling pointerdown suppresses WebKit's synthesized click after a touch tap.
     expect(pointerDown.defaultPrevented).toBe(false);
-    const mouseDown = createEvent.mouseDown(button);
-    fireEvent(button, mouseDown);
+    const mouseDown = createEvent.mouseDown(green);
+    fireEvent(green, mouseDown);
     expect(mouseDown.defaultPrevented).toBe(true);
 
-    fireEvent.click(button);
-    expect(onHighlight).toHaveBeenCalledTimes(1);
+    fireEvent.click(green);
+    expect(onColor).toHaveBeenCalledWith('green');
+    expect(screen.queryByRole('button', { name: 'Remove highlight' })).toBeNull();
   });
 
-  it('shows why Highlight is unavailable for a book that is not saved', () => {
+  it('shows why highlighting is unavailable for a book that is not saved', () => {
     render(
       <SelectionActions
-        action={{ kind: 'create', left: 10, top: 20 }}
+        action={fresh}
         unsavedReason="Highlights need this book saved on this device."
-        onHighlight={() => {}}
+        onColor={() => {}}
         onRemove={() => {}}
       />,
     );
-    expect(screen.getByRole('button', { name: 'Highlight' })).toBeDisabled();
+    for (const radio of screen.getAllByRole('radio')) expect(radio).toBeDisabled();
     expect(screen.getByText('Highlights need this book saved on this device.')).toBeVisible();
   });
 
-  it('offers Remove highlight for a chosen highlight', () => {
+  it('rings a chosen highlight’s colour and offers Remove highlight', () => {
     const onRemove = vi.fn();
     render(
       <SelectionActions
-        action={{ kind: 'remove', id: 'h1', left: 10, top: 20 }}
+        action={{ kind: 'remove', id: 'h1', left: 10, top: 20, above: 0 }}
+        color="blue"
         unsavedReason={null}
-        onHighlight={() => {}}
+        onColor={() => {}}
         onRemove={onRemove}
       />,
     );
+    expect(screen.getByRole('radio', { name: 'Blue' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Blue' }).tabIndex).toBe(0);
+    expect(screen.getByRole('radio', { name: 'Yellow' }).tabIndex).toBe(-1);
     fireEvent.click(screen.getByRole('button', { name: 'Remove highlight' }));
     expect(onRemove).toHaveBeenCalledWith('h1');
   });
@@ -58,7 +72,7 @@ describe('SelectionActions', () => {
       <SelectionActions
         action={null}
         unsavedReason={null}
-        onHighlight={() => {}}
+        onColor={() => {}}
         onRemove={() => {}}
       />,
     );

@@ -2,7 +2,7 @@
 // Layout (sample in the phase-12 context file): the title, a summary line, then one section per
 // chapter (from the table of contents) and one subsection per page, in book order.
 import { chapterAt, type OutlineEntry } from './bookmarks';
-import { sortByPosition, type Highlight } from './highlights';
+import { highlightColor, sortByPosition, type Highlight } from './highlights';
 import type { Note } from './notes';
 
 export interface ExportInput {
@@ -93,7 +93,13 @@ export function exportMarkdown({
       lines.push(`**${label}:** ${noteText(note.text)}`, '');
     }
     for (const passage of byPage.get(pageIndex) ?? []) {
-      lines.push(`> ${escape(passage.quote)}`, '');
+      const color = highlightColor(passage);
+      lines.push(
+        `> ${escape(passage.quote)}`,
+        '',
+        `*${color[0]?.toUpperCase()}${color.slice(1)} highlight*`,
+        '',
+      );
       const attached = noteFor.get(passage.id);
       if (attached) lines.push(`**Note:** ${noteText(attached.text)}`, '');
     }

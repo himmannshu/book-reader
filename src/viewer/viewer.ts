@@ -5,6 +5,7 @@
 import {
   highlightAt as findHighlightAt,
   joinTextPieces,
+  highlightColor,
   toPageRects,
   type Highlight,
   type HighlightRect,
@@ -581,11 +582,12 @@ export class Viewer {
   }
 
   #drawHighlights(): void {
-    const byPage = new Map<number, { id: string; rect: HighlightRect }[]>();
+    const byPage = new Map<number, { id: string; color: string; rect: HighlightRect }[]>();
     for (const highlight of this.#highlightList) {
+      const color = highlightColor(highlight);
       for (const rect of highlight.rects) {
         const list = byPage.get(rect.pageIndex) ?? [];
-        list.push({ id: highlight.id, rect });
+        list.push({ id: highlight.id, color, rect });
         byPage.set(rect.pageIndex, list);
       }
     }
@@ -594,9 +596,10 @@ export class Viewer {
       const boxes = (size && byPage.get(pageIndex)) || [];
       if (boxes.length === 0 && !slot.highlights.firstChild) return;
       slot.highlights.replaceChildren(
-        ...boxes.map(({ id, rect }) => {
+        ...boxes.map(({ id, color, rect }) => {
           const box = document.createElement('div');
-          box.className = 'highlight-box';
+          // Its colour's fill (phase 21): a class, so a theme change needs no redraw.
+          box.className = `highlight-box highlight-box--${color}`;
           box.dataset.highlightId = id;
           const percent = (value: number, of: number) => `${(value / of) * 100}%`;
           box.style.left = percent(rect.x, size?.width ?? 1);

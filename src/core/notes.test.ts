@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Highlight } from './highlights';
-import { noteId, sortNotes, validNoteText, type Note, type NoteTarget } from './notes';
+import {
+  annotationRows,
+  noteId,
+  sortNotes,
+  validNoteText,
+  type Note,
+  type NoteTarget,
+} from './notes';
 
 const page: NoteTarget = { kind: 'page', pageIndex: 0 };
 const passage: NoteTarget = { kind: 'highlight', pageIndex: 0, highlightId: 'h' };
@@ -53,5 +60,44 @@ describe('notes', () => {
       noteId('book', { kind: 'page', pageIndex: 1 }),
     ]);
     expect(notes[0]?.target).toEqual(passage); // Sorting never mutates the input.
+  });
+});
+
+describe('annotationRows (phase 21: the Notes tab lists every highlight)', () => {
+  const mark = (id: string, pageIndex: number, y: number): Highlight => ({
+    id,
+    bookId: 'b',
+    pageIndex,
+    rects: [{ pageIndex, x: 72, y, width: 100, height: 12 }],
+    quote: id,
+    createdAt: 1,
+  });
+  const written = (target: NoteTarget, text: string): Note => ({
+    id: noteId('b', target),
+    bookId: 'b',
+    target,
+    text,
+    createdAt: 1,
+    updatedAt: 1,
+  });
+
+  it('gives every highlight a row, with its note; page notes lead their page', () => {
+    const highlights = [mark('low', 0, 300), mark('high', 0, 100), mark('later', 2, 50)];
+    const notes = [
+      written({ kind: 'highlight', pageIndex: 0, highlightId: 'low' }, 'On the low one'),
+      written({ kind: 'page', pageIndex: 0 }, 'Page one'),
+    ];
+    const rows = annotationRows(notes, highlights);
+    expect(
+      rows.map((row) =>
+        row.kind === 'highlight' ? `${row.highlight.id}:${row.note?.text ?? ''}` : row.note.text,
+      ),
+    ).toEqual(['Page one', 'high:', 'low:On the low one', 'later:']);
+  });
+
+  it('keeps a note whose highlight is gone, as a note on its page', () => {
+    const notes = [written({ kind: 'highlight', pageIndex: 1, highlightId: 'gone' }, 'Orphan')];
+    const rows = annotationRows(notes, [mark('h', 3, 10)]);
+    expect(rows.map((row) => row.kind)).toEqual(['note', 'highlight']);
   });
 });
