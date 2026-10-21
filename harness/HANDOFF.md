@@ -14,7 +14,9 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is the user's call (pushing main deploys).
 - Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
   main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
-- Phases 19 and 20 Complete (user-checked, CI green) on stacked branches, not merged into main.
+- 2026-10-21: the user asked to merge every phase into main. main fast-forwarded to phase 23 (19–23 and the Mac
+  WebKit fix from `mac-webkit-baseline`) and was pushed, which deployed production; the push's full CI run is the
+  check (build log). Phases 19 and 20 Complete (user-checked).
 - Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Pushed 2026-10-21;
   full CI green (run 39664582126). Only the user's device check (contract item 13) is left.
 - Phase 22 (library shelf) built on `phase-22-library-shelf` (from 21) and phase 23 (listen bar and voice notes) on
@@ -94,10 +96,10 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 1. User: device checks for phases 21, 22 and 23 (harness/USER-CHECKLIST.md, with their questions). All three are
    pushed; previews in the Cloudflare dashboard (Deployments, newest per branch).
-2. When the user wants to merge: run `scripts/verify.sh` on `phase-23-listen-bar-voice-notes` (it holds 19–23) and
-   the full CI run on it, since 22 and 23 ran focused checks only. Optionally an evaluator review of 22 and 23.
-3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–23 and the Mac WebKit fix
-   on `mac-webkit-baseline`).
+2. The full CI run on main's push (build log) is the first full check of 22 and 23. Optionally an evaluator review
+   of 22 and 23.
+3. Merged into main on 2026-10-21 (fast-forward, pushed; production deployed). The phase branches can be deleted on
+   GitHub when the user likes; `docs-readme` still waits for its demo GIF.
 4. Watch: WebKit steady-scroll p95 swings 32–52 ms on this Mac, on phase 20 as much as 21 (budget 40); a miss means
    rerun perf alone and check no other worktree is running perf. One ~2.4 s freeze sample on every run (also on the
    baseline). WebKit whole-book search ~1400 ms on phase 20 and 21 alike (was ~900; not budgeted, worth a look).

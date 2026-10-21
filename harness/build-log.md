@@ -2018,3 +2018,11 @@ Contract evidence from this final canonical run (contract unchanged after approv
   39690556156 (22) and 39690555973 (23).
 - Not asked for: the same command also pushed `phase-21-highlight-colours` 5749740..1c85911 (two harness-doc
   commits: the CI record and the checklist). It made one more preview build and quick-check run 39690558149.
+
+### 2026-10-21 19:45 EDT | Phases 19–23 | Claude Code (Opus 5.5) | Merged into main (user's request)
+- The user asked to merge all the phases into main, run CI and monitor it. main (fea67a5) fast-forwarded to
+  `phase-23-listen-bar-voice-notes` (1c70143): 44 commits, phases 19–23 and `mac-webkit-baseline`'s fix (already in
+  the stack). No merge commit, no conflicts. Quick checks on the last branch pushes were green (39690556156,
+  39690555973, 39690558149).
+- Pushing main deploys production (Cloudflare Pages) and runs the full CI suite (chromium and webkit jobs); its
+  result is recorded below when it finishes.
