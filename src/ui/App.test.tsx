@@ -18,6 +18,7 @@ const fakeDoc: PdfDoc = {
   renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
   outline: () => Promise.resolve([]),
   pageLabels: () => Promise.resolve(null),
+  author: () => Promise.resolve(null),
   pageText: () => Promise.resolve(''),
   destroy: () => Promise.resolve(),
 };
@@ -52,7 +53,10 @@ describe('App', () => {
 
   it('invites the reader to open a PDF when no books are stored', async () => {
     render(<App store={memoryStore()} />);
-    expect(await screen.findByText('No books yet. Open a PDF to start.')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Your library is empty' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Choose Open PDF to add one\./)).toBeInTheDocument();
   });
 
   it('lists the stored books', async () => {

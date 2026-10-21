@@ -8,9 +8,14 @@ const COVER_WIDTH = 240;
 export interface DrawnCover {
   bytes: ArrayBuffer;
   type: string;
+  /** From the PDF's metadata (phase 22); null when it has none or it could not be read. */
+  author: string | null;
 }
 
-/** Draws page 1 of an open document into a small JPEG. Aborting cancels the drawing. */
+/**
+ * Draws page 1 of an open document into a small JPEG and reads the book's author with it.
+ * Aborting cancels the drawing.
+ */
 export async function drawCover(doc: PdfDoc, signal?: AbortSignal): Promise<DrawnCover> {
   const canvas = document.createElement('canvas');
   try {
@@ -23,7 +28,12 @@ export async function drawCover(doc: PdfDoc, signal?: AbortSignal): Promise<Draw
       canvas.toBlob(resolve, 'image/jpeg', 0.8),
     );
     if (!blob) throw new Error('The cover could not be encoded');
-    return { bytes: await blob.arrayBuffer(), type: blob.type || 'image/jpeg' };
+    // A book with unreadable metadata still gets its cover.
+    const author = await doc.author().catch((error: unknown) => {
+      console.error("Could not read the book's author", error);
+      return null;
+    });
+    return { bytes: await blob.arrayBuffer(), type: blob.type || 'image/jpeg', author };
   } finally {
     // Free the backing store at once (Safari keeps it otherwise).
     canvas.width = 0;

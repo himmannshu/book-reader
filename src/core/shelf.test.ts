@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { ReadingState } from './reading-state';
-import { filterShelf, readingProgress, sortShelf, type ShelfBook } from './shelf';
+import {
+  SHELF_FILTERS,
+  filterByStatus,
+  filterShelf,
+  readingProgress,
+  shelfCounts,
+  shelfStatus,
+  sortShelf,
+  validShelfView,
+  type ShelfBook,
+} from './shelf';
 
 const state = (pageIndex: number, pageCount?: number): ReadingState => ({
   bookId: 'x',
@@ -79,5 +89,58 @@ describe('filterShelf', () => {
 
   it('keeps everything for empty text', () => {
     expect(filterShelf(books, '   ')).toHaveLength(2);
+  });
+});
+
+describe('shelfStatus (phase 22)', () => {
+  it('is cloud for a book not on this device, whatever its progress', () => {
+    expect(shelfStatus({ hasFile: false }, state(150, 300))).toBe('cloud');
+  });
+
+  it('is unread before the book is started, reading in between, finished at the last page', () => {
+    expect(shelfStatus({}, undefined)).toBe('unread');
+    expect(shelfStatus({ hasFile: true }, state(0, 300))).toBe('unread');
+    expect(shelfStatus({}, state(150, 300))).toBe('reading');
+    expect(shelfStatus({}, state(298, 300))).toBe('reading');
+    expect(shelfStatus({}, state(299, 300))).toBe('finished');
+    expect(shelfStatus({}, state(0, 1))).toBe('finished');
+  });
+});
+
+describe('shelf filters (phase 22)', () => {
+  const shelf = [
+    { ...book('a', 'Alpha', 1), hasFile: true },
+    { ...book('b', 'Beta', 2), hasFile: true },
+    { ...book('c', 'Gamma', 3), hasFile: true },
+    { ...book('d', 'Delta', 4), hasFile: false },
+  ];
+  const states = new Map<string, ReadingState>([
+    ['a', state(150, 300)],
+    ['b', state(299, 300)],
+  ]);
+
+  it('counts the books in each filter', () => {
+    expect(shelfCounts(shelf, states)).toEqual({
+      all: 4,
+      reading: 1,
+      unread: 1,
+      finished: 1,
+      cloud: 1,
+    });
+  });
+
+  it('keeps only the books in the chosen filter, in their order', () => {
+    expect(filterByStatus(shelf, states, 'all').map((b) => b.id)).toEqual(['a', 'b', 'c', 'd']);
+    expect(filterByStatus(shelf, states, 'reading').map((b) => b.id)).toEqual(['a']);
+    expect(filterByStatus(shelf, states, 'unread').map((b) => b.id)).toEqual(['c']);
+    expect(filterByStatus(shelf, states, 'finished').map((b) => b.id)).toEqual(['b']);
+    expect(filterByStatus(shelf, states, 'cloud').map((b) => b.id)).toEqual(['d']);
+  });
+
+  it('knows its filters and views', () => {
+    expect(SHELF_FILTERS).toEqual(['all', 'reading', 'unread', 'finished', 'cloud']);
+    expect(validShelfView('list')).toBe(true);
+    expect(validShelfView('grid')).toBe(true);
+    expect(validShelfView('table')).toBe(false);
   });
 });

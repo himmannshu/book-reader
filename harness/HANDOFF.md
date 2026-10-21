@@ -22,6 +22,22 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Branch `phase-10-reading-comfort-k8v7pk` is merged and stale; the user deletes it on GitHub.
 - Everything the user must check is in harness/USER-CHECKLIST.md.
 
+## Standing instruction from the user (2026-10-21, after phase 21's CI run)
+
+"Let's go ahead and build all the phases, I don't think we need to run CI checks, and the verify with every
+phase since the changes are small. Unless, we are touching code that will affect performance and core logic,
+we shouldn't try and run the full suite. ... you choose the best direction and good architecture choices.
+Don't wait for my permission, maybe plan all the phases first or do the planning phase by phase."
+- Overrides AGENTS.md's "wait for approval" and "do not start the next phase", and the per-phase full verify
+  and CI run, for this run (phases 22–23). Everything else in AGENTS.md holds.
+- Checks per phase: lint, format, types, unit tests and the affected e2e specs (both engines). `scripts/verify.sh`
+  only when a phase touches the viewer, rendering, scrolling, the engine, src/core, storage or sync. The build log
+  says which scope was used and why. Contract items for full verify / CI are recorded as deferred, not passed.
+- Contracts: "Approved by: agent under the user's standing instruction of 2026-10-21"; judgment calls in each
+  phase's context file. Branches stacked: `phase-22-…` from `phase-21-highlight-colours`, and so on.
+- Not pushing (the instruction does not mention it, and every push deploys a preview); commit locally.
+- Never: main, credentials, Cloudflare dashboard, paid services, budget changes.
+
 ## Standing instructions from the user (2026-10-20; ended with the merge of 10–17)
 
 (Ended with the merge on 2026-10-20; kept for the record.) The user was away and asked the agent to keep building the roadmap, phase after phase, using the

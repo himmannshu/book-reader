@@ -1,21 +1,41 @@
 import { useDeferredValue, useMemo, useState } from 'react';
-import { formatSize } from '../core/library';
 import type { ReadingState } from '../core/reading-state';
 import {
+  SHELF_FILTERS,
   SHELF_SORTS,
+  filterByStatus,
   filterShelf,
-  readingProgress,
+  shelfCounts,
   sortShelf,
-  validShelfSort,
+  type ShelfFilter,
   type ShelfSort,
+  type ShelfView,
 } from '../core/shelf';
 import type { BookRecord } from '../storage/types';
-import { Button, EmptyState, ProgressBar } from './controls';
+import { BookCard } from './BookCard';
+import { Chip, EmptyState, SegmentedControl, cx } from './controls';
+import { Icon } from './icons';
 
-const SORT_LABELS: Record<ShelfSort, string> = {
-  recent: 'Recent',
-  title: 'Title',
-  progress: 'Progress',
+const SORT_OPTIONS = SHELF_SORTS.map((value) => ({
+  value,
+  label: { recent: 'Recent', title: 'Title', progress: 'Progress' }[value],
+}));
+const VIEW_OPTIONS = [
+  { value: 'grid', label: 'Grid', icon: 'grid' },
+  { value: 'list', label: 'List', icon: 'list' },
+] as const;
+const FILTER_LABELS: Record<ShelfFilter, string> = {
+  all: 'All',
+  reading: 'Reading',
+  unread: 'Unread',
+  finished: 'Finished',
+  cloud: 'In cloud',
+};
+const NONE_IN_FILTER: Record<Exclude<ShelfFilter, 'all'>, string> = {
+  reading: 'No books in progress. A book you have started appears here.',
+  unread: 'Every book here has been started.',
+  finished: 'No finished books yet. A book read to its last page appears here.',
+  cloud: 'Every book is on this device.',
 };
 const NO_COVERS: ReadonlyMap<string, string> = new Map();
 const NO_STATES: ReadonlyMap<string, ReadingState> = new Map();
@@ -35,16 +55,20 @@ interface LibraryProps {
   onCancelDownload?(): void;
   /** Cover image URLs by book id (phase 11). */
   covers?: ReadonlyMap<string, string>;
+  /** Authors by book id, read with the covers (phase 22). */
+  authors?: ReadonlyMap<string, string>;
   /** Saved reading states by book id, for progress. */
   states?: ReadonlyMap<string, ReadingState>;
   sort?: ShelfSort;
   onSortChange?(sort: ShelfSort): void;
+  view?: ShelfView;
+  onViewChange?(view: ShelfView): void;
 }
 
 /**
- * The library shelf: a cover, the title and the reading progress for each book, with sort and a
- * filter. Books known from another device (no file here) can be downloaded where that is set up.
- * Removing asks first, because it deletes data.
+ * The library shelf (phase 22, the design's Library): a heading, filter chips with counts, sort and
+ * grid/list controls, a title filter, and a BookCard per book. Books known from another device (no
+ * file here) can be downloaded where that is set up.
  */
 export function Library({
   books,
@@ -56,23 +80,32 @@ export function Library({
   downloading = null,
   onCancelDownload,
   covers = NO_COVERS,
+  authors = NO_COVERS,
   states = NO_STATES,
   sort = 'recent',
   onSortChange,
+  view = 'grid',
+  onViewChange,
 }: LibraryProps) {
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<ShelfFilter>('all');
   const [filter, setFilter] = useState('');
   // Typing stays responsive with many books: the shelf may lag a frame behind the input.
   const deferredFilter = useDeferredValue(filter);
+  const counts = useMemo(() => shelfCounts(books, states), [books, states]);
+  // In cloud is offered only while some book is only in the cloud.
+  const filters = SHELF_FILTERS.filter((option) => option !== 'cloud' || counts.cloud > 0);
+  const status = filters.includes(chosen) ? chosen : 'all';
   const shown = useMemo(
-    () => filterShelf(sortShelf(books, states, sort), deferredFilter),
-    [books, states, sort, deferredFilter],
+    () =>
+      filterShelf(filterByStatus(sortShelf(books, states, sort), states, status), deferredFilter),
+    [books, states, sort, status, deferredFilter],
   );
 
   if (books.length === 0) {
     return (
       <EmptyState icon="library" title="Your library is empty">
-        No books yet. Open a PDF to start.
+        Books you open appear here, with your place, highlights and notes. Choose Open PDF to add
+        one.
       </EmptyState>
     );
   }
@@ -80,141 +113,77 @@ export function Library({
   return (
     <section className="library" aria-labelledby="library-heading">
       <div className="library-header">
-        <h2 id="library-heading">Your books</h2>
-        <input
-          type="search"
-          className="picker library-filter"
-          aria-label="Filter books"
-          placeholder="Filter"
-          value={filter}
-          onChange={(event) => setFilter(event.currentTarget.value)}
-        />
-        <label className="theme-picker">
-          Sort
-          <select
-            className="picker"
+        <h2 id="library-heading" className="title-xl">
+          Library
+        </h2>
+        <div className="library-chips" role="group" aria-label="Show">
+          {filters.map((option) => (
+            <Chip
+              key={option}
+              selected={status === option}
+              count={counts[option]}
+              onClick={() => setChosen(option)}
+            >
+              {FILTER_LABELS[option]}
+            </Chip>
+          ))}
+        </div>
+        <div className="library-controls">
+          <div className="br-search library-filter">
+            <span className="br-search__lead">
+              <Icon name="search" size={18} />
+            </span>
+            <input
+              type="search"
+              aria-label="Filter books"
+              placeholder="Filter by title"
+              value={filter}
+              onChange={(event) => setFilter(event.currentTarget.value)}
+            />
+          </div>
+          <SegmentedControl
+            label="Sort"
+            options={SORT_OPTIONS}
             value={sort}
-            onChange={(event) => {
-              const next = event.currentTarget.value;
-              if (validShelfSort(next)) onSortChange?.(next);
-            }}
-          >
-            {SHELF_SORTS.map((option) => (
-              <option key={option} value={option}>
-                {SORT_LABELS[option]}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={(next) => onSortChange?.(next)}
+          />
+          <SegmentedControl
+            label="View"
+            options={VIEW_OPTIONS}
+            value={view}
+            iconOnly
+            onChange={(next) => onViewChange?.(next)}
+          />
+        </div>
       </div>
       {shown.length === 0 && (
-        <EmptyState icon="search" compact>
-          No books match “{filter.trim()}”.
+        <EmptyState icon={filter.trim() ? 'search' : 'library'} compact>
+          {filter.trim()
+            ? `No books match “${filter.trim()}”.`
+            : status === 'all'
+              ? 'No books.'
+              : NONE_IN_FILTER[status]}
         </EmptyState>
       )}
-      <ul aria-label="Your books" className="shelf">
-        {shown.map((book) => {
-          const here = book.hasFile !== false;
-          const openable = here || canDownload;
-          const progress = downloading?.bookId === book.id ? downloading : null;
-          const coverUrl = covers.get(book.id);
-          const read = readingProgress(states.get(book.id));
-          const cover = coverUrl ? (
-            <img className="cover" src={coverUrl} alt="" loading="lazy" decoding="async" />
-          ) : (
-            <span className="cover cover-placeholder" aria-hidden="true">
-              {book.title}
-            </span>
-          );
-          const readLine = (
-            <span className="library-progress">
-              {read ? (
-                <>
-                  <ProgressBar value={read.percent / 100} label={`Progress in ${book.title}`} />
-                  {`Page ${read.page} of ${read.pageCount} · ${read.percent}%`}
-                </>
-              ) : (
-                'Not started'
-              )}
-            </span>
-          );
-          return (
-            <li key={book.id} className={here ? 'library-item' : 'library-item elsewhere'}>
-              {openable ? (
-                <span className="library-title-group">
-                  <button
-                    type="button"
-                    className="library-open"
-                    disabled={busy || downloading !== null}
-                    onClick={() => onOpen(book)}
-                  >
-                    {cover}
-                    <span className="library-title">{book.title}</span>
-                  </button>
-                  {readLine}
-                  {!here && (
-                    <span className="library-note" aria-live="polite">
-                      {progress
-                        ? `Downloading… ${progress.percent}%`
-                        : `On your other devices · ${formatSize(book.byteSize)} · downloads when you open it`}
-                    </span>
-                  )}
-                </span>
-              ) : (
-                <span className="library-title-group">
-                  {cover}
-                  <span className="library-title">{book.title}</span>
-                  <span className="library-note">
-                    On your other devices: open its PDF here to read it.
-                  </span>
-                </span>
-              )}
-              {progress ? (
-                <Button size="sm" onClick={() => onCancelDownload?.()}>
-                  Cancel download
-                </Button>
-              ) : confirmingId === book.id ? (
-                <span className="library-confirm">
-                  Remove this book?
-                  {here && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setConfirmingId(null);
-                        onRemoveFromDevice(book);
-                      }}
-                    >
-                      Remove from this device
-                    </Button>
-                  )}
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => {
-                      setConfirmingId(null);
-                      onDeleteEverywhere(book);
-                    }}
-                  >
-                    Delete everywhere
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setConfirmingId(null)}>
-                    Cancel
-                  </Button>
-                </span>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  aria-label={`Remove ${book.title}`}
-                  disabled={busy}
-                  onClick={() => setConfirmingId(book.id)}
-                >
-                  Remove
-                </Button>
-              )}
-            </li>
-          );
-        })}
+      <ul aria-label="Your books" className={cx('shelf', `shelf--${view}`)}>
+        {shown.map((book) => (
+          <BookCard
+            key={book.id}
+            book={book}
+            layout={view}
+            coverUrl={covers.get(book.id)}
+            author={authors.get(book.id)}
+            state={states.get(book.id)}
+            canDownload={canDownload}
+            download={downloading?.bookId === book.id ? downloading : null}
+            locked={downloading !== null}
+            busy={busy}
+            onOpen={() => onOpen(book)}
+            onCancelDownload={() => onCancelDownload?.()}
+            onRemoveFromDevice={() => onRemoveFromDevice(book)}
+            onDeleteEverywhere={() => onDeleteEverywhere(book)}
+          />
+        ))}
       </ul>
     </section>
   );

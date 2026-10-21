@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sortByRecentlyOpened, titleFromFileName } from './library';
+import { cleanAuthor, sortByRecentlyOpened, titleFromFileName } from './library';
 
 describe('titleFromFileName', () => {
   it('drops the .pdf extension, in any case', () => {
@@ -40,5 +40,30 @@ describe('sortByRecentlyOpened', () => {
     const input = [book('a', 1), book('b', 2)];
     sortByRecentlyOpened(input);
     expect(input.map((b) => b.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('cleanAuthor (phase 22)', () => {
+  it('keeps a readable name, trimmed, with runs of spaces and control characters collapsed', () => {
+    expect(cleanAuthor('  Mary   Shelley ')).toBe('Mary Shelley');
+    expect(cleanAuthor('Jane\u0000 Austen\r\n')).toBe('Jane Austen');
+  });
+
+  it('joins a list of creators', () => {
+    expect(cleanAuthor(['Harold Abelson', ' Gerald Jay Sussman '])).toBe(
+      'Harold Abelson, Gerald Jay Sussman',
+    );
+  });
+
+  it('is null for nothing usable', () => {
+    expect(cleanAuthor('')).toBeNull();
+    expect(cleanAuthor('   ')).toBeNull();
+    expect(cleanAuthor(undefined)).toBeNull();
+    expect(cleanAuthor(42)).toBeNull();
+    expect(cleanAuthor([])).toBeNull();
+  });
+
+  it('cuts a very long value', () => {
+    expect(cleanAuthor('x'.repeat(500))?.length).toBeLessThanOrEqual(120);
   });
 });

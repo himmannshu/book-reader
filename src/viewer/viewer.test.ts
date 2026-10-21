@@ -39,6 +39,7 @@ function fakeDoc(pageCount: number, size: PageSize = { width: 500, height: 700 }
     },
     outline: () => Promise.resolve([]),
     pageLabels: () => Promise.resolve(null),
+    author: () => Promise.resolve(null),
     pageText: () => Promise.resolve(''),
     destroy: () => Promise.resolve(),
   };

@@ -16,6 +16,13 @@ export interface ShelfBook {
   addedAt: number;
 }
 
+/** Grid of covers or a list of rows (phase 22). */
+export type ShelfView = 'grid' | 'list';
+
+export function validShelfView(value: unknown): value is ShelfView {
+  return value === 'grid' || value === 'list';
+}
+
 export interface Progress {
   /** 1-based page reached. */
   page: number;
@@ -68,4 +75,55 @@ export function filterShelf<T extends ShelfBook>(books: readonly T[], text: stri
   const wanted = plain(text.trim());
   if (!wanted) return [...books];
   return books.filter((book) => plain(book.title).includes(wanted));
+}
+
+/** Where a book stands, for its badge and the filter chips (phase 22). */
+export type ShelfStatus = 'reading' | 'unread' | 'finished' | 'cloud';
+export type ShelfFilter = 'all' | ShelfStatus;
+export const SHELF_FILTERS: readonly ShelfFilter[] = [
+  'all',
+  'reading',
+  'unread',
+  'finished',
+  'cloud',
+];
+
+/**
+ * In the cloud when the file is not on this device; otherwise unread until started (as
+ * readingProgress), finished once the last page is reached, and reading in between.
+ */
+export function shelfStatus(
+  book: { hasFile?: boolean },
+  state: ReadingState | null | undefined,
+): ShelfStatus {
+  if (book.hasFile === false) return 'cloud';
+  const progress = readingProgress(state);
+  if (!progress) return 'unread';
+  return progress.page >= progress.pageCount ? 'finished' : 'reading';
+}
+
+/** How many books each filter shows. */
+export function shelfCounts<T extends ShelfBook & { hasFile?: boolean }>(
+  books: readonly T[],
+  states: ReadonlyMap<string, ReadingState>,
+): Record<ShelfFilter, number> {
+  const counts: Record<ShelfFilter, number> = {
+    all: books.length,
+    reading: 0,
+    unread: 0,
+    finished: 0,
+    cloud: 0,
+  };
+  for (const book of books) counts[shelfStatus(book, states.get(book.id))] += 1;
+  return counts;
+}
+
+/** The books a filter shows, in their order. Returns a new array. */
+export function filterByStatus<T extends ShelfBook & { hasFile?: boolean }>(
+  books: readonly T[],
+  states: ReadonlyMap<string, ReadingState>,
+  filter: ShelfFilter,
+): T[] {
+  if (filter === 'all') return [...books];
+  return books.filter((book) => shelfStatus(book, states.get(book.id)) === filter);
 }

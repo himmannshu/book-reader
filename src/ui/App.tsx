@@ -10,7 +10,7 @@ import {
 import { titleFromFileName } from '../core/library';
 import { markOpened, markOpenStart } from '../core/perf-marks';
 import type { ReadingState, Theme } from '../core/reading-state';
-import type { ShelfSort } from '../core/shelf';
+import type { ShelfSort, ShelfView } from '../core/shelf';
 import { pdfjsEngine } from '../engine/pdfjs-engine';
 import { PdfOpenError, type PdfDoc, type PdfEngine } from '../engine/types';
 import { createIndexedDBStores, indexedDBAvailable } from '../storage/indexeddb-book-store';
@@ -169,11 +169,16 @@ export function App({
 
   // The shelf (phase 11): cover images and reading states, both local to this device.
   const [shelfSort, setShelfSort] = useState<ShelfSort>(() => preferences.shelfSort());
+  const [shelfView, setShelfView] = useState<ShelfView>(() => preferences.shelfView());
   const [shelf, setShelf] = useState<{
     covers: ReadonlyMap<string, string>;
+    /** Authors read with the covers (phase 22). Absent: none, or not read yet. */
+    authors: ReadonlyMap<string, string>;
+    /** Books whose cover is up to date, for the code that decides whether to draw one. */
+    drawn: ReadonlySet<string>;
     states: ReadonlyMap<string, ReadingState>;
-  }>({ covers: new Map(), states: new Map() });
-  /** Books that have a cover, for the code that decides whether to draw one. */
+  }>({ covers: new Map(), authors: new Map(), drawn: new Set(), states: new Map() });
+  /** Books with an up-to-date cover, read synchronously as a book closes. */
   const coverIds = useRef(new Set<string>());
 
   const loadShelf = useCallback(
@@ -186,11 +191,17 @@ export function App({
               URL.createObjectURL(new Blob([cover.bytes], { type: cover.type })),
             ]),
           );
-          coverIds.current = new Set(urls.keys());
+          const authors = new Map<string, string>();
+          for (const cover of coverList) if (cover.author) authors.set(cover.bookId, cover.author);
+          // A cover drawn before phase 22 has no author field: it is drawn again to read it.
+          const drawn = new Set(
+            coverList.filter((cover) => cover.author !== undefined).map((cover) => cover.bookId),
+          );
+          coverIds.current = new Set(drawn);
           setShelf((previous) => {
             for (const url of previous.covers.values()) URL.revokeObjectURL(url);
             const states = new Map(stateList.map((state) => [state.bookId, state]));
-            return { covers: urls, states };
+            return { covers: urls, authors, drawn, states };
           });
         },
         // The shelf still lists the books, just without covers or progress.
@@ -213,7 +224,15 @@ export function App({
       setShelf((previous) => {
         const old = previous.covers.get(bookId);
         if (old) URL.revokeObjectURL(old);
-        return { ...previous, covers: new Map(previous.covers).set(bookId, url) };
+        const authors = new Map(previous.authors);
+        if (cover.author) authors.set(bookId, cover.author);
+        else authors.delete(bookId);
+        return {
+          ...previous,
+          covers: new Map(previous.covers).set(bookId, url),
+          authors,
+          drawn: new Set(previous.drawn).add(bookId),
+        };
       });
     },
     [covers],
@@ -290,10 +309,10 @@ export function App({
   useEffect(() => {
     coverWorker.want(
       books
-        .filter((record) => record.hasFile !== false && !shelf.covers.has(record.id))
+        .filter((record) => record.hasFile !== false && !shelf.drawn.has(record.id))
         .map((record) => record.id),
     );
-  }, [books, shelf.covers, coverWorker]);
+  }, [books, shelf.drawn, coverWorker]);
 
   const onRemoteChanges = useCallback(() => {
     setSyncVersion((version) => version + 1);
@@ -584,11 +603,17 @@ export function App({
           downloading={downloading}
           onCancelDownload={() => download.current?.abort()}
           covers={shelf.covers}
+          authors={shelf.authors}
           states={shelf.states}
           sort={shelfSort}
           onSortChange={(next) => {
             setShelfSort(next);
             preferences.setShelfSort(next);
+          }}
+          view={shelfView}
+          onViewChange={(next) => {
+            setShelfView(next);
+            preferences.setShelfView(next);
           }}
         />
       )}

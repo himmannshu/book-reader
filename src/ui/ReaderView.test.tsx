@@ -58,6 +58,7 @@ function fakeDoc() {
     renderTextLayer: () => ({ promise: new Promise(() => {}), cancel: () => {} }),
     outline,
     pageLabels: () => Promise.resolve(null),
+    author: () => Promise.resolve(null),
     pageText: () => Promise.resolve(''),
     destroy: () => Promise.resolve(),
   };

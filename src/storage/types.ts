@@ -2,7 +2,7 @@ import type { Bookmark } from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import type { Note } from '../core/notes';
 import type { ReadingState, Theme } from '../core/reading-state';
-import type { ShelfSort } from '../core/shelf';
+import type { ShelfSort, ShelfView } from '../core/shelf';
 import type { VoiceNote } from '../core/voice-notes';
 import type { SyncItem } from '../core/sync';
 
@@ -83,6 +83,11 @@ export interface Cover {
   bytes: ArrayBuffer;
   /** Media type, such as image/jpeg. */
   type: string;
+  /**
+   * The author from the PDF's metadata, read with the cover (phase 22): null when it has none.
+   * Absent on covers drawn before phase 22, which are drawn again to read it.
+   */
+  author?: string | null;
 }
 
 /** Covers drawn on this device. Never synced; kept when only the file is removed. */
@@ -98,6 +103,9 @@ export interface Preferences {
   setTheme(theme: Theme): void;
   shelfSort(): ShelfSort;
   setShelfSort(sort: ShelfSort): void;
+  /** Grid or list on the library shelf (phase 22). */
+  shelfView(): ShelfView;
+  setShelfView(view: ShelfView): void;
 }
 
 /** Local bookkeeping for sync (phase 09a). Only the sync engine uses it. */

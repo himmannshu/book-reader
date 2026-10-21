@@ -1,6 +1,7 @@
 // PDF.js adapter for the engine interface. This is the only module allowed to import pdfjs-dist.
 // PDF.js parses and decodes in its own Web Worker; drawing onto the canvas happens here.
 import { GlobalWorkerOptions, TextLayer, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
+import { cleanAuthor } from '../core/library';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { resolveOutline, type RawOutlineItem } from './outline';
 import './text-layer.css';
@@ -148,6 +149,12 @@ class PdfjsDoc implements PdfDoc {
   async pageLabels(): Promise<string[] | null> {
     const labels = await this.#doc.getPageLabels();
     return labels?.some((label) => label.trim() !== '') ? labels : null;
+  }
+
+  async author(): Promise<string | null> {
+    const { info, metadata } = await this.#doc.getMetadata();
+    const fromInfo = cleanAuthor((info as { Author?: unknown } | null)?.Author);
+    return fromInfo ?? cleanAuthor(metadata?.get('dc:creator'));
   }
 
   async destroy(): Promise<void> {

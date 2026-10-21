@@ -74,3 +74,19 @@ describe('shelf sort preference', () => {
     expect(createPreferences(() => storage).shelfSort()).toBe('recent');
   });
 });
+
+describe('shelf view preference (phase 22)', () => {
+  it('starts as a grid and keeps the chosen view', () => {
+    const data = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => data.get(key) ?? null,
+      setItem: (key: string, value: string) => void data.set(key, value),
+    } as unknown as Storage;
+    const prefs = createPreferences(() => storage);
+    expect(prefs.shelfView()).toBe('grid');
+    prefs.setShelfView('list');
+    expect(createPreferences(() => storage).shelfView()).toBe('list');
+    data.set('book-reader:shelf-view', 'carousel');
+    expect(createPreferences(() => storage).shelfView()).toBe('grid');
+  });
+});

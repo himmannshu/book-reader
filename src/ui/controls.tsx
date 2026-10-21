@@ -220,6 +220,53 @@ export function ProgressBar({
 }
 
 /**
+ * A filter toggle above the library shelf (phase 22). Selected shows a check and the accent, so the
+ * state never relies on colour alone; `count` is how many books match.
+ */
+export function Chip({
+  selected,
+  count,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  count?: number;
+  onClick(): void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      className={cx('br-chip', selected && 'is-selected')}
+      onClick={onClick}
+    >
+      {selected && <Icon name="check" size={16} />}
+      <span>{children}</span>
+      {count !== undefined && <span className="br-chip__count">{count}</span>}
+    </button>
+  );
+}
+
+/** One or two words of status on a book card (phase 22). Never more than one per card. */
+export function Badge({
+  tone = 'neutral',
+  icon,
+  children,
+}: {
+  tone?: 'neutral' | 'accent' | 'positive' | 'danger';
+  icon?: IconName;
+  children: ReactNode;
+}) {
+  return (
+    <span className={cx('br-badge', `br-badge--${tone}`)}>
+      {icon && <Icon name={icon} size={13} />}
+      {children}
+    </span>
+  );
+}
+
+/**
  * A short message at the bottom of the screen. `danger` is for failures the reader can act on and
  * stays until dismissed; the others leave on their own after about 4 s (app.css).
  */

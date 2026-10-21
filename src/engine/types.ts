@@ -52,6 +52,8 @@ export interface PdfDoc {
    * (phase 19). An empty label means that page has none.
    */
   pageLabels(): Promise<string[] | null>;
+  /** The book's author from its metadata (Info Author, else XMP creator), or null (phase 22). */
+  author(): Promise<string | null>;
   destroy(): Promise<void>;
 }
 

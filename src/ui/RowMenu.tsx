@@ -22,7 +22,16 @@ const ITEMS = '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:dis
  * outside closes it. Focus goes back to the button before an action runs, so an action that opens
  * something (an editor, a confirmation) takes focus from there.
  */
-export function RowMenu({ items, disabled = false }: { items: RowMenuItem[]; disabled?: boolean }) {
+export function RowMenu({
+  items,
+  disabled = false,
+  label = 'More actions',
+}: {
+  items: RowMenuItem[];
+  disabled?: boolean;
+  /** The button's name, such as "More for <title>" on a book card. */
+  label?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
@@ -86,7 +95,7 @@ export function RowMenu({ items, disabled = false }: { items: RowMenuItem[]; dis
       <IconButton
         ref={button}
         icon="more"
-        label="More actions"
+        label={label}
         className={cx('row-more', open && 'is-pressed')}
         aria-haspopup="menu"
         aria-expanded={open}
