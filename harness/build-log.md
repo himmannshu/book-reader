@@ -1921,3 +1921,22 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - New, non-blocking: N6 Add note pressed while a colour's save runs turns the highlight yellow and opens no editor
   (`highlightSelection('yellow')` from Add note sets `pendingColor`, src/ui/useHighlights.ts:192); N7 the menu does
   not re-lay out on resize or rotation while open (SelectionActions.tsx); N8 `ONE_ROW_EXTRA` repeats app.css sizes.
+
+### 2026-10-21 15:30 EDT | Phase 21 | Claude Code (Opus 5.5) | Recheck findings N6, N7 fixed; verify PASS
+- Fixed in 3517cbb, each with a test seen failing on the old code first (e2e/highlight-colours.spec.ts, both engines):
+  - N6: Add note now asks `highlightForNote()` (src/ui/useHighlights.ts), which waits for a colour's save under way
+    and keeps its colour, else makes a yellow highlight. Only swatch presses set the pending colour. Test: Green and
+    Add note pressed in one tick → the editor opens, the note saves, one green highlight. Red before: no editor.
+  - N7: the menu's listener treats a window resize like a scroll: the menu over a highlight closes (its highlight
+    moved), the menu over a selection follows it. A probe showed narrowing the window rebuilds the text layer and
+    drops the selection, so that menu already closed; the one left off screen was the menu over a highlight. Test:
+    1280 → 390 px with the menu over a highlight → closed (red before: still open); over a selection → closed or
+    every target on screen. Judgment call: closing on rotation matches scrolling; tapping the highlight reopens it.
+  - N8 (ONE_ROW_EXTRA duplicates app.css sizes) left as it is.
+- `npm run test:e2e -- highlight-colours highlights notes voice-notes share` → 106 passed. Lint, format clean.
+- `scripts/verify.sh` at 3517cbb, run 1 → FAIL at one test: webkit notes "books isolate notes …" timed out in
+  importBook with page 1 still "rendering" (the load stall seen before, entry above at line ~1720). Alone with
+  `--repeat-each=10` → 10 passed.
+- `scripts/verify.sh` at 3517cbb, run 2 → PASS: unit 404; browser 356 passed + 2 skipped; sync 29; perf 10 (chromium
+  first 190 ms, jump 28, p95 16.7, canvas 67.1, search 878; webkit first 144, jump 76, p95 33, canvas 67.1, search
+  870; blank 0 / 1.1 %). Budgets unchanged. Contract item 12 still needs the CI run (branch not pushed).

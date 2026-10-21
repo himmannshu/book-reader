@@ -5,7 +5,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (resumed 14:00; running the phase 21 recheck).
+- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (resumed 14:00; recheck done, N6/N7 fixed, verify PASS at 3517cbb).
 - Local baseline: verify on main (fea67a5) failed 9 WebKit tests on macOS (first WebKit run on a
   Mac). Fixed on branch `mac-webkit-baseline` (6a30927, not pushed): verify PASS there, WebKit and
   perf included. Causes: harness/context/mac-webkit-baseline-context.md. One real app change:
@@ -74,14 +74,15 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
       (build log 14:00 entry).
   - Evaluator recheck at 8113d9a (review file appendix): items 1–11 PASS, B1–B4/N1/N4/N5 fixed. Open: item 12 (no
     green verify at HEAD yet: timing checks fail under load, pass alone; CI not run) and item 13 (device check).
-    New non-blocking: N6 Add note during a colour's save turns it yellow, no editor (useHighlights.ts:192);
-    N7 menu does not re-lay out on resize/rotation; N8 ONE_ROW_EXTRA duplicates app.css sizes.
+    New non-blocking N6 (Add note during a colour's save) and N7 (menu over a highlight left off screen after a
+    resize; it now closes, as on scroll) fixed in 3517cbb with tests seen red. N8 (ONE_ROW_EXTRA duplicates
+    app.css sizes) left. `scripts/verify.sh` PASS at 3517cbb (run 2; run 1 hit the known WebKit load stall).
   - Left as they are (for the user's device check): N2 bookmark rows' More menu holds only Remove bookmark;
     N3 Add note on a fresh selection then Cancel keeps the yellow highlight (recorded judgment call).
 
 ## Next action
 
-1. Phase 21: with the user's go-ahead, fix N6 (and N7) test first; then a green `scripts/verify.sh` on a quiet machine.
+1. Phase 21: done locally (verify PASS at 3517cbb). No evaluator pass over the N6/N7 fixes (small; the user's call).
 2. Then ask the user before pushing `phase-21-highlight-colours` (a preview deploy) and running
    `gh workflow run verify.yml --ref phase-21-highlight-colours`; record the run. Then the user's device check
    (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
@@ -138,19 +139,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 14:31 EDT
+Snapshot 2026-10-21 15:30 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
-- Uncommitted files: 3
-- Last verify: FAIL at 2026-10-21 14:28 EDT (commit 8113d9a)
+- HEAD: 3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-21 15:29 EDT (commit 3517cbb)
 - Recent commits:
+    3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
+    bf4db8e phase 21: evaluator recheck recorded (items 1-11 pass; N6-N8 new, non-blocking)
     8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
     de3e7c0 handoff: Claude Code 2026-10-21
     c7e1c64 phase 21: review fixes recorded; verify PASS
-    814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
-    fab20ab phase 21: built; verify PASS (build log)
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
-     M harness/code_review/phase-21-review.md
 <!-- AUTO:END -->
