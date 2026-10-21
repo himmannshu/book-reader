@@ -84,9 +84,8 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 ## Next action
 
 1. Phase 21: done locally (verify PASS at 3517cbb). No evaluator pass over the N6/N7 fixes (small; the user's call).
-2. Pushed and CI green (run 39664582126, build log 16:06). Next: the user's device check
-   (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
-   the lists and More menus, the export, N3).
+2. Pushed and CI green (run 39664582126, build log 16:06). Next: the user's device check, listed under Phase 21
+   in harness/USER-CHECKLIST.md (with three questions: N3 Cancel, N2 bookmark More menu, N7 rotation).
 3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–21 and the Mac WebKit fix).
 4. Watch: WebKit steady-scroll p95 swings 32–52 ms on this Mac, on phase 20 as much as 21 (budget 40); a miss means
    rerun perf alone and check no other worktree is running perf. One ~2.4 s freeze sample on every run (also on the
@@ -139,18 +138,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 16:06 EDT
+Snapshot 2026-10-21 18:14 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 5749740 phase 21: N6, N7 fixes recorded; verify PASS
+- HEAD: 5e9c064 phase 21: full CI green recorded (run 39664582126)
 - Uncommitted files: 2
 - Last verify: PASS at 2026-10-21 15:29 EDT (commit 3517cbb)
 - Recent commits:
+    5e9c064 phase 21: full CI green recorded (run 39664582126)
     5749740 phase 21: N6, N7 fixes recorded; verify PASS
     3517cbb phase 21: recheck fixes (N6 Add note during a colour's save keeps it; N7 menu over a highlight closes on resize)
     bf4db8e phase 21: evaluator recheck recorded (items 1-11 pass; N6-N8 new, non-blocking)
     8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
-    de3e7c0 handoff: Claude Code 2026-10-21
 - Changed files:
      M harness/HANDOFF.md
-     M harness/build-log.md
+     M harness/USER-CHECKLIST.md
 <!-- AUTO:END -->

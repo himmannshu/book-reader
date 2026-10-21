@@ -156,4 +156,30 @@ buttons in the search sheet.
 - [x] Notes and Bookmarks rows show the page and the chapter; editing and deleting work, also on iPhone
       (the "Delete note?" question appears above the sheet).
 
+## Phase 21: Highlight colours (branch `phase-21-highlight-colours`)
+
+Highlights come in four colours (yellow, green, blue, pink), and the menu over a selection becomes the
+design's highlight menu. The Notes tab now lists every highlight. Preview: the push of 2026-10-21
+(full CI green, run 39664582126).
+
+- [ ] Mac, iPad and iPhone: select a few words. The menu shows four colour dots, then Add note, Copy,
+      Share and Listen from here. It sits above the words (below them near the top of the screen) and
+      never covers them. Tap a colour: the words fill in that colour and the menu stays.
+- [ ] iPhone and iPad, with a thumb: drag the selection handles while the menu shows; the menu follows
+      and every button stays on screen and easy to hit. On iPhone the menu may fold into two rows.
+- [ ] Tap an existing highlight: its colour is ringed; tap another colour to change it. Remove highlight
+      takes it away. Reload: the colours are kept.
+- [ ] Light, Sepia and Dark (Aa): each colour reads well on the page and the text stays legible.
+- [ ] Copy pastes the passage elsewhere; Share opens the share sheet with the title and page; Listen from
+      here starts reading at the start of that sentence (also for a passage that runs onto the next page).
+- [ ] Notes tab: every highlight is listed with its colour behind the passage and its note if it has one,
+      in book order with the page notes. Each row's More (…) has Edit note, Change colour, Share, Copy,
+      Delete, and they work. On iPad portrait with the panel open, the highlight menu stays over the page.
+- [ ] Two devices signed in: change a highlight's colour on one; after a sync it shows on the other.
+- [ ] Export (Markdown) names each highlight's colour under its passage, for example "*Green highlight*".
+- [ ] Questions: (a) Add note on a fresh selection, then Cancel, keeps a yellow highlight with no note. Fine,
+      or should Cancel remove it? (b) A bookmark row's More (…) holds only Remove bookmark. Enough? (c)
+      Rotating the device with the menu open over a highlight closes the menu (as scrolling does); tap the
+      highlight to reopen it. Fine?
+
 <!-- Later phases append their sections below. -->
