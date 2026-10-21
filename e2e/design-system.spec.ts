@@ -1,7 +1,14 @@
 // Phase 18: the Book Reader design system's foundations. Fonts (also offline), focus rings,
 // motion, toasts and the colours drawn over pages.
 import { expect, test, type Page } from '@playwright/test';
-import { chooseTheme, importBook, loadControlled, openFixture, pageSlot } from './helpers';
+import {
+  chooseTheme,
+  importBook,
+  loadControlled,
+  openFixture,
+  openPanel,
+  pageSlot,
+} from './helpers';
 
 /** The resolved value of a design token, as a computed colour. */
 function token(page: Page, name: string): Promise<string> {
@@ -87,7 +94,7 @@ test('every control reached with the keyboard shows a 2 px focus ring', async ({
   browserName,
 }) => {
   await importBook(page, 'text-4-pages.pdf');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   const seen: string[] = [];
   const missing: string[] = [];
   for (let i = 0; i < 25; i++) {

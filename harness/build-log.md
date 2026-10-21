@@ -1759,3 +1759,37 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - User, on their devices: "Did the manual verification, looks good to me". Contract item 13 has its evidence, so
   every item does: PLANS row 19 → Complete (user-checked 2026-10-20; not merged). USER-CHECKLIST phase 19 ticked,
   with no changes asked for on its two questions. F-021 evidence notes the user check.
+
+### 2026-10-20 23:55 EDT | Phase 20 | Claude Code (Opus 5.5) | Built: tabbed panel, search panel, docked and sheet panels, contents tree
+- Plan approved by the user ("Approved: phase 20 as planned, with rows keeping today's actions and the AnnotationRow
+  More menu in phase 21"). Branch `phase-20-panels-and-sheets` from `phase-19-reader-chrome`.
+- New: `Tabs` and `SidePanel` in controls.tsx (side from 720 px at 380 px on the right; sheet below with grabber, scrim
+  and drag-to-close on the grabber and title only), the contents tree in ContentsPanel.tsx (fold, page labels, current
+  chapter via `chapterPathAt` in src/core/bookmarks.ts, parents opened on entry, scrolled into view), the design's
+  search field (count, previous and next inside; Shift+Enter; Escape clears then closes) and result rows (page and
+  chapter). Toolbar: Contents and Search only; More holds Contents and Search; `NARROW_QUERY` and every 699 px media
+  query → 719 px. Rows restyled with hairlines and a metadata line, actions unchanged.
+- Red first: e2e/panels.spec.ts (11 tests × 2 engines) failed before the code; unit tests for chapterPathAt and Tabs
+  failed first.
+- Found while updating tests: on phones the confirmation dialog ("Delete note?", "Discard changes?") opened under the
+  Notes sheet; `.confirmation-backdrop` now sits above sheets (z-index 35). Panels no longer take focus from a tab the
+  reader is moving through with the arrow keys (`onTab` in usePanelKeys).
+- Test changes for moved controls (none loosened):
+  - Bookmarks and Notes buttons → tabs: shared `openPanel` now shows a panel (Contents, then the tab); new
+    `pressTool` (open or close with the toolbar tool), `keyboardToTab` (Shift+Tab to the tabs, arrows, Tab in;
+    Option held in WebKit). Clicks that closed the Notes panel became `pressTool(page, 'Contents')`; the guard test's
+    "switch panel" step became a click on the Contents tab. Unit tests use a `showTab` helper.
+  - Keyboard tests: Bookmarks/Notes reached from the toolbar's Contents through the tabs; Escape returns focus to
+    Contents (was the Bookmarks/Notes button).
+  - Contents entries: page numbers are aria-hidden, so entries keep their exact names; the outline-reading helper
+    reads the tree's titles; loose `name: 'Contents'` locators made exact (the panel adds "Close Contents"); the
+    Contents heading is the panel's title.
+  - Search results read "p. 1" (design); the search spec maps it back to "Page 1" for its unchanged expectation.
+  - reader-chrome: the tool order and the More menu drop the phase 19 stop-gap Bookmarks and Notes buttons.
+  - Touch notes test: `tapPanel` goes through Contents and the tab; the phone threshold is 720 px.
+  - notes "highlight removal…": waits for the pages to lay out after the docked panel closes before clicking.
+- Visual check (WebKit screenshots 1280 and 390 px): docked tabbed panel and tree, Notes rows, search panel, phone
+  sheet. Fixed from it: toasts over a phone sheet move under the toolbar; the Voice notes heading is a quiet label.
+- `scripts/verify.sh` → PASS (first run): unit 396; browser 317 passed + 1 skipped; sync 27; perf 10 (chromium first
+  194 ms, jump 18, p95 16.7, canvas 67.1, search 883; webkit first 142, jump 88, p95 36 [samples 36, 2431, 31], canvas
+  67.1, search 895; blank 0 / 1.1 %). Budgets unchanged.

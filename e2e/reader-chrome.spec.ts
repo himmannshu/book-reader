@@ -42,11 +42,10 @@ test.describe('toolbar', () => {
 
   test('shows the tools in the designed order, each named and titled', async ({ page }) => {
     await importBook(page, 'text-4-pages.pdf');
+    // Phase 20: Bookmarks and Notes are tabs of the panel Contents opens.
     expect(await toolNames(page)).toEqual([
       'Library',
       'Contents',
-      'Bookmarks',
-      'Notes',
       'Search',
       'Listen',
       'Reading settings',
@@ -64,7 +63,7 @@ test.describe('toolbar', () => {
 
   test('the open tool and a bookmarked page show pressed', async ({ page }) => {
     await importBook(page, 'text-4-pages.pdf');
-    const contents = toolbar(page).getByRole('button', { name: 'Contents' });
+    const contents = toolbar(page).getByRole('button', { name: 'Contents', exact: true });
     await contents.click();
     await expect(contents).toHaveAttribute('aria-expanded', 'true');
     await expect(contents).toHaveClass(/is-pressed/);
@@ -84,7 +83,7 @@ test.describe('toolbar', () => {
     await importBook(page, 'outline-12-pages.pdf');
     await expect(page.getByTestId('book-title')).toHaveText('outline-12-pages');
     await expect(page.getByTestId('chapter')).toHaveText('Part One');
-    await toolbar(page).getByRole('button', { name: 'Contents' }).click();
+    await toolbar(page).getByRole('button', { name: 'Contents', exact: true }).click();
     await page.getByRole('button', { name: 'Chapter 2', exact: true }).click();
     await expect(page.getByTestId('chapter')).toHaveText('Chapter 2');
   });
@@ -128,11 +127,11 @@ test.describe('fading', () => {
   });
 
   test('never hides while a panel or Reading settings is open', async ({ page }) => {
-    await toolbar(page).getByRole('button', { name: 'Contents' }).click();
+    await toolbar(page).getByRole('button', { name: 'Contents', exact: true }).click();
     await wheel(page);
     await page.waitForTimeout(300);
     await expect(toolbar(page)).toHaveAttribute('data-hidden', 'false');
-    await toolbar(page).getByRole('button', { name: 'Contents' }).click();
+    await toolbar(page).getByRole('button', { name: 'Contents', exact: true }).click();
 
     await settingsButton(page).click();
     await wheel(page);
@@ -348,12 +347,7 @@ test.describe('phones', () => {
       await more.click();
       await expect(more).toHaveAttribute('aria-expanded', 'true');
       const menu = page.getByRole('menu', { name: 'More' });
-      await expect(menu.getByRole('menuitem')).toHaveText([
-        'Contents',
-        'Bookmarks',
-        'Notes',
-        'Search',
-      ]);
+      await expect(menu.getByRole('menuitem')).toHaveText(['Contents', 'Search']);
       for (const element of await page.locator('header button, [role="menu"] button').all()) {
         const box = await element.boundingBox();
         if (!box || box.width === 0) continue;

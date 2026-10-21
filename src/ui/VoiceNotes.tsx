@@ -32,7 +32,7 @@ export function VoiceNotes({
   const recording = voice.recording;
   return (
     <section className="voice-notes" aria-label="Voice notes">
-      <h2>Voice notes</h2>
+      <h3>Voice notes</h3>
       {recording ? (
         <div className="voice-recording" role="status">
           <span className="recording-dot" aria-hidden="true" />

@@ -247,32 +247,10 @@ body {
   min-width: 0;
 }
 
-.side-panel {
-  width: 300px;
-  flex: none;
-  overflow: auto;
-  padding: 12px 8px 24px;
-  background: var(--surface-raised);
-  border-right: 1px solid var(--line);
-}
-
-.side-panel h2 {
-  margin: 4px 8px 8px;
-  font-family: var(--font-serif);
-  font-size: 19px;
-  line-height: 26px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.side-panel ul {
+.br-panel__body ul {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.side-panel ul ul {
-  padding-left: 14px;
 }
 
 .panel-entry {
@@ -322,7 +300,7 @@ body {
   min-width: 0;
 }
 
-.side-panel .bookmark-remove {
+.bookmark-remove {
   width: auto;
   flex: none;
   font-size: 0.8rem;
@@ -392,9 +370,19 @@ body {
 .note-buttons .panel-entry {
   width: auto;
 }
-.note-row {
-  border-top: 1px solid var(--line);
-  padding: 10px 4px;
+/* Rows in the panels are divided by hairlines, never boxed (phase 20, the design's AnnotationRow). */
+.note-row,
+.bookmark-row {
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-2) 0;
+}
+
+.note-jump strong {
+  display: flex;
+  gap: 6px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 .note-text,
 .note-quote {
@@ -404,7 +392,7 @@ body {
   margin-top: 6px;
 }
 .note-quote {
-  color: var(--ink-muted);
+  color: var(--ink);
   font-family: var(--font-serif);
   font-size: var(--text-m);
   line-height: 22px;
@@ -413,10 +401,11 @@ body {
   margin: 8px;
   padding: 8px;
 }
+/* Above the bottom sheets (26) it is asked from, below toasts (40). */
 .confirmation-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 35;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -438,16 +427,6 @@ body {
   font-family: var(--font-serif);
   font-size: 19px;
   line-height: 26px;
-}
-
-@media (max-width: 699px) {
-  .side-panel {
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: min(85vw, 320px);
-    z-index: 2;
-    box-shadow: var(--shadow-sheet);
-  }
 }
 
 .update-notice {
@@ -639,43 +618,19 @@ body {
   outline: 2px solid var(--accent);
 }
 
-.search-form input {
-  width: 100%;
-  margin: 0 0 4px;
-}
-
-.search-steps {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin: 4px 8px 8px;
-  font-size: 0.85rem;
-  color: var(--ink-muted);
-}
-
-.search-steps .br-btn {
-  padding: 0 var(--space-3);
-}
-
-.search-result .note-quote {
-  display: block;
-}
-
-.search-result mark {
+.br-result mark {
   /* A solid colour per theme, with body text on it: 4.5:1 in every theme (phase 14 review). */
   background: var(--hl-yellow);
   color: var(--ink);
 }
 
-.search-result[aria-current='true'] {
-  background: var(--canvas);
-  outline: 2px solid var(--accent);
+.br-result.is-active {
+  background: var(--accent-soft);
 }
 
 /* ---- Phase 14 design pass: toolbar, buttons, touch targets ---- */
 
-@media (pointer: coarse), (max-width: 699px) {
+@media (pointer: coarse), (max-width: 719px) {
   :root {
     --control-h: 44px;
   }
@@ -699,7 +654,7 @@ body {
 }
 
 /* Touch-sized controls everywhere else too (phase 14). */
-@media (pointer: coarse), (max-width: 699px) {
+@media (pointer: coarse), (max-width: 719px) {
   .panel-entry,
   .br-btn,
   .br-iconbtn,
@@ -708,7 +663,7 @@ body {
     min-width: 44px;
   }
 
-  .side-panel .bookmark-remove {
+  .bookmark-remove {
     min-height: 44px;
   }
 }
@@ -751,7 +706,7 @@ body {
   text-align: center;
 }
 
-@media (max-width: 699px) {
+@media (max-width: 719px) {
   .library-header h2 {
     flex: 1;
   }
@@ -981,7 +936,7 @@ body {
 }
 
 /* Touch screens and phones: 44 px everywhere, the small sizes included (phase 14 rule). */
-@media (pointer: coarse), (max-width: 699px) {
+@media (pointer: coarse), (max-width: 719px) {
   .br-btn--sm {
     min-height: 44px;
   }
@@ -1361,7 +1316,7 @@ body:has(.player-bar, .search-bar) .br-toast {
     color 0.16s ease-out;
 }
 
-@media (pointer: coarse), (max-width: 699px) {
+@media (pointer: coarse), (max-width: 719px) {
   .br-seg__opt {
     min-height: var(--touch-target);
   }
@@ -1441,7 +1396,7 @@ body:has(.player-bar, .search-bar) .br-toast {
   font-variant-numeric: tabular-nums;
 }
 
-@media (max-width: 699px) {
+@media (max-width: 719px) {
   .br-settings {
     top: auto;
     right: 0;
@@ -1454,9 +1409,9 @@ body:has(.player-bar, .search-bar) .br-toast {
   }
 }
 
-/* With the Reading settings sheet up, messages show under the toolbar, not over the sheet. */
-@media (max-width: 699px) {
-  body:has(.br-settings) .br-toast {
+/* With a sheet up (Reading settings, a panel), messages show under the toolbar, not over it. */
+@media (max-width: 719px) {
+  body:has(.br-settings, .br-panel--sheet) .br-toast {
     top: calc(env(safe-area-inset-top) + var(--toolbar-height) + var(--space-2));
     bottom: auto;
   }
@@ -1510,4 +1465,284 @@ body:has(.player-bar, .search-bar, .br-toast) .br-pagepill {
   .br-pagepill {
     transition: none;
   }
+}
+
+/* ---- Phase 20: panels and sheets (design: SidePanel, Tabs, TocList, SearchField, SearchResult). ---- */
+
+/* Docked on the right beside the page, from 720 px. */
+.br-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+
+.br-panel--side {
+  flex: none;
+  order: 2;
+  width: var(--panel-width);
+  max-width: 100%;
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-sheet);
+}
+
+/* Under 720 px: a sheet from the bottom over a scrim, at most 88 % of the height. */
+.br-panel--sheet {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 26;
+  max-height: 88vh;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-sheet);
+  animation: br-sheet-in 0.2s ease-out;
+}
+
+@keyframes br-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.br-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  background: var(--scrim);
+}
+
+.br-panel__grabber {
+  align-self: center;
+  flex: none;
+  width: 36px;
+  height: 5px;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--line-strong);
+  /* A bigger target than it looks, to drag the sheet down. */
+  box-shadow: 0 0 0 12px transparent;
+  touch-action: none;
+  cursor: grab;
+}
+
+.br-panel__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+}
+
+.br-panel--sheet .br-panel__head {
+  touch-action: none;
+}
+
+.br-panel__head h2 {
+  margin: 0;
+}
+
+.br-panel__sub {
+  flex: none;
+  padding: 0 var(--space-4);
+}
+
+.br-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+/* Tabs: the selected one in ink with an accent underline. */
+.br-tabs {
+  display: flex;
+  gap: var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.br-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.br-tab:hover,
+.br-tab.is-selected {
+  color: var(--ink);
+}
+
+.br-tab.is-selected::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+
+.br-tab__count {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The contents tree. */
+.br-toc {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.br-toc__row {
+  display: flex;
+  align-items: center;
+  padding-left: calc(var(--br-depth) * 16px);
+  border-radius: var(--radius-sm);
+}
+
+.br-toc__row.is-current {
+  background: var(--accent-soft);
+}
+
+.br-toc__row:not(.is-current):hover {
+  background: var(--surface-sunken);
+}
+
+.br-toc__twisty {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.panel-entry.br-toc__link {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-2) var(--space-2) 0;
+  background: none;
+}
+
+.br-toc__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.br-toc__page {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.br-toc__row.is-current .br-toc__title,
+.br-toc__row.is-current .br-toc__page {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* The search field: count, previous and next inside it, pinned above the results. */
+.br-search {
+  position: sticky;
+  top: calc(-1 * var(--space-2));
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--touch-target);
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.br-search:focus-within {
+  border-color: var(--focus-ring);
+  box-shadow: inset 0 0 0 1px var(--focus-ring);
+}
+
+.br-search__input {
+  flex: 1;
+  min-width: 0;
+  height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  /* 16 px: iOS zooms the page into smaller fields. */
+  font-size: 16px;
+  outline: none;
+}
+
+.br-search__count {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.panel-entry.br-result {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.br-result__meta {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ink-muted);
+}
+
+.br-result__text {
+  color: var(--ink);
+}
+
+.br-result mark {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .br-panel--sheet {
+    animation: none;
+  }
+}
+
+/* Sections inside a panel tab (Voice notes in Notes): a quiet label, not a second title. */
+.br-panel__body h3 {
+  margin: var(--space-4) 0 var(--space-1);
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }

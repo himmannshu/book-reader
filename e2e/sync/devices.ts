@@ -1,6 +1,6 @@
 // Shared by the two-device suites: one browser context per device, signed in as the test's user.
 import { expect, test as base, type BrowserContext, type Page } from '@playwright/test';
-import { expectPageAtTop, pageSlot } from '../helpers';
+import { expectPageAtTop, openPanel, pageSlot } from '../helpers';
 
 /**
  * `device()` opens a device: its own browser context (so its own IndexedDB), signed in as this
@@ -89,8 +89,7 @@ export async function bookmarkPage(page: Page, index: number) {
 }
 
 export async function bookmarkLabels(page: Page): Promise<string[]> {
-  if ((await bookmarksPanel(page).count()) === 0)
-    await page.getByRole('button', { name: 'Bookmarks', exact: true }).click();
+  if ((await bookmarksPanel(page).count()) === 0) await openPanel(page, 'Bookmarks');
   await expect(bookmarksPanel(page)).toBeVisible();
   return bookmarksPanel(page).locator('.bookmark-jump').allTextContents();
 }
@@ -99,8 +98,7 @@ export const notesPanel = (page: Page) => page.getByRole('navigation', { name: '
 export const noteEditor = (page: Page) => page.getByRole('textbox', { name: 'Note text' });
 
 export async function openNotes(page: Page) {
-  if ((await notesPanel(page).count()) === 0)
-    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  if ((await notesPanel(page).count()) === 0) await openPanel(page, 'Notes');
   await expect(notesPanel(page)).toBeVisible();
 }
 

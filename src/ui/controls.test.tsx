@@ -1,7 +1,15 @@
 // Phase 18: the design system's basic controls.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { Button, EmptyState, IconButton, ProgressBar, SegmentedControl, Toast } from './controls';
+import {
+  Button,
+  EmptyState,
+  IconButton,
+  ProgressBar,
+  SegmentedControl,
+  Tabs,
+  Toast,
+} from './controls';
 import { ICON_NAMES, Icon } from './icons';
 
 describe('Icon', () => {
@@ -154,5 +162,44 @@ describe('SegmentedControl', () => {
       />,
     );
     expect(container.querySelector('.br-seg__swatch--sepia')).not.toBeNull();
+  });
+});
+
+describe('Tabs', () => {
+  const items = [
+    { value: 'contents', label: 'Contents', controls: 'contents-panel' },
+    { value: 'bookmarks', label: 'Bookmarks', count: 3 },
+    { value: 'notes', label: 'Notes', count: 0 },
+  ] as const;
+
+  it('is a named tab list; the selected tab controls its panel and is the only Tab stop', () => {
+    render(<Tabs label="Reader panels" items={items} value="contents" onChange={() => {}} />);
+    expect(screen.getByRole('tablist', { name: 'Reader panels' })).toBeInTheDocument();
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Contents', 'Bookmarks3', 'Notes0']);
+    expect(tabs.map((tab) => tab.getAttribute('aria-selected'))).toEqual([
+      'true',
+      'false',
+      'false',
+    ]);
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1]);
+    expect(tabs[0]).toHaveAttribute('aria-controls', 'contents-panel');
+  });
+
+  it('chooses with a click, the arrow keys (wrapping), Home and End, focus following', () => {
+    const onChange = vi.fn();
+    render(<Tabs label="Reader panels" items={items} value="contents" onChange={onChange} />);
+    fireEvent.click(screen.getByRole('tab', { name: /^Notes/ }));
+    expect(onChange).toHaveBeenLastCalledWith('notes');
+    const contents = screen.getByRole('tab', { name: 'Contents' });
+    fireEvent.keyDown(contents, { key: 'ArrowRight' });
+    expect(onChange).toHaveBeenLastCalledWith('bookmarks');
+    expect(screen.getByRole('tab', { name: /^Bookmarks/ })).toHaveFocus();
+    fireEvent.keyDown(contents, { key: 'ArrowLeft' });
+    expect(onChange).toHaveBeenLastCalledWith('notes');
+    fireEvent.keyDown(contents, { key: 'End' });
+    expect(onChange).toHaveBeenLastCalledWith('notes');
+    fireEvent.keyDown(contents, { key: 'Home' });
+    expect(onChange).toHaveBeenLastCalledWith('contents');
   });
 });

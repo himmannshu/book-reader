@@ -1,18 +1,20 @@
 // Shared controls (phase 14), restyled and extended from the Book Reader design system in phase 18
 // (harness/context/design-system/components/). Class names follow the design's `br-` prefix.
 import {
+  useRef,
   useSyncExternalStore,
   type KeyboardEvent,
   type ComponentProps,
+  type PointerEvent,
   type ReactNode,
 } from 'react';
 import { THEMES, validTheme, type Theme } from '../core/reading-state';
 import { Icon, type IconName } from './icons';
 import { THEME_LABELS } from './theme';
 
-/** Below this width the reader's toolbar is compact (panels under More, phase 19) and Reading
- * settings is a bottom sheet. */
-export const NARROW_QUERY = '(max-width: 699px)';
+/** Below the design's 720 px the reader's toolbar is compact (panels under More), and panels and
+ * Reading settings are bottom sheets (phases 19, 20). */
+export const NARROW_QUERY = '(max-width: 719px)';
 
 /** Whether a media query matches, following changes (for example rotating an iPad). */
 export function useMediaQuery(query: string): boolean {
@@ -268,5 +270,165 @@ export function EmptyState({
       <p className="br-empty__body">{children}</p>
       {action && <div className="br-empty__action">{action}</div>}
     </div>
+  );
+}
+
+export interface TabItem<V extends string> {
+  value: V;
+  label: string;
+  /** Shown after the label (the number of bookmarks or notes); omitted when unknown. */
+  count?: number;
+  /** The id of the content the tab shows. */
+  controls?: string;
+}
+
+/**
+ * Tabs (phase 20), from the design's Tabs: the selected one is underlined in accent. The arrow
+ * keys, Home and End move between tabs and choose them; only the selected tab is a Tab stop.
+ */
+export function Tabs<V extends string>({
+  items,
+  value,
+  onChange,
+  label,
+}: {
+  items: readonly TabItem<V>[];
+  value: V;
+  onChange(value: V): void;
+  label: string;
+}) {
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    const index = items.findIndex((item) => item.value === value);
+    const last = items.length - 1;
+    const next =
+      event.key === 'ArrowRight'
+        ? (index + 1) % items.length
+        : event.key === 'ArrowLeft'
+          ? (index - 1 + items.length) % items.length
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? last
+              : null;
+    if (next === null) return;
+    event.preventDefault();
+    const item = items[next];
+    if (!item) return;
+    onChange(item.value);
+    const tabs =
+      event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    tabs?.[next]?.focus();
+  }
+
+  return (
+    <div role="tablist" aria-label={label} className="br-tabs">
+      {items.map((item) => {
+        const selected = item.value === value;
+        return (
+          <button
+            key={item.value}
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            aria-controls={selected ? item.controls : undefined}
+            tabIndex={selected ? 0 : -1}
+            className={cx('br-tab', selected && 'is-selected')}
+            onClick={() => onChange(item.value)}
+            onKeyDown={onKeyDown}
+          >
+            {item.label}
+            {item.count !== undefined && <span className="br-tab__count">{item.count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** How far a sheet must be dragged down before letting go closes it. */
+const SHEET_CLOSE_DRAG_PX = 80;
+
+/**
+ * The reader's panel (phase 20), from the design's SidePanel. `side` docks on the right beside the
+ * page (720 px and wider); `sheet` rises from the bottom over a scrim (phones). A sheet closes with
+ * its Close button, a tap on the scrim, or a drag down on its grabber or title (not on its lists,
+ * which keep their own touch scrolling). Escape is the reader's (ReaderView).
+ */
+export function SidePanel({
+  id,
+  title,
+  presentation,
+  onClose,
+  header,
+  children,
+}: {
+  id?: string;
+  title: string;
+  presentation: 'side' | 'sheet';
+  onClose(): void;
+  /** Tabs or the search field, pinned under the title. */
+  header?: ReactNode;
+  children: ReactNode;
+}) {
+  const sheet = presentation === 'sheet';
+  const panel = useRef<HTMLElement>(null);
+  const drag = useRef<{ pointer: number; startY: number; by: number } | null>(null);
+
+  function onPointerDown(event: PointerEvent<HTMLElement>) {
+    if (!sheet || event.button !== 0) return;
+    if (event.target instanceof Element && event.target.closest('button')) return;
+    drag.current = { pointer: event.pointerId, startY: event.clientY, by: 0 };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: PointerEvent<HTMLElement>) {
+    const current = drag.current;
+    if (!current || current.pointer !== event.pointerId || !panel.current) return;
+    current.by = Math.max(0, event.clientY - current.startY);
+    // Straight to the element: a drag is not worth a React render per move.
+    panel.current.style.transform = `translateY(${current.by}px)`;
+  }
+
+  function onPointerEnd(event: PointerEvent<HTMLElement>) {
+    const current = drag.current;
+    if (!current || current.pointer !== event.pointerId) return;
+    drag.current = null;
+    if (panel.current) panel.current.style.transform = '';
+    if (event.type === 'pointerup' && current.by >= SHEET_CLOSE_DRAG_PX) onClose();
+  }
+
+  const dragHandlers = sheet
+    ? {
+        onPointerDown,
+        onPointerMove,
+        onPointerUp: onPointerEnd,
+        onPointerCancel: onPointerEnd,
+      }
+    : {};
+
+  return (
+    <>
+      {sheet && <div className="br-scrim" aria-hidden="true" onClick={onClose} />}
+      <aside
+        ref={panel}
+        id={id}
+        className={cx('br-panel', `br-panel--${presentation}`)}
+        aria-label={title}
+      >
+        {sheet && <span className="br-panel__grabber" aria-hidden="true" {...dragHandlers} />}
+        <div className="br-panel__head" {...dragHandlers}>
+          <h2 className="title-md">{title}</h2>
+          <IconButton
+            icon="close"
+            label={`Close ${title}`}
+            variant="filled"
+            size="sm"
+            onClick={onClose}
+          />
+        </div>
+        {header && <div className="br-panel__sub">{header}</div>}
+        <div className="br-panel__body">{children}</div>
+      </aside>
+    </>
   );
 }

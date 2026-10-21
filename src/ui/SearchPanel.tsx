@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH, searchable } from '../core/search';
 import type { SearchResult, SearchState } from './useSearch';
-import { Button } from './controls';
+import { IconButton } from './controls';
 
 /** Typing pauses this long before a search starts. */
 const TYPING_DELAY_MS = 300;
@@ -32,6 +32,7 @@ export function SearchPanel({
   current,
   onSearch,
   onChoose,
+  chapterFor,
 }: {
   id: string;
   state: SearchState;
@@ -40,6 +41,8 @@ export function SearchPanel({
   current: number | null;
   onSearch(query: string): void;
   onChoose(index: number): void;
+  /** The chapter a page belongs to, when the book's outline is known (phase 20). */
+  chapterFor?(pageIndex: number): string | undefined;
 }) {
   const [query, setQuery] = useState(state.query);
   const input = useRef<HTMLInputElement>(null);
@@ -69,12 +72,14 @@ export function SearchPanel({
     onChoose(next);
   };
 
+  // The search field (phase 20, the design's SearchField): the match count and previous and next
+  // inside it, pinned above the results. Enter goes to the next match, Shift+Enter to the previous;
+  // Escape clears the field, and a second Escape (the reader's) closes the panel.
   return (
-    <section id={id} className="side-panel search-panel" aria-label="Search">
-      <h2>Search</h2>
+    <section id={id} className="search-panel" aria-label="Search">
       <form
         role="search"
-        className="search-form"
+        className="br-search"
         onSubmit={(event) => {
           event.preventDefault();
           // Enter searches now, or goes to the next match of a finished search.
@@ -85,42 +90,62 @@ export function SearchPanel({
         <input
           ref={input}
           type="search"
-          className="picker"
+          className="br-search__input"
           aria-label="Search in book"
           placeholder="Search in book"
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && event.shiftKey) {
+              event.preventDefault();
+              step(-1);
+            } else if (event.key === 'Escape' && query !== '') {
+              event.preventDefault();
+              // Not the reader's Escape too: that would close the panel.
+              event.stopPropagation();
+              setQuery('');
+              onSearch('');
+            }
+          }}
         />
+        {results.length > 0 && (
+          <>
+            <span className="br-search__count" data-testid="search-count" aria-live="polite">
+              {current === null ? results.length : `${current + 1} of ${results.length}`}
+            </span>
+            <IconButton icon="collapse" label="Previous match" size="sm" onClick={() => step(-1)} />
+            <IconButton icon="expand" label="Next match" size="sm" onClick={() => step(1)} />
+          </>
+        )}
       </form>
       <p className="panel-note" role="status">
         {statusText(state, pageCount)}
       </p>
-      {results.length > 0 && (
-        <div className="search-steps">
-          <Button onClick={() => step(-1)}>Previous match</Button>
-          <span>{current === null ? '' : `${current + 1} of ${results.length}`}</span>
-          <Button onClick={() => step(1)}>Next match</Button>
-        </div>
-      )}
       {results.length > 0 && searchable(state.query) && (
-        <ul aria-label="Search results">
-          {results.map((result, index) => (
-            <li key={`${result.pageIndex}:${result.occurrence}`}>
-              <button
-                type="button"
-                className="panel-entry search-result"
-                aria-current={index === current ? 'true' : undefined}
-                onClick={() => onChoose(index)}
-              >
-                <strong>Page {result.pageIndex + 1}</strong>
-                <span className="note-quote">
-                  {result.snippet.before}
-                  <mark>{result.snippet.match}</mark>
-                  {result.snippet.after}
-                </span>
-              </button>
-            </li>
-          ))}
+        <ul aria-label="Search results" className="br-results">
+          {results.map((result, index) => {
+            const chapter = chapterFor?.(result.pageIndex);
+            return (
+              <li key={`${result.pageIndex}:${result.occurrence}`}>
+                <button
+                  type="button"
+                  className={`panel-entry br-result${index === current ? ' is-active' : ''}`}
+                  aria-current={index === current ? 'true' : undefined}
+                  onClick={() => onChoose(index)}
+                >
+                  <span className="caption br-result__meta">
+                    <span>p. {result.pageIndex + 1}</span>
+                    {chapter && <span className="br-truncate">· {chapter}</span>}
+                  </span>
+                  <span className="br-result__text">
+                    {result.snippet.before}
+                    <mark>{result.snippet.match}</mark>
+                    {result.snippet.after}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

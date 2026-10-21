@@ -118,14 +118,13 @@ export function NotesPanel({
     <nav
       id={id}
       ref={ref}
-      className="side-panel notes-panel"
+      className="notes-panel"
       aria-label="Notes"
       tabIndex={-1}
       onKeyDown={(event) => {
         if (!(event.target instanceof HTMLTextAreaElement)) onKeyDown(event);
       }}
     >
-      <h2>Notes</h2>
       {notes.unavailableReason && <p className="panel-note">{notes.unavailableReason}</p>}
       {notes.failed && <Button onClick={notes.retry}>Retry notes</Button>}
       <button

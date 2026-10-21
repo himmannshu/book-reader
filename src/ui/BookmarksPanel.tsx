@@ -39,15 +39,7 @@ export function BookmarksPanel({ id, bookmarks, onChoose, onRemove }: BookmarksP
   }, [items, ref]);
 
   return (
-    <nav
-      id={id}
-      ref={ref}
-      className="side-panel"
-      aria-label="Bookmarks"
-      tabIndex={-1}
-      onKeyDown={onKeyDown}
-    >
-      <h2>Bookmarks</h2>
+    <nav id={id} ref={ref} aria-label="Bookmarks" tabIndex={-1} onKeyDown={onKeyDown}>
       {bookmarks.status === 'unsaved' && <p className="panel-note">{UNSAVED_REASON}</p>}
       {bookmarks.status === 'loading' && <p className="panel-note">Loading bookmarks…</p>}
       {bookmarks.status === 'failed' && (

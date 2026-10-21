@@ -45,6 +45,27 @@ export function chapterAt(
   return best;
 }
 
+/**
+ * Where chapterAt's entry sits in the outline: its index at each level from the top down (phase
+ * 20: the contents tree marks it and opens its parents). Null when no entry starts by this page.
+ */
+export function chapterPathAt(
+  pageIndex: number,
+  outline: readonly OutlineEntry[],
+): number[] | null {
+  const target = chapterAt(pageIndex, outline);
+  if (!target) return null;
+  const find = (entries: readonly OutlineEntry[]): number[] | null => {
+    for (const [index, entry] of entries.entries()) {
+      if (entry === target) return [index];
+      const below = find(entry.children);
+      if (below) return [index, ...below];
+    }
+    return null;
+  };
+  return find(outline);
+}
+
 /** "Page N", plus the title of the chapter the page belongs to (see chapterAt). */
 export function bookmarkLabel(pageIndex: number, outline: readonly OutlineEntry[]): string {
   const page = `Page ${pageIndex + 1}`;

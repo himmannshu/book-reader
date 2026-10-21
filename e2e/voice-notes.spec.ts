@@ -1,7 +1,7 @@
 // Phase 15: voice notes. The microphone is a synthetic tone, so no device or permission dialog is
 // needed. Where the test browser has no MediaRecorder, the app must say so instead.
 import { expect, test, type Page } from '@playwright/test';
-import { importBook } from './helpers';
+import { importBook, openPanel, pressTool } from './helpers';
 
 // The stand-ins go on MediaDevices.prototype, not on navigator.mediaDevices: WebKit on macOS can
 // garbage-collect the mediaDevices wrapper when nothing holds it, and a property set on it is lost.
@@ -31,7 +31,7 @@ function voiceList(page: Page) {
 }
 
 async function openNotes(page: Page) {
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
 }
 
 async function record(page: Page, ms: number) {
@@ -129,7 +129,7 @@ test.describe('with a microphone', () => {
     await openNotes(page);
     await page.getByRole('button', { name: 'Record voice note on this page' }).click();
     await expect(page.getByText(/^Recording on page/)).toBeVisible();
-    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+    await pressTool(page, 'Contents');
     const bar = page.getByRole('toolbar', { name: 'Recording' });
     await expect(bar).toBeVisible();
     await page.waitForTimeout(800);

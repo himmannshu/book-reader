@@ -1,5 +1,5 @@
 import { devices, expect, test, type Page } from '@playwright/test';
-import { fixturePath, importBook, manifest, pageSlot, setReaderZoom } from './helpers';
+import { fixturePath, importBook, manifest, openPanel, pageSlot, setReaderZoom } from './helpers';
 
 const BOOK = 'text-4-pages.pdf';
 
@@ -299,7 +299,7 @@ for (const change of ['resize', 'focused resize', 'side panel', 'scroll away']) 
     if (change === 'resize' || change === 'focused resize') {
       await resize(page, 700, 800);
     } else if (change === 'side panel') {
-      await page.getByRole('button', { name: 'Bookmarks', exact: true }).click();
+      await openPanel(page, 'Bookmarks');
     } else {
       await page.getByTestId('reader').evaluate((reader) => {
         reader.scrollTop = reader.scrollHeight;

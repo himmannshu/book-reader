@@ -9,7 +9,14 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
-import { bookmarkId, bookmarkLabel, chapterAt, sortByPage, type Bookmark } from '../core/bookmarks';
+import {
+  bookmarkId,
+  bookmarkLabel,
+  chapterAt,
+  chapterPathAt,
+  sortByPage,
+  type Bookmark,
+} from '../core/bookmarks';
 import type { Highlight } from '../core/highlights';
 import { exportFileName, exportMarkdown } from '../core/export';
 import { excerptText } from '../core/share';
@@ -37,15 +44,23 @@ import type {
 import { Viewer, defaultViewerOptions } from '../viewer/viewer';
 import { annotationMessage, logUnexpectedAnnotationError } from './annotation-messages';
 import { BookmarksPanel, UNSAVED_REASON, type BookmarksState } from './BookmarksPanel';
-import { ContentsPanel, type OutlineState } from './ContentsPanel';
+import { ContentsPanel, outlineKey, type OutlineState } from './ContentsPanel';
 import { SelectionActions } from './SelectionActions';
 import { useHighlights } from './useHighlights';
 import { useNotes } from './useNotes';
 import { NotesPanel } from './NotesPanel';
 import { ConfirmDialog } from './ConfirmDialog';
-import { Button, IconButton, NARROW_QUERY, Toast, useMediaQuery } from './controls';
+import {
+  Button,
+  IconButton,
+  NARROW_QUERY,
+  SidePanel,
+  Tabs,
+  Toast,
+  useMediaQuery,
+} from './controls';
 import { PagePill } from './PagePill';
-import { ReaderToolbar, type PanelTool } from './ReaderToolbar';
+import { ReaderToolbar, toolFor, type PanelTool, type ToolbarPanel } from './ReaderToolbar';
 import { ReadingSettings } from './ReadingSettings';
 import { SearchPanel } from './SearchPanel';
 import { useVoiceNotes } from './useVoiceNotes';
@@ -61,11 +76,13 @@ const BOOKMARKS_ID = 'bookmarks-panel';
 const NOTES_ID = 'notes-panel';
 const SEARCH_ID = 'search-panel';
 const SETTINGS_ID = 'reading-settings';
-const PANEL_IDS: Record<PanelTool, string> = {
-  contents: CONTENTS_ID,
-  bookmarks: BOOKMARKS_ID,
-  notes: NOTES_ID,
-  search: SEARCH_ID,
+/** The tabbed panel for Contents, Bookmarks and Notes (phase 20). */
+const TABBED_PANEL_ID = 'reader-panel';
+type Tab = 'contents' | 'bookmarks' | 'notes';
+const TAB_TITLES: Record<Tab, string> = {
+  contents: 'Contents',
+  bookmarks: 'Bookmarks',
+  notes: 'Notes',
 };
 const APPLE = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 const NO_HIGHLIGHTS: readonly Highlight[] = [];
@@ -152,10 +169,13 @@ export function ReaderView({
   const bodyRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const contentsButtonRef = useRef<HTMLButtonElement>(null);
-  const bookmarksButtonRef = useRef<HTMLButtonElement>(null);
-  const notesButtonRef = useRef<HTMLButtonElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<Panel | null>(null);
+  /** The tab Contents opens on: the one used last. */
+  const [lastTab, setLastTab] = useState<Tab>('contents');
+  if (openPanel !== null && openPanel !== 'search' && openPanel !== lastTab) setLastTab(openPanel);
+  /** Folded parents in the contents tree (outlineKey), kept while the panel is closed. */
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const narrow = useMediaQuery(NARROW_QUERY);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -472,25 +492,51 @@ export function ReaderView({
     if (typeof window.matchMedia === 'function' && window.matchMedia(NARROW_QUERY).matches) {
       return moreButtonRef;
     }
-    return panel === 'contents'
-      ? contentsButtonRef
-      : panel === 'bookmarks'
-        ? bookmarksButtonRef
-        : panel === 'notes'
-          ? notesButtonRef
-          : searchButtonRef;
+    return toolFor(panel) === 'search' ? searchButtonRef : contentsButtonRef;
   }
 
-  function togglePanel(panel: Panel) {
+  /** Opens a tab or panel; the contents opens the current chapter's parents. */
+  function showPanel(panel: Panel) {
+    setOpenPanel(panel);
+    if (panel !== 'contents') return;
+    void loadOutline();
+    const path = outline.status === 'ready' ? chapterPathAt(currentPage, outline.items) : null;
+    if (!path || path.length < 2) return;
+    const parents = path.slice(0, -1).map((_, depth) => outlineKey(path.slice(0, depth + 1)));
+    setCollapsed((folded) => new Set([...folded].filter((key) => !parents.includes(key))));
+  }
+
+  /** A toolbar tool: Contents opens the tabbed panel on its last tab; a second press closes it. */
+  function togglePanel(tool: ToolbarPanel) {
     written.request(() => {
       marked.dismiss();
-      if (openPanel === panel) {
+      if (openPanel !== null && toolFor(openPanel) === tool) {
         setOpenPanel(null);
-        buttonFor(panel).current?.focus();
+        buttonFor(openPanel).current?.focus();
         return;
       }
-      setOpenPanel(panel);
-      if (panel === 'contents') void loadOutline();
+      showPanel(tool === 'search' ? 'search' : lastTab);
+    });
+  }
+
+  function chooseTab(tab: Tab) {
+    written.request(() => showPanel(tab));
+  }
+
+  function closePanel() {
+    const panel = openPanel;
+    if (panel === null) return;
+    written.request(() => {
+      setOpenPanel(null);
+      buttonFor(panel).current?.focus();
+    });
+  }
+
+  function toggleFold(key: string) {
+    setCollapsed((folded) => {
+      const next = new Set(folded);
+      if (!next.delete(key)) next.add(key);
+      return next;
     });
   }
 
@@ -842,8 +888,15 @@ export function ReaderView({
     };
   }, [toolbarHidden, toolsSlot]);
 
-  const chapter =
-    outline.status === 'ready' ? chapterAt(currentPage, outline.items)?.title.trim() : undefined;
+  const chapterFor = (pageIndex: number) =>
+    outline.status === 'ready' ? chapterAt(pageIndex, outline.items)?.title.trim() : undefined;
+  const chapter = chapterFor(currentPage);
+  const currentPath = outline.status === 'ready' ? chapterPathAt(currentPage, outline.items) : null;
+  const notesCount =
+    written.items !== null && voice.items !== null
+      ? written.items.length + voice.items.length
+      : undefined;
+  const presentation = narrow ? 'sheet' : 'side';
 
   const tools = (
     <ReaderToolbar
@@ -853,13 +906,8 @@ export function ReaderView({
       hidden={toolbarHidden}
       onLibrary={() => onLibrary?.()}
       openPanel={openPanel}
-      panelIds={PANEL_IDS}
-      panelButtons={{
-        contents: contentsButtonRef,
-        bookmarks: bookmarksButtonRef,
-        notes: notesButtonRef,
-        search: searchButtonRef,
-      }}
+      panelId={openPanel === 'search' ? SEARCH_ID : TABBED_PANEL_ID}
+      panelButtons={{ contents: contentsButtonRef, search: searchButtonRef }}
       onPanel={togglePanel}
       listening={listen.state.status !== 'idle'}
       onListen={() => {
@@ -892,51 +940,6 @@ export function ReaderView({
         </Toast>
       )}
       <div ref={bodyRef} className="reader-body">
-        {openPanel === 'contents' && (
-          <ContentsPanel id={CONTENTS_ID} outline={outline} onChoose={choose} />
-        )}
-        {openPanel === 'bookmarks' && (
-          <BookmarksPanel
-            id={BOOKMARKS_ID}
-            bookmarks={bookmarksState}
-            onChoose={choose}
-            onRemove={removeBookmark}
-          />
-        )}
-        {openPanel === 'notes' && (
-          <NotesPanel
-            id={NOTES_ID}
-            notes={written}
-            highlights={highlightList}
-            currentPage={currentPage}
-            onOpen={openNote}
-            onChoose={chooseNote}
-            onExport={() => void exportAnnotations()}
-            exportUnavailableReason={exportUnavailableReason}
-          >
-            <VoiceNotes
-              voice={voice}
-              currentPage={currentPage}
-              unavailableReason={voiceUnavailableReason}
-              quoteFor={(target) =>
-                target.kind === 'highlight'
-                  ? highlightList.find((highlight) => highlight.id === target.highlightId)?.quote
-                  : undefined
-              }
-              onGoTo={goToNoteTarget}
-            />
-          </NotesPanel>
-        )}
-        {openPanel === 'search' && (
-          <SearchPanel
-            id={SEARCH_ID}
-            state={searchState}
-            pageCount={doc.pageCount}
-            current={searchCurrent}
-            onSearch={runSearch}
-            onChoose={chooseSearchResult}
-          />
-        )}
         <div
           ref={scrollerRef}
           className="reader-scroller"
@@ -950,6 +953,89 @@ export function ReaderView({
           }}
           onKeyDown={onPagesKeyDown}
         />
+        {openPanel !== null && openPanel !== 'search' && (
+          <SidePanel
+            id={TABBED_PANEL_ID}
+            title={TAB_TITLES[openPanel]}
+            presentation={presentation}
+            onClose={closePanel}
+            header={
+              <Tabs<Tab>
+                label="Reader panels"
+                value={openPanel}
+                onChange={chooseTab}
+                items={[
+                  { value: 'contents', label: 'Contents', controls: CONTENTS_ID },
+                  {
+                    value: 'bookmarks',
+                    label: 'Bookmarks',
+                    count: items?.length,
+                    controls: BOOKMARKS_ID,
+                  },
+                  { value: 'notes', label: 'Notes', count: notesCount, controls: NOTES_ID },
+                ]}
+              />
+            }
+          >
+            {openPanel === 'contents' && (
+              <ContentsPanel
+                id={CONTENTS_ID}
+                outline={outline}
+                current={currentPath}
+                collapsed={collapsed}
+                onToggle={toggleFold}
+                pageLabels={pageLabels}
+                onChoose={choose}
+              />
+            )}
+            {openPanel === 'bookmarks' && (
+              <BookmarksPanel
+                id={BOOKMARKS_ID}
+                bookmarks={bookmarksState}
+                onChoose={choose}
+                onRemove={removeBookmark}
+              />
+            )}
+            {openPanel === 'notes' && (
+              <NotesPanel
+                id={NOTES_ID}
+                notes={written}
+                highlights={highlightList}
+                currentPage={currentPage}
+                onOpen={openNote}
+                onChoose={chooseNote}
+                onExport={() => void exportAnnotations()}
+                exportUnavailableReason={exportUnavailableReason}
+              >
+                <VoiceNotes
+                  voice={voice}
+                  currentPage={currentPage}
+                  unavailableReason={voiceUnavailableReason}
+                  quoteFor={(target) =>
+                    target.kind === 'highlight'
+                      ? highlightList.find((highlight) => highlight.id === target.highlightId)
+                          ?.quote
+                      : undefined
+                  }
+                  onGoTo={goToNoteTarget}
+                />
+              </NotesPanel>
+            )}
+          </SidePanel>
+        )}
+        {openPanel === 'search' && (
+          <SidePanel title="Search" presentation={presentation} onClose={closePanel}>
+            <SearchPanel
+              id={SEARCH_ID}
+              state={searchState}
+              pageCount={doc.pageCount}
+              current={searchCurrent}
+              onSearch={runSearch}
+              onChoose={chooseSearchResult}
+              chapterFor={chapterFor}
+            />
+          </SidePanel>
+        )}
         <PagePill
           pageIndex={currentPage}
           pageCount={doc.pageCount}

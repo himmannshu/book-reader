@@ -1,7 +1,15 @@
 import { devices, expect, test, type Page } from '@playwright/test';
 import type { Note } from '../src/core/notes';
 import type { Highlight } from '../src/core/highlights';
-import { expectPageAtTop, fixturePath, importBook, pageSlot } from './helpers';
+import {
+  expectPageAtTop,
+  fixturePath,
+  importBook,
+  keyboardToTab,
+  openPanel,
+  pageSlot,
+  pressTool,
+} from './helpers';
 
 const notesPanel = (page: Page) => page.getByRole('navigation', { name: 'Notes' });
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Note text' });
@@ -37,8 +45,7 @@ async function save(page: Page, text: string, touch = false) {
 }
 
 async function pageNote(page: Page, text: string) {
-  if (!(await notesPanel(page).count()))
-    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  if (!(await notesPanel(page).count())) await openPanel(page, 'Notes');
   await page.getByRole('button', { name: 'Add note to this page', exact: true }).click();
   await save(page, text);
 }
@@ -86,16 +93,29 @@ async function highlight(
 }
 
 /** Taps a panel's toolbar button, or More and then the panel on phones (phase 19). */
+/**
+ * Shows the Notes tab with taps (phase 20): Contents opens the tabbed panel, from the toolbar or
+ * under More on phones, then the tab.
+ */
 async function tapPanel(page: Page, name: 'Notes' | 'Contents') {
+  await expect(page.getByRole('toolbar', { name: 'Reader' })).toBeVisible();
+  const tablist = page.getByRole('tablist', { name: 'Reader panels' });
+  if (!(await tablist.isVisible())) await tapContents(page);
+  const tab = tablist.getByRole('tab', { name: new RegExp(`^${name}`) });
+  if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.tap();
+}
+
+/** Taps the toolbar's Contents (under More on phones): opens or closes the tabbed panel. */
+async function tapContents(page: Page) {
   const button = page
     .getByRole('toolbar', { name: 'Reader' })
-    .getByRole('button', { name, exact: true });
+    .getByRole('button', { name: 'Contents', exact: true });
   if (await button.isVisible()) {
     await button.tap();
     return;
   }
   await page.getByRole('button', { name: 'More', exact: true }).tap();
-  await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name }).tap();
+  await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name: 'Contents' }).tap();
 }
 
 async function clickHighlight(page: Page, touch = false) {
@@ -215,7 +235,7 @@ test('one note per target; blank edits and Cancel preserve the saved multiline U
   });
   expect(records[0]?.updatedAt).toBeGreaterThanOrEqual(original?.updatedAt ?? 0);
   await reopen(page);
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(row(page, 'Edited\n中文 🌻')).toHaveCount(1);
 });
 
@@ -235,7 +255,7 @@ test('note-only deletion can cancel, confirms permanently, and keeps its highlig
   expect(await stored<Note>(page)).toEqual([]);
   expect(await stored<Highlight>(page, 'highlights')).toHaveLength(1);
   await reopen(page);
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(notesPanel(page)).toContainText('No notes yet.');
   await expect(page.locator('.highlight-box')).toHaveCount(1);
 });
@@ -245,7 +265,9 @@ test('highlight removal confirms both, rolls back on failure, and leaves other n
 }) => {
   await passageNote(page, 'Linked');
   await pageNote(page, 'Independent');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await pressTool(page, 'Contents');
+  // The pages widen as the docked panel closes (phase 20): click once they are laid out.
+  await layoutReady(page);
   await clickHighlight(page);
   await page.getByRole('button', { name: 'Remove highlight', exact: true }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Cancel' }).click();
@@ -261,7 +283,7 @@ test('highlight removal confirms both, rolls back on failure, and leaves other n
   await expect(page.locator('.highlight-box')).toHaveCount(0);
   expect((await stored<Note>(page)).map((note) => note.text)).toEqual(['Independent']);
   await reopen(page);
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(page.locator('.note-row')).toHaveCount(1);
   await expect(notesPanel(page)).toContainText('Independent');
 });
@@ -275,8 +297,9 @@ test(
     await row(page, 'Saved page').getByRole('button', { name: 'Edit note' }).click();
     await editor(page).fill('Draft retained');
     for (const navigate of [
-      () => page.getByRole('button', { name: 'Notes', exact: true }).click(),
-      () => page.getByRole('button', { name: 'Contents', exact: true }).click(),
+      // Closing the panel, and switching to another of its tabs (phase 20).
+      () => pressTool(page, 'Contents'),
+      () => page.getByRole('tab', { name: 'Contents' }).click(),
       () => page.keyboard.press('Escape'),
       () => row(page, 'Saved passage').getByRole('button', { name: 'Edit note' }).click(),
       () => row(page, 'Saved passage').locator('.note-jump').click(),
@@ -294,7 +317,7 @@ test(
     await page.getByLabel('Open PDF').setInputFiles(fixturePath('basic-3-pages.pdf'));
     await expect(page.getByRole('status')).toHaveText('Saved on this device.');
     await expect(page.getByTestId('book-title')).toContainText('basic-3-pages');
-    await page.getByRole('button', { name: 'Notes', exact: true }).click();
+    await openPanel(page, 'Notes');
     await expect(notesPanel(page)).toContainText('No notes yet.');
     await page.getByRole('button', { name: 'Add note to this page' }).click();
     await editor(page).fill('New draft');
@@ -310,7 +333,7 @@ test('books isolate notes and book removal cascades both target types', async ({
   await pageNote(page, 'Book B page');
   await page.getByRole('button', { name: 'Library', exact: true }).click();
   await page.getByRole('button', { name: 'text-4-pages', exact: true }).click();
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(page.locator('.note-row')).toHaveCount(2);
   await expect(notesPanel(page)).not.toContainText('Book B page');
   await page.getByRole('button', { name: 'Library', exact: true }).click();
@@ -320,16 +343,21 @@ test('books isolate notes and book removal cascades both target types', async ({
   expect((await stored<Note>(page)).map((note) => note.text)).toEqual(['Book B page']);
   expect(await stored(page, 'highlights')).toEqual([]);
   await importBook(page, 'text-4-pages.pdf');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(notesPanel(page)).toContainText('No notes yet.');
 });
 
 test('keyboard newline, save, cancel/delete confirmation and jump keep usable focus', async ({
   page,
+  browserName,
 }) => {
-  const toggle = page.getByRole('button', { name: 'Notes', exact: true });
+  // Notes is a tab of the panel the toolbar's Contents opens (phase 20).
+  const toggle = page
+    .getByRole('toolbar', { name: 'Reader' })
+    .getByRole('button', { name: 'Contents', exact: true });
   await toggle.focus();
   await page.keyboard.press('Enter');
+  await keyboardToTab(page, browserName, 'Notes');
   await expect(page.getByRole('button', { name: 'Add note to this page' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(editor(page)).toBeFocused();
@@ -405,13 +433,13 @@ test('different highlights on one page retain independent notes and existing tar
   page,
 }) => {
   await passageNote(page, 'Bravo thought');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await pressTool(page, 'Contents');
   await layoutReady(page);
   await clickHighlight(page);
   await page.getByRole('button', { name: 'Edit note', exact: true }).click();
   await expect(editor(page)).toHaveValue('Bravo thought');
   await save(page, 'Bravo edited');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await pressTool(page, 'Contents');
   await highlight(page, 'Alpha one');
   const box = await page.locator('.highlight-box').first().boundingBox();
   if (!box) throw new Error('No Alpha highlight');
@@ -421,7 +449,7 @@ test('different highlights on one page retain independent notes and existing tar
   await expect(page.locator('.note-text')).toHaveText(['Alpha thought', 'Bravo edited']);
   expect(await stored<Note>(page)).toHaveLength(2);
   await reopen(page);
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await openPanel(page, 'Notes');
   await expect(page.locator('.note-text')).toHaveText(['Alpha thought', 'Bravo edited']);
 });
 
@@ -434,7 +462,7 @@ test('multiline and cross-page passage notes sort by PDF position and jump to th
   await save(page, 'Middle passage');
   await expect(row(page, 'Middle passage')).toContainText('Charlie three');
   await pageNote(page, 'Page one');
-  await page.getByRole('button', { name: 'Notes', exact: true }).click();
+  await pressTool(page, 'Contents');
   await layoutReady(page);
   await page.getByTestId('reader').evaluate((reader) => {
     const first = reader.querySelector<HTMLElement>('[data-page-index="0"]');
@@ -503,8 +531,9 @@ for (const name of ['iPhone 13', 'iPad (gen 7)'] as const) {
       await save(page, 'Touch page edited', true);
       await row(page, 'Touch page edited').locator('.note-jump').tap();
       await expect(page.getByTestId('reader')).toBeFocused();
-      if (device.viewport.width < 700) await expect(notesPanel(page)).toHaveCount(0);
-      else await tapPanel(page, 'Notes');
+      // Under 720 px the sheet closes after a jump; a docked panel stays, and is closed here.
+      if (device.viewport.width < 720) await expect(notesPanel(page)).toHaveCount(0);
+      else await tapContents(page);
       await highlight(page, 'Bravo two', undefined, true);
       await clickHighlight(page, true);
       await page.getByRole('button', { name: 'Add note', exact: true }).tap();

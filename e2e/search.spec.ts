@@ -31,7 +31,10 @@ test('searching a word lists every match, on every page it appears on', async ({
   await expect(page.getByRole('status').filter({ hasText: 'matches' })).toHaveText(
     '8 matches on 4 pages',
   );
-  const pages = (await results(page).locator('strong').allInnerTexts()).map((t) => t.trim());
+  // Each result starts with its page, "p. 1" (phase 20, the design's SearchResult).
+  const pages = (
+    await results(page).locator('.br-result__meta > span:first-child').allInnerTexts()
+  ).map((t) => t.trim().replace(/^p\. /, 'Page '));
   expect(pages).toEqual([
     'Page 1',
     'Page 1',

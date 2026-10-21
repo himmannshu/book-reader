@@ -195,8 +195,10 @@ export async function chooseTheme(page: Page, label: 'Light' | 'Sepia' | 'Dark')
   );
 }
 
-/** Opens or closes a reader panel: its toolbar button, or under More on phones (phase 19). */
-export async function openPanel(page: Page, name: 'Contents' | 'Bookmarks' | 'Notes' | 'Search') {
+/** Presses a toolbar tool, or picks it under More on phones (phase 19). Opens or closes its panel. */
+export async function pressTool(page: Page, name: 'Contents' | 'Search') {
+  // The reader may still be opening (a book chosen in the library a moment ago).
+  await expect(page.getByRole('toolbar', { name: 'Reader' })).toBeVisible();
   const button = page
     .getByRole('toolbar', { name: 'Reader' })
     .getByRole('button', { name, exact: true });
@@ -206,4 +208,45 @@ export async function openPanel(page: Page, name: 'Contents' | 'Bookmarks' | 'No
   }
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menu', { name: 'More' }).getByRole('menuitem', { name }).click();
+}
+
+/**
+ * Shows a reader panel. Contents, Bookmarks and Notes are tabs of one panel (phase 20), opened
+ * with Contents; Search has its own. Does nothing when the panel already shows.
+ */
+export async function openPanel(page: Page, name: 'Contents' | 'Bookmarks' | 'Notes' | 'Search') {
+  if (name === 'Search') {
+    if (!(await page.getByRole('complementary', { name: 'Search' }).isVisible())) {
+      await pressTool(page, 'Search');
+    }
+    return;
+  }
+  const tablist = page.getByRole('tablist', { name: 'Reader panels' });
+  if (!(await tablist.isVisible())) await pressTool(page, 'Contents');
+  const tab = tablist.getByRole('tab', { name: new RegExp(`^${name}`) });
+  if ((await tab.getAttribute('aria-selected')) !== 'true') await tab.click();
+  await expect(page.getByRole('complementary', { name })).toBeVisible();
+}
+
+/**
+ * With focus in the tabbed panel: back to its tabs (Shift+Tab), across to `name` (arrow keys) and
+ * into that tab's content (Tab), as a keyboard user does (phase 20). Safari's Tab skips buttons
+ * unless Option is held, as its users do.
+ */
+export async function keyboardToTab(
+  page: Page,
+  browserName: string,
+  name: 'Contents' | 'Bookmarks' | 'Notes',
+) {
+  const option = browserName === 'webkit' ? 'Alt+' : '';
+  const onTab = () => page.evaluate(() => document.activeElement?.getAttribute('role') === 'tab');
+  // Up past the entries (and the tree's chevrons) to the selected tab.
+  for (let i = 0; i < 30 && !(await onTab()); i++) await page.keyboard.press(`${option}Shift+Tab`);
+  expect(await onTab()).toBe(true);
+  for (let i = 0; i < 3; i++) {
+    const label = await page.evaluate(() => document.activeElement?.textContent ?? '');
+    if (label.startsWith(name)) break;
+    await page.keyboard.press('ArrowRight');
+  }
+  await page.keyboard.press(`${option}Tab`);
 }

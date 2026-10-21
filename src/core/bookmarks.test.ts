@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bookmarkId, bookmarkLabel, sortByPage, type OutlineEntry } from './bookmarks';
+import {
+  bookmarkId,
+  bookmarkLabel,
+  chapterPathAt,
+  sortByPage,
+  type OutlineEntry,
+} from './bookmarks';
 
 const entry = (title: string, pageIndex: number | null, children: OutlineEntry[] = []) => ({
   title,
@@ -59,5 +65,30 @@ describe('sortByPage', () => {
     const sorted = sortByPage(marks);
     expect(sorted.map((b) => b.pageIndex)).toEqual([2, 5, 9]);
     expect(marks[0]?.pageIndex).toBe(9);
+  });
+});
+
+describe('chapterPathAt', () => {
+  const entry = (title: string, pageIndex: number | null, children: OutlineEntry[] = []) => ({
+    title,
+    pageIndex,
+    children,
+  });
+  const outline = [
+    entry('Part One', 0, [entry('Chapter 1', 1), entry('Chapter 2', 4)]),
+    entry('Part Two', 7, [entry('Chapter 3', 8), entry('Broken', null)]),
+    entry('Appendix', 11),
+  ];
+
+  it('gives the indexes from the top level down to the chapter the page belongs to', () => {
+    expect(chapterPathAt(0, outline)).toEqual([0]);
+    expect(chapterPathAt(5, outline)).toEqual([0, 1]);
+    expect(chapterPathAt(9, outline)).toEqual([1, 0]);
+    expect(chapterPathAt(11, outline)).toEqual([2]);
+  });
+
+  it('is null before the first entry or without an outline', () => {
+    expect(chapterPathAt(0, [entry('Late', 3)])).toBeNull();
+    expect(chapterPathAt(4, [])).toBeNull();
   });
 });

@@ -14,13 +14,17 @@ import { IconButton } from './controls';
 import { Icon, type IconName } from './icons';
 
 export type PanelTool = 'contents' | 'bookmarks' | 'notes' | 'search';
+/** The toolbar's two panel tools (phase 20): Contents opens the tabbed panel. */
+export type ToolbarPanel = 'contents' | 'search';
 
-const PANEL_TOOLS: { panel: PanelTool; label: string; icon: IconName }[] = [
+const PANEL_TOOLS: { panel: ToolbarPanel; label: string; icon: IconName }[] = [
   { panel: 'contents', label: 'Contents', icon: 'contents' },
-  { panel: 'bookmarks', label: 'Bookmarks', icon: 'list' },
-  { panel: 'notes', label: 'Notes', icon: 'note' },
   { panel: 'search', label: 'Search', icon: 'search' },
 ];
+
+/** Which toolbar tool shows a panel: Bookmarks and Notes are tabs of Contents. */
+export const toolFor = (panel: PanelTool): ToolbarPanel =>
+  panel === 'search' ? 'search' : 'contents';
 
 export interface ReaderToolbarProps {
   title: string;
@@ -31,9 +35,10 @@ export interface ReaderToolbarProps {
   hidden: boolean;
   onLibrary(): void;
   openPanel: PanelTool | null;
-  panelIds: Record<PanelTool, string>;
-  panelButtons: Record<PanelTool, RefObject<HTMLButtonElement | null>>;
-  onPanel(panel: PanelTool): void;
+  /** The id of the open panel, for the tool that opened it. */
+  panelId: string;
+  panelButtons: Record<ToolbarPanel, RefObject<HTMLButtonElement | null>>;
+  onPanel(panel: ToolbarPanel): void;
   listening: boolean;
   onListen(): void;
   settingsOpen: boolean;
@@ -61,7 +66,7 @@ export function ReaderToolbar({
   hidden,
   onLibrary,
   openPanel,
-  panelIds,
+  panelId,
   panelButtons,
   onPanel,
   listening,
@@ -78,10 +83,10 @@ export function ReaderToolbar({
   onMenuChange,
   status,
 }: ReaderToolbarProps) {
-  const panelTool = (panel: PanelTool) => {
+  const panelTool = (panel: ToolbarPanel) => {
     const tool = PANEL_TOOLS.find((candidate) => candidate.panel === panel);
     if (!tool) return null;
-    const open = openPanel === panel;
+    const open = openPanel !== null && toolFor(openPanel) === panel;
     return (
       <IconButton
         key={panel}
@@ -90,7 +95,7 @@ export function ReaderToolbar({
         label={tool.label}
         className={cx(open && 'is-pressed')}
         aria-expanded={open}
-        aria-controls={open ? panelIds[panel] : undefined}
+        aria-controls={open ? panelId : undefined}
         onClick={() => onPanel(panel)}
       />
     );
@@ -105,7 +110,7 @@ export function ReaderToolbar({
     >
       <div className="br-toolbar__lead">
         <IconButton icon="back" label="Library" onClick={onLibrary} />
-        {!compact && (['contents', 'bookmarks', 'notes'] as const).map(panelTool)}
+        {!compact && panelTool('contents')}
       </div>
       <div className="br-toolbar__title">
         <span className="book-title br-truncate" data-testid="book-title">
@@ -173,7 +178,7 @@ function MoreMenu({
 }: {
   buttonRef: Ref<HTMLButtonElement>;
   openPanel: PanelTool | null;
-  onPanel(panel: PanelTool): void;
+  onPanel(panel: ToolbarPanel): void;
   onOpenChange(open: boolean): void;
 }) {
   const [open, setOpen] = useState(false);
@@ -240,7 +245,10 @@ function MoreMenu({
               key={tool.panel}
               type="button"
               role="menuitem"
-              className={cx('br-menu__item', openPanel === tool.panel && 'is-current')}
+              className={cx(
+                'br-menu__item',
+                openPanel !== null && toolFor(openPanel) === tool.panel && 'is-current',
+              )}
               onClick={() => {
                 change(false);
                 onPanel(tool.panel);

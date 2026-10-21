@@ -17,7 +17,7 @@ test('choosing a chapter in Contents brings its page to the top', async ({ page 
   await openFixture(page, 'outline-12-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
 
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await entry(page, 'Chapter 2').click();
 
   await expectPageAtTop(page, 4);
@@ -34,7 +34,8 @@ async function outlineTree(page: Page): Promise<Node[]> {
     const read = (list: Element | null): Node[] =>
       list
         ? [...list.children].map((li) => ({
-            title: li.querySelector(':scope > button')?.textContent ?? '',
+            // Phase 20: each entry is a row (chevron, title, page) in a tree.
+            title: li.querySelector(':scope > .br-toc__row .br-toc__title')?.textContent ?? '',
             children: read(li.querySelector(':scope > ul')),
           }))
         : [];
@@ -47,7 +48,7 @@ test(
   { tag: '@any-engine' },
   async ({ page }) => {
     await openFixture(page, 'outline-12-pages.pdf');
-    await page.getByRole('button', { name: 'Contents' }).click();
+    await page.getByRole('button', { name: 'Contents', exact: true }).click();
     await expect(entry(page, 'Appendix')).toBeVisible();
     expect(await outlineTree(page)).toEqual([
       {
@@ -72,7 +73,7 @@ test(
 test('an entry with a named destination jumps to the right page', async ({ page }) => {
   await openFixture(page, 'outline-12-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await entry(page, 'Chapter 3').click();
   await expectPageAtTop(page, 8);
 });
@@ -82,7 +83,7 @@ test(
   { tag: '@any-engine' },
   async ({ page }) => {
     await openFixture(page, 'outline-12-pages.pdf');
-    await page.getByRole('button', { name: 'Contents' }).click();
+    await page.getByRole('button', { name: 'Contents', exact: true }).click();
     await expect(entry(page, 'Missing section')).toBeDisabled();
     await expect(entry(page, 'Chapter 3')).toBeEnabled();
     await expect(page.getByRole('alert')).toHaveCount(0);
@@ -91,7 +92,7 @@ test(
 
 test('a book without an outline says so', { tag: '@any-engine' }, async ({ page }) => {
   await openFixture(page, 'basic-3-pages.pdf');
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await expect(contents(page)).toContainText('This book has no table of contents.');
   await expect(contents(page).getByRole('button')).toHaveCount(0);
 });
@@ -101,7 +102,7 @@ test('Contents works from the keyboard, and Escape returns focus to the button',
 }) => {
   await openFixture(page, 'outline-12-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  const button = page.getByRole('button', { name: 'Contents' });
+  const button = page.getByRole('button', { name: 'Contents', exact: true });
   await button.focus();
   await page.keyboard.press('Enter');
 
@@ -156,7 +157,7 @@ test('opening another book while Contents is open shows the new book, not a stuc
   page,
 }) => {
   await openFixture(page, 'outline-12-pages.pdf');
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await expect(entry(page, 'Chapter 1')).toBeVisible();
 
   await openFixture(page, 'basic-3-pages.pdf');
@@ -164,7 +165,7 @@ test('opening another book while Contents is open shows the new book, not a stuc
   await expect(page.getByTestId('page-announcement')).toHaveText(/ of 3 /);
   // Either the panel closed with the old book, or it shows the new book's contents; never "Loading".
   if ((await contents(page).count()) === 0) {
-    await page.getByRole('button', { name: 'Contents' }).click();
+    await page.getByRole('button', { name: 'Contents', exact: true }).click();
   }
   await expect(contents(page)).toContainText('This book has no table of contents.');
   await expect(contents(page)).not.toContainText('Loading contents');
@@ -174,7 +175,7 @@ test('Escape closes Contents even when no entry has focus', async ({ page }) => 
   // A book without an outline: the panel has no entries to focus.
   await openFixture(page, 'basic-3-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  const button = page.getByRole('button', { name: 'Contents' });
+  const button = page.getByRole('button', { name: 'Contents', exact: true });
   await button.focus();
   await page.keyboard.press('Enter');
   await expect(contents(page)).toContainText('This book has no table of contents.');
@@ -196,7 +197,7 @@ test('after choosing an entry in a wide window, the keyboard scrolls the book', 
 }) => {
   await openFixture(page, 'outline-12-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await entry(page, 'Chapter 1').click();
   await expectPageAtTop(page, 1);
 
@@ -210,11 +211,15 @@ test('after choosing an entry in a wide window, the keyboard scrolls the book', 
 test('Escape closes Contents after a mouse click, wherever focus ends up', async ({ page }) => {
   await openFixture(page, 'basic-3-pages.pdf');
   await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
-  const button = page.getByRole('button', { name: 'Contents' });
+  const button = page.getByRole('button', { name: 'Contents', exact: true });
   await button.click();
   await expect(contents(page)).toBeVisible();
   // Clicking plain text moves focus to the page body (in Safari, even clicking the button does).
-  await contents(page).getByRole('heading', { name: 'Contents' }).click();
+  // The heading is the panel's title (phase 20).
+  await page
+    .getByRole('complementary', { name: 'Contents' })
+    .getByRole('heading', { name: 'Contents' })
+    .click();
   await page.keyboard.press('Escape');
   await expect(contents(page)).toHaveCount(0);
   await expect(button).toHaveAttribute('aria-expanded', 'false');

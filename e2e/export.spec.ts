@@ -1,7 +1,7 @@
 // Phase 12: export a book's highlights and notes to a Markdown file.
 import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
-import { importBook } from './helpers';
+import { importBook, openPanel } from './helpers';
 
 declare global {
   interface Window {
@@ -95,7 +95,7 @@ test(
     await page.reload();
     await page.getByLabel('Open PDF').setInputFiles('tests/fixtures/text-4-pages.pdf');
     await expect(page.getByRole('alert')).toBeVisible();
-    await page.getByRole('button', { name: 'Notes' }).click();
+    await openPanel(page, 'Notes');
     await expect(page.getByRole('button', { name: 'Export highlights and notes' })).toBeDisabled();
     await expect(
       page.getByText('Export works once the book is saved on this device.'),

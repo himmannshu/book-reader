@@ -64,6 +64,14 @@ function fakeDoc() {
   return { doc, outline };
 }
 
+/** Opens the tabbed panel with Contents and shows a tab (phase 20). */
+function showTab(name: 'Bookmarks' | 'Notes') {
+  if (!screen.queryByRole('tablist', { name: 'Reader panels' })) {
+    fireEvent.click(screen.getByRole('button', { name: 'Contents' }));
+  }
+  fireEvent.click(screen.getByRole('tab', { name: new RegExp(`^${name}`) }));
+}
+
 describe('ReaderView contents', () => {
   it('shows a visible loading reason and disables note creation until notes arrive', () => {
     const { doc } = fakeDoc();
@@ -77,7 +85,7 @@ describe('ReaderView contents', () => {
         readingStates={noReadingStates}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Notes' }));
+    showTab('Notes');
     expect(screen.getByText('Loading notes…')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add note to this page' })).toBeDisabled();
   });
@@ -148,7 +156,7 @@ describe('ReaderView bookmarks', () => {
     expect(await screen.findByRole('button', { name: 'Remove bookmark' })).toHaveClass(
       'is-pressed',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
+    showTab('Bookmarks');
     expect(screen.getByRole('button', { name: 'Page 1' })).toBeInTheDocument();
   });
 
@@ -170,7 +178,7 @@ describe('ReaderView bookmarks', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'Bookmarks need this book saved on this device.',
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
+    showTab('Bookmarks');
     // In the panel too (and still in the alert).
     expect(screen.getAllByText('Bookmarks need this book saved on this device.')).toHaveLength(2);
   });
@@ -198,7 +206,7 @@ describe('ReaderView bookmarks', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const store = { ...memoryBookmarks(), list: () => Promise.reject(new Error('broken')) };
     render(<ReaderView doc={doc} bookId="book" bookmarks={store} highlights={noHighlights} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Bookmarks' }));
+    showTab('Bookmarks');
     expect(await screen.findByText("This book's bookmarks couldn't be read.")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Bookmark this page' })).toBeDisabled();
     expect(errors).toHaveBeenCalled();

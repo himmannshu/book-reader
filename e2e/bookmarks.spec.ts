@@ -1,12 +1,21 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectPageAtTop, importBook, openPanel as togglePanel, pageSlot } from './helpers';
+import {
+  expectPageAtTop,
+  importBook,
+  keyboardToTab,
+  openPanel as togglePanel,
+  pageSlot,
+} from './helpers';
 
 function panel(page: Page) {
   return page.getByRole('navigation', { name: 'Bookmarks' });
 }
 
+// Bookmarks is a tab of the panel the toolbar's Contents opens (phase 20).
 function panelButton(page: Page) {
-  return page.getByRole('button', { name: 'Bookmarks', exact: true });
+  return page
+    .getByRole('toolbar', { name: 'Reader' })
+    .getByRole('button', { name: 'Contents', exact: true });
 }
 
 // The toggle's name says its state (phase 19): 'Remove bookmark' while the page is bookmarked.
@@ -156,6 +165,7 @@ test('removing a book deletes its bookmarks; importing it again starts with none
 
 test('Bookmarks works from the keyboard, and Escape returns focus to the button', async ({
   page,
+  browserName,
 }) => {
   await importBook(page, 'outline-12-pages.pdf');
   await bookmarkPage(page, 1);
@@ -164,6 +174,7 @@ test('Bookmarks works from the keyboard, and Escape returns focus to the button'
 
   await panelButton(page).focus();
   await page.keyboard.press('Enter');
+  await keyboardToTab(page, browserName, 'Bookmarks');
   await expect(entry(page, 'Page 2 · Chapter 1')).toBeFocused();
   // Arrow keys move through each entry and its Remove button, in order.
   await page.keyboard.press('ArrowDown');
@@ -181,13 +192,18 @@ test('Bookmarks works from the keyboard, and Escape returns focus to the button'
   await expect(panelButton(page)).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('removing a bookmark with the keyboard keeps focus in the list', async ({ page }) => {
+test('removing a bookmark with the keyboard keeps focus in the list', async ({
+  page,
+  browserName,
+}) => {
   await importBook(page, 'outline-12-pages.pdf');
   await bookmarkPage(page, 1);
   await bookmarkPage(page, 8);
 
   await panelButton(page).focus();
   await page.keyboard.press('Enter');
+  await keyboardToTab(page, browserName, 'Bookmarks');
+  await expect(entry(page, 'Page 2 · Chapter 1')).toBeFocused();
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter'); // Remove "Page 2 · Chapter 1"
   await expect(entry(page, 'Page 9 · Chapter 3')).toBeFocused();
@@ -196,9 +212,9 @@ test('removing a bookmark with the keyboard keeps focus in the list', async ({ p
 
 test('only one side panel is open at a time', async ({ page }) => {
   await importBook(page, 'outline-12-pages.pdf');
-  await page.getByRole('button', { name: 'Contents' }).click();
+  await page.getByRole('button', { name: 'Contents', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Table of contents' })).toBeVisible();
-  await panelButton(page).click();
+  await page.getByRole('tab', { name: /^Bookmarks/ }).click();
   await expect(panel(page)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Table of contents' })).toHaveCount(0);
 });

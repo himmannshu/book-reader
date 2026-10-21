@@ -1,5 +1,11 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 
+/**
+ * True while focus is on a panel tab (phase 20): a reader moving through the tabs with the arrow
+ * keys keeps focus there, so the newly shown panel does not take it.
+ */
+export const onTab = () => document.activeElement?.getAttribute('role') === 'tab';
+
 /** The buttons a side panel's arrow keys move between, in document order. */
 export const PANEL_ENTRY = '.panel-entry:not(:disabled)';
 
@@ -13,7 +19,7 @@ export function usePanelKeys<T extends HTMLElement>(ready: boolean) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || onTab()) return;
     ref.current?.querySelector<HTMLButtonElement>(PANEL_ENTRY)?.focus();
   }, [ready]);
 
