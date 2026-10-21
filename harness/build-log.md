@@ -1910,3 +1910,14 @@ Contract evidence from this final canonical run (contract unchanged after approv
   phase 20 too (38 ms). A second worktree (`perf-first-page-investigation`) exists in .claude/worktrees; a perf run
   there at the same time would explain the misses, but that could not be confirmed. Budgets unchanged. The temporary
   worktree was removed.
+
+### 2026-10-21 14:30 EDT | Phase 21 | Claude Code (Opus 5.5) | Evaluator recheck: items 1–11 PASS; 12 and 13 open
+- Evaluator subagent (fresh context) rechecked at 8113d9a; appendix "Recheck (2026-10-21)" in
+  harness/code_review/phase-21-review.md. B1–B4, N1, N4, N5 confirmed fixed; N2, N3 left as recorded.
+- Item 12 not met: its four `scripts/verify.sh` runs each failed one timing check that passes alone (WebKit p95 52;
+  Chromium first page 296 and 257 against 250; two files.spec sync tests while a macOS update held load ~69, 14/14
+  alone). Its alternating runs against phase 20 showed no phase 21 slowdown. A green verify on a quiet machine and
+  the CI run are still needed. Item 13 is the user's device check.
+- New, non-blocking: N6 Add note pressed while a colour's save runs turns the highlight yellow and opens no editor
+  (`highlightSelection('yellow')` from Add note sets `pendingColor`, src/ui/useHighlights.ts:192); N7 the menu does
+  not re-lay out on resize or rotation while open (SelectionActions.tsx); N8 `ONE_ROW_EXTRA` repeats app.css sizes.

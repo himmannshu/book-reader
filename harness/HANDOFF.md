@@ -72,15 +72,16 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
     - 14:00 session: verify at de3e7c0 failed only WebKit steady-scroll p95 (52, then 41 ms alone). Four alternating
       perf runs against phase 20 all passed with the same spread (p20 32/38 ms, p21 38/32 ms): noise, not phase 21
       (build log 14:00 entry).
-  - Not done: the evaluator RECHECK (started 14:00 this session; the review file has no appendix yet).
+  - Evaluator recheck at 8113d9a (review file appendix): items 1–11 PASS, B1–B4/N1/N4/N5 fixed. Open: item 12 (no
+    green verify at HEAD yet: timing checks fail under load, pass alone; CI not run) and item 13 (device check).
+    New non-blocking: N6 Add note during a colour's save turns it yellow, no editor (useHighlights.ts:192);
+    N7 menu does not re-lay out on resize/rotation; N8 ONE_ROW_EXTRA duplicates app.css sizes.
   - Left as they are (for the user's device check): N2 bookmark rows' More menu holds only Remove bookmark;
     N3 Add note on a fresh selection then Cancel keeps the yellow highlight (recorded judgment call).
 
 ## Next action
 
-1. Phase 21: run the evaluator recheck (fresh `evaluator` subagent; diff `git diff phase-20-panels-and-sheets...HEAD`,
-   fixes `git diff fab20ab..HEAD`; it appends a marked appendix to harness/code_review/phase-21-review.md). Fix
-   any blocker it finds, then verify.
+1. Phase 21: with the user's go-ahead, fix N6 (and N7) test first; then a green `scripts/verify.sh` on a quiet machine.
 2. Then ask the user before pushing `phase-21-highlight-colours` (a preview deploy) and running
    `gh workflow run verify.yml --ref phase-21-highlight-colours`; record the run. Then the user's device check
    (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
@@ -137,18 +138,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 14:00 EDT
+Snapshot 2026-10-21 14:31 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: de3e7c0 handoff: Claude Code 2026-10-21
-- Uncommitted files: 2
-- Last verify: FAIL at 2026-10-21 13:33 EDT (commit de3e7c0)
+- HEAD: 8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
+- Uncommitted files: 3
+- Last verify: FAIL at 2026-10-21 14:28 EDT (commit 8113d9a)
 - Recent commits:
+    8113d9a phase 21: perf comparison with phase 20 recorded (WebKit p95 miss was noise)
     de3e7c0 handoff: Claude Code 2026-10-21
     c7e1c64 phase 21: review fixes recorded; verify PASS
     814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
     fab20ab phase 21: built; verify PASS (build log)
-    53ed3aa wip: phase 21: two-device test for a colour change
 - Changed files:
      M harness/HANDOFF.md
      M harness/build-log.md
+     M harness/code_review/phase-21-review.md
 <!-- AUTO:END -->
