@@ -212,14 +212,15 @@ test('"Delete everywhere" removes the file from the cloud too', async ({ device 
 
   await backToLibrary(a);
   await libraryItem(a, TITLE)
-    .getByRole('button', { name: `Remove ${TITLE}` })
+    .getByRole('button', { name: `More for ${TITLE}` })
     .click();
+  await a.getByRole('menuitem', { name: 'Delete everywhere' }).click();
   await libraryItem(a, TITLE).getByRole('button', { name: 'Delete everywhere' }).click();
   await syncNow(a);
 
   expect((await b.request.get(`/api/files/${id}`)).status()).toBe(404);
   await syncNow(b);
-  await expect(b.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(b.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
 
   // The file itself is gone, not just hidden: import the book again with uploads held back, and
   // the cloud still has no file for it.
@@ -240,8 +241,9 @@ test('"Remove from this device" frees the file; the book downloads again with it
 
   await backToLibrary(a);
   await libraryItem(a, TITLE)
-    .getByRole('button', { name: `Remove ${TITLE}` })
+    .getByRole('button', { name: `More for ${TITLE}` })
     .click();
+  await a.getByRole('menuitem', { name: 'Remove from this device' }).click();
   await libraryItem(a, TITLE).getByRole('button', { name: 'Remove from this device' }).click();
   await expect(libraryItem(a, TITLE)).toContainText('On your other devices');
 

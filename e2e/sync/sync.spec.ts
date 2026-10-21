@@ -141,8 +141,9 @@ test('"Remove from this device" keeps the book elsewhere; "Delete everywhere" re
 
   await backToLibrary(a);
   await libraryItem(a)
-    .getByRole('button', { name: `Remove ${TITLE}` })
+    .getByRole('button', { name: `More for ${TITLE}` })
     .click();
+  await a.getByRole('menuitem', { name: 'Remove from this device' }).click();
   await libraryItem(a).getByRole('button', { name: 'Remove from this device' }).click();
   await expect(libraryItem(a)).toContainText('On your other devices');
   await syncNow(a);
@@ -153,13 +154,14 @@ test('"Remove from this device" keeps the book elsewhere; "Delete everywhere" re
 
   await backToLibrary(b);
   await libraryItem(b)
-    .getByRole('button', { name: `Remove ${TITLE}` })
+    .getByRole('button', { name: `More for ${TITLE}` })
     .click();
+  await b.getByRole('menuitem', { name: 'Delete everywhere' }).click();
   await libraryItem(b).getByRole('button', { name: 'Delete everywhere' }).click();
-  await expect(b.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(b.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
   await syncNow(b);
   await syncNow(a);
-  await expect(a.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(a.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
 });
 
 test('changes made offline are kept and sync when the device is back online', async ({

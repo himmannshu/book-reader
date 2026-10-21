@@ -34,6 +34,8 @@ export function RowMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
+  // Opens rightwards when there is no room to the left (a book card in the first column).
+  const [start, setStart] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -43,13 +45,18 @@ export function RowMenu({
     if (!open || !menu.current) return;
     const box = menu.current.getBoundingClientRect();
     if (box.bottom > window.innerHeight - 8 && box.height < box.top) setUp(true);
+    if (box.left < 8) setStart(true);
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     menu.current?.querySelector<HTMLButtonElement>(ITEMS)?.focus();
     const onPointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && !wrapper.current?.contains(event.target)) setOpen(false);
+      if (event.target instanceof Node && !wrapper.current?.contains(event.target)) {
+        setOpen(false);
+        setUp(false);
+        setStart(false);
+      }
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -58,6 +65,7 @@ export function RowMenu({
   function close() {
     setOpen(false);
     setUp(false);
+    setStart(false);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -105,7 +113,12 @@ export function RowMenu({
       {open && (
         <div
           ref={menu}
-          className={cx('br-menu', 'row-menu__list', up && 'row-menu__list--up')}
+          className={cx(
+            'br-menu',
+            'row-menu__list',
+            up && 'row-menu__list--up',
+            start && 'row-menu__list--start',
+          )}
           role="menu"
           aria-label="More actions"
           onKeyDown={onKeyDown}

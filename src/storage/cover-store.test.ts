@@ -39,6 +39,20 @@ describe('covers', () => {
     );
   });
 
+  it('keep the author read with them; one drawn before phase 22 has none recorded', async () => {
+    const s = setup();
+    const a = await s.books.add(pdf('a'), 'a.pdf');
+    const b = await s.books.add(pdf('b'), 'b.pdf');
+    const c = await s.books.add(pdf('c'), 'c.pdf');
+    await s.covers.put({ bookId: a.id, ...jpeg(1), author: 'Mary Shelley' });
+    await s.covers.put({ bookId: b.id, ...jpeg(2), author: null });
+    await s.covers.put({ bookId: c.id, ...jpeg(3) });
+    const authors = new Map((await s.covers.list()).map((cover) => [cover.bookId, cover]));
+    expect(authors.get(a.id)?.author).toBe('Mary Shelley');
+    expect(authors.get(b.id)?.author).toBeNull();
+    expect(authors.get(c.id)).not.toHaveProperty('author');
+  });
+
   it('are ignored for a book not in the library, and never queued for sync', async () => {
     const s = setup();
     const a = await s.books.add(pdf('a'), 'a.pdf');

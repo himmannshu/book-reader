@@ -182,4 +182,23 @@ design's highlight menu. The Notes tab now lists every highlight. Preview: the p
       Rotating the device with the menu open over a highlight closes the menu (as scrolling does); tap the
       highlight to reopen it. Fine?
 
+## Phase 22: Library shelf redesign (branch `phase-22-library-shelf`)
+
+The library becomes the designed shelf: a big "Library" heading, filter chips with counts, Sort and
+Grid/List controls, and a card per book with its author and one status badge. Not pushed yet (no preview);
+ask the agent to push when you want to check it on devices.
+
+- [ ] Mac, iPad and iPhone: the shelf shows covers at a book's shape (2:3) with the title under them, the
+      author when the PDF has one, and either a progress bar or one badge (New, Finished, In cloud,
+      Downloading). On iPhone, three covers a row.
+- [ ] A book whose cover has not been drawn yet shows a plain cover with its title and an accent band.
+- [ ] Chips: All, Reading, Unread, Finished (and In cloud when a book is only in the cloud) with counts;
+      tapping one shows only those books. The title filter still works with them.
+- [ ] Grid and List: switch to List, reload: it stays List. Rows show a small cover with the text beside it.
+- [ ] A card's More (…) offers Remove from this device and Delete everywhere; each asks in the card first.
+      On iPhone, the menu of a card on the left stays on screen.
+- [ ] Remove every book: the empty library says how to add one.
+- [ ] Your real books: does the author look right? (It comes from the PDF's own metadata, which some PDFs
+      fill badly; the title still comes from the file name.)
+
 <!-- Later phases append their sections below. -->

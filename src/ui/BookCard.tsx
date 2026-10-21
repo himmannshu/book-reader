@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { formatSize } from '../core/library';
 import type { ReadingState } from '../core/reading-state';
 import { readingProgress, shelfStatus, type ShelfView } from '../core/shelf';
@@ -21,18 +21,19 @@ interface BookCardProps {
   /** Another book is downloading, or a book is opening. */
   locked: boolean;
   busy: boolean;
-  onOpen(): void;
+  onOpen(book: BookRecord): void;
   onCancelDownload(): void;
-  onRemoveFromDevice(): void;
-  onDeleteEverywhere(): void;
+  onRemoveFromDevice(book: BookRecord): void;
+  onDeleteEverywhere(book: BookRecord): void;
 }
 
 /**
  * One book on the shelf (phase 22, the design's BookCard): its cover, title, author, progress or
  * one status badge, and a More menu. A grid card or a row. The cover button is named by the title.
  * A book without a drawn cover gets a typographic one. Removing asks first, in the card.
+ * Memoized: typing in the title filter re-renders the shelf, not every card.
  */
-export function BookCard({
+export const BookCard = memo(function BookCard({
   book,
   layout,
   coverUrl,
@@ -115,7 +116,7 @@ export function BookCard({
           className="br-book__open"
           aria-label={book.title}
           disabled={busy || locked}
-          onClick={onOpen}
+          onClick={() => onOpen(book)}
         >
           {cover}
         </button>
@@ -123,7 +124,7 @@ export function BookCard({
         <span className="br-book__open">{cover}</span>
       )}
       <div className="br-book__info">
-        <h3 className="book-title br-book__title">{book.title}</h3>
+        <h3 className="book-title br-book__title library-title">{book.title}</h3>
         {author && <p className="caption br-book__author">{author}</p>}
         <div className="br-book__meta">
           {progress && !badge && (
@@ -152,8 +153,8 @@ export function BookCard({
                 variant={confirming === 'everywhere' ? 'danger' : 'secondary'}
                 onClick={() => {
                   setConfirming(null);
-                  if (confirming === 'device') onRemoveFromDevice();
-                  else onDeleteEverywhere();
+                  if (confirming === 'device') onRemoveFromDevice(book);
+                  else onDeleteEverywhere(book);
                 }}
               >
                 {confirming === 'device' ? 'Remove from this device' : 'Delete everywhere'}
@@ -180,4 +181,4 @@ export function BookCard({
       )}
     </li>
   );
-}
+});

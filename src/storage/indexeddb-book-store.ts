@@ -755,6 +755,10 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
       }),
   };
 
+  /** A cover's author: absent (drawn before phase 22), null (none) or a name. */
+  const validCoverAuthor = (author: unknown) =>
+    author === undefined || author === null || typeof author === 'string';
+
   const covers: CoverStore = {
     list: () =>
       guard(async () => {
@@ -769,16 +773,19 @@ export function createIndexedDBStores(options: IndexedDBBookStoreOptions = {}): 
             typeof (row as Cover).bookId === 'string' &&
             // Not instanceof: a cloned buffer may come from another realm.
             Object.prototype.toString.call((row as Cover).bytes) === '[object ArrayBuffer]' &&
-            typeof (row as Cover).type === 'string',
+            typeof (row as Cover).type === 'string' &&
+            validCoverAuthor((row as Cover).author),
         );
       }),
 
-    put: ({ bookId, bytes, type }) =>
+    put: ({ bookId, bytes, type, author }) =>
       guard(async () => {
         const database = await db();
         await atomic(database, [BOOKS, COVERS], async (tx) => {
           if ((await request(tx.objectStore(BOOKS).getKey(bookId))) === undefined) return;
-          const row: Cover = { bookId, bytes, type };
+          // Absent author: drawn without reading it (kept absent, so it is read later).
+          const row: Cover =
+            author === undefined ? { bookId, bytes, type } : { bookId, bytes, type, author };
           tx.objectStore(COVERS).put(row);
         });
       }),

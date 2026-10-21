@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import type { ReadingState } from '../core/reading-state';
 import {
   SHELF_FILTERS,
@@ -88,6 +88,7 @@ export function Library({
   onViewChange,
 }: LibraryProps) {
   const [chosen, setChosen] = useState<ShelfFilter>('all');
+  const cancelDownload = useCallback(() => onCancelDownload?.(), [onCancelDownload]);
   const [filter, setFilter] = useState('');
   // Typing stays responsive with many books: the shelf may lag a frame behind the input.
   const deferredFilter = useDeferredValue(filter);
@@ -129,8 +130,8 @@ export function Library({
           ))}
         </div>
         <div className="library-controls">
-          <div className="br-search library-filter">
-            <span className="br-search__lead">
+          <div className="library-filter">
+            <span className="library-filter__lead">
               <Icon name="search" size={18} />
             </span>
             <input
@@ -178,10 +179,10 @@ export function Library({
             download={downloading?.bookId === book.id ? downloading : null}
             locked={downloading !== null}
             busy={busy}
-            onOpen={() => onOpen(book)}
-            onCancelDownload={() => onCancelDownload?.()}
-            onRemoveFromDevice={() => onRemoveFromDevice(book)}
-            onDeleteEverywhere={() => onDeleteEverywhere(book)}
+            onOpen={onOpen}
+            onCancelDownload={cancelDownload}
+            onRemoveFromDevice={onRemoveFromDevice}
+            onDeleteEverywhere={onDeleteEverywhere}
           />
         ))}
       </ul>

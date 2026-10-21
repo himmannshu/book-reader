@@ -1,6 +1,7 @@
 # Phase 22: Library shelf redesign
 
-- Status: In progress (plan approved by the agent under the user's standing instruction of 2026-10-21)
+- Status: Built 2026-10-21; user's device check pending (plan approved by the agent under the user's
+  standing instruction of 2026-10-21)
 - Branch: phase-22-library-shelf (cut from `phase-21-highlight-colours`; main has none of 19–21 yet)
 - Depends on: 18
 

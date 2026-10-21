@@ -63,7 +63,7 @@ test.describe('fonts', () => {
     await loadControlled(page);
     await context.setOffline(true);
     await page.reload();
-    await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
     const loaded = await page.evaluate(async () => {
       await Promise.all([
         document.fonts.load('600 24px Literata'),

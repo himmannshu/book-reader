@@ -97,7 +97,7 @@ test('with the network off, the app shell still opens', async ({ page, context }
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Book Reader' })).toBeVisible();
   await expect(page.getByLabel('Open PDF')).toBeAttached();
-  await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
 });
 
 test('with the network off, a saved book opens from Your books', async ({ page, context }) => {

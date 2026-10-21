@@ -257,6 +257,11 @@ body {
   bottom: calc(100% + var(--space-1));
 }
 
+.row-menu__list--start {
+  right: auto;
+  left: 0;
+}
+
 .row-menu__colors {
   display: flex;
   gap: var(--space-1);
@@ -753,12 +758,6 @@ body {
   bottom: -8px;
 }
 
-/* The card's menu opens leftwards from its button, inside the card's column. */
-.br-book .row-menu__list {
-  right: 0;
-  left: auto;
-}
-
 .library-confirm {
   display: grid;
   gap: var(--space-2);
@@ -796,6 +795,11 @@ body {
 @media (pointer: coarse) {
   .br-chip {
     height: var(--touch-target);
+  }
+
+  /* The icon-only Grid and List options are 44 px wide on touch screens too. */
+  .library-controls .br-seg__opt {
+    min-width: var(--touch-target);
   }
 }
 
@@ -835,8 +839,8 @@ body {
   color: var(--positive);
 }
 
-/* The search field look (the design's SearchField), for the title filter. */
-.br-search {
+/* The title filter, drawn as the design's SearchField (the Search panel has its own rules). */
+.library-filter {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -849,16 +853,16 @@ body {
   box-sizing: border-box;
 }
 
-.br-search:focus-within {
+.library-filter:focus-within {
   box-shadow: inset 0 0 0 2px var(--focus-ring);
 }
 
-.br-search__lead {
+.library-filter__lead {
   display: inline-flex;
   margin-right: var(--space-1);
 }
 
-.br-search input {
+.library-filter input {
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -870,7 +874,7 @@ body {
   outline: none;
 }
 
-.br-search input::placeholder {
+.library-filter input::placeholder {
   color: var(--ink-muted);
 }
 

@@ -163,7 +163,8 @@ test.describe('phones', () => {
       await page.getByRole('button', { name: 'Library', exact: true }).click();
       expect(await noSidewaysScroll(page), 'library').toBe(true);
       const item = page.getByRole('list', { name: 'Your books' }).getByRole('listitem').first();
-      await item.getByRole('button', { name: /^Remove / }).click();
+      await item.getByRole('button', { name: /^More for / }).click();
+      await page.getByRole('menuitem', { name: 'Delete everywhere' }).click();
       await expect(item.getByRole('button', { name: 'Delete everywhere' })).toBeVisible();
       const title = await item.locator('.library-title').boundingBox();
       expect(title?.width ?? 0, 'title while confirming').toBeGreaterThan(40);

@@ -354,7 +354,8 @@ test('books isolate notes and book removal cascades both target types', async ({
   await expect(page.locator('.note-row')).toHaveCount(2);
   await expect(notesPanel(page)).not.toContainText('Book B page');
   await page.getByRole('button', { name: 'Library', exact: true }).click();
-  await page.getByRole('button', { name: 'Remove text-4-pages', exact: true }).click();
+  await page.getByRole('button', { name: 'More for text-4-pages', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Delete everywhere' }).click();
   await page.getByRole('button', { name: 'Delete everywhere' }).click();
   await expect(page.getByRole('button', { name: 'text-4-pages', exact: true })).toHaveCount(0);
   expect((await stored<Note>(page)).map((note) => note.text)).toEqual(['Book B page']);

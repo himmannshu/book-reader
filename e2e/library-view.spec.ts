@@ -10,6 +10,14 @@ function bookItem(page: Page, title: string) {
   return shelf(page).getByRole('listitem').filter({ hasText: title });
 }
 
+/** Chooses an item in a book card's More menu. */
+async function chooseInMore(page: Page, title: string, item: string) {
+  await bookItem(page, title)
+    .getByRole('button', { name: `More for ${title}` })
+    .click();
+  await page.getByRole('menuitem', { name: item }).click();
+}
+
 async function backToLibrary(page: Page) {
   await page.getByRole('button', { name: 'Library', exact: true }).click();
   await expect(shelf(page)).toBeVisible();
@@ -70,9 +78,7 @@ test('a book imported but never closed gets its cover in the background after a 
 test('a book only on other devices shows a placeholder cover with its title', async ({ page }) => {
   await importBook(page, 'basic-3-pages.pdf');
   await backToLibrary(page);
-  await bookItem(page, 'basic-3-pages')
-    .getByRole('button', { name: 'Remove basic-3-pages' })
-    .click();
+  await chooseInMore(page, 'basic-3-pages', 'Remove from this device');
   await bookItem(page, 'basic-3-pages')
     .getByRole('button', { name: 'Remove from this device' })
     .click();
@@ -107,7 +113,7 @@ test('a book only on other devices shows a placeholder cover with its title', as
 test('each book shows its reading progress', async ({ page }) => {
   await importBook(page, 'long-300-pages.pdf');
   await backToLibrary(page);
-  await expect(bookItem(page, 'long-300-pages').getByText('Not started')).toBeVisible();
+  await expect(bookItem(page, 'long-300-pages').getByText('New', { exact: true })).toBeVisible();
 
   await bookItem(page, 'long-300-pages')
     .getByRole('button', { name: 'long-300-pages', exact: true })
@@ -120,6 +126,10 @@ test('each book shows its reading progress', async ({ page }) => {
   await backToLibrary(page);
   const item = bookItem(page, 'long-300-pages');
   await expect(item.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50');
+  await expect(item.getByText('50%', { exact: true })).toBeVisible();
+  await expect(item.getByText('New', { exact: true })).toHaveCount(0);
+  // The list view also gives the page.
+  await page.getByRole('radio', { name: 'List' }).click();
   await expect(item.getByText('Page 151 of 300 · 50%')).toBeVisible();
 });
 
@@ -136,7 +146,10 @@ test(
       .poll(() => titles(page))
       .toEqual(['text-4-pages', 'basic-3-pages', 'outline-12-pages']);
 
-    await page.getByRole('combobox', { name: 'Sort' }).selectOption({ label: 'Title' });
+    await page
+      .getByRole('radiogroup', { name: 'Sort' })
+      .getByRole('radio', { name: 'Title' })
+      .click();
     await expect
       .poll(() => titles(page))
       .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
@@ -150,7 +163,9 @@ test(
     await expect.poll(() => titles(page)).toHaveLength(3);
 
     await page.reload();
-    await expect(page.getByRole('combobox', { name: 'Sort' })).toHaveValue('title');
+    await expect(
+      page.getByRole('radiogroup', { name: 'Sort' }).getByRole('radio', { name: 'Title' }),
+    ).toHaveAttribute('aria-checked', 'true');
     await expect
       .poll(() => titles(page))
       .toEqual(['basic-3-pages', 'outline-12-pages', 'text-4-pages']);
@@ -161,7 +176,7 @@ test('with 100 books the shelf shows within 1 s and filtering keeps up with typi
   page,
 }) => {
   // Seed 100 books with covers and progress straight into IndexedDB (the app made the database).
-  await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
   await page.evaluate(async () => {
     const canvas = document.createElement('canvas');
     canvas.width = 120;
@@ -228,7 +243,7 @@ test('with 100 books the shelf shows within 1 s and filtering keeps up with typi
     { polling: 'raf' },
   );
   expect(await updated.jsonValue()).toBeLessThan(100);
-  await expect(bookItem(page, 'Book 42').getByText('Page 43 of 100 · 43%')).toBeVisible();
+  await expect(bookItem(page, 'Book 42')).toBeVisible();
 });
 
 /** How many covers are stored, straight from IndexedDB. */
@@ -302,3 +317,120 @@ test('no cover is drawn while a book is open, even when opening one book after a
   await expect(bookItem(page, 'basic-3-pages').locator('img.cover')).toBeVisible();
   await expect(bookItem(page, 'text-4-pages').locator('img.cover')).toBeVisible();
 });
+
+// Phase 22: the designed shelf.
+test('the shelf has its heading, chips, sort and view controls, and a card per book', async ({
+  page,
+}) => {
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
+  await importBook(page, 'text-4-pages.pdf');
+  await backToLibrary(page);
+  await expect(page.getByRole('heading', { name: 'Library', level: 2 })).toHaveClass(/title-xl/);
+  const chips = page.getByRole('group', { name: 'Show' }).getByRole('button');
+  await expect(chips).toHaveText(['All1', 'Reading0', 'Unread1', 'Finished0']);
+  await expect(page.getByRole('radiogroup', { name: 'Sort' }).getByRole('radio')).toHaveText([
+    'Recent',
+    'Title',
+    'Progress',
+  ]);
+  await expect(page.getByRole('radiogroup', { name: 'View' }).getByRole('radio')).toHaveCount(2);
+
+  const card = bookItem(page, 'text-4-pages');
+  await expect(card.getByRole('heading', { name: 'text-4-pages' })).toBeVisible();
+  // The fixtures carry an author in their metadata; it is read with the cover.
+  await expect(card.getByText('book-reader fixtures')).toBeVisible();
+  await expect(card.getByText('New', { exact: true })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'More for text-4-pages' })).toBeVisible();
+  const cover = await card.locator('.br-book__cover').boundingBox();
+  const width = await page.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cover-width')),
+  );
+  expect(cover?.width).toBeCloseTo(width, 0);
+  expect((cover?.height ?? 0) / (cover?.width ?? 1)).toBeCloseTo(1.5, 1);
+  // Still there after a reload: the author is kept with the cover.
+  await page.reload();
+  await expect(bookItem(page, 'text-4-pages').getByText('book-reader fixtures')).toBeVisible();
+});
+
+test('the chips filter by status with counts, and grid or list is remembered', async ({ page }) => {
+  await importBook(page, 'basic-3-pages.pdf');
+  // Read to the last page: finished.
+  await pageSlot(page, 2).evaluate((slot: HTMLElement) => {
+    const reader = slot.closest<HTMLElement>('[data-testid="reader"]');
+    if (reader) reader.scrollTop = reader.scrollHeight;
+  });
+  await expect(pageSlot(page, 2)).toHaveAttribute('data-state', 'rendered');
+  await importBook(page, 'text-4-pages.pdf');
+  await backToLibrary(page);
+  const chips = page.getByRole('group', { name: 'Show' });
+  await expect(chips.getByRole('button', { name: /^Finished/ })).toHaveText('Finished1');
+  await expect(bookItem(page, 'basic-3-pages').getByText('Finished')).toBeVisible();
+  await chips.getByRole('button', { name: /^Finished/ }).click();
+  await expect.poll(() => titles(page)).toEqual(['basic-3-pages']);
+  await chips.getByRole('button', { name: /^Unread/ }).click();
+  await expect.poll(() => titles(page)).toEqual(['text-4-pages']);
+  await chips.getByRole('button', { name: /^All/ }).click();
+  await expect.poll(() => titles(page)).toHaveLength(2);
+
+  await expect(shelf(page)).toHaveClass(/shelf--grid/);
+  await page.getByRole('radio', { name: 'List' }).click();
+  await expect(shelf(page)).toHaveClass(/shelf--list/);
+  const row = await bookItem(page, 'text-4-pages').locator('.br-book__cover').boundingBox();
+  expect(row?.width).toBeCloseTo(64, 0);
+  await page.reload();
+  await expect(shelf(page)).toHaveClass(/shelf--list/);
+  await expect(page.getByRole('radio', { name: 'List' })).toHaveAttribute('aria-checked', 'true');
+});
+
+test('a card’s More menu deletes the book everywhere after a confirmation', async ({ page }) => {
+  await importBook(page, 'text-4-pages.pdf');
+  await backToLibrary(page);
+  await chooseInMore(page, 'text-4-pages', 'Delete everywhere');
+  const item = bookItem(page, 'text-4-pages');
+  await item.getByRole('button', { name: 'Cancel' }).click();
+  await expect(item).toBeVisible();
+  await chooseInMore(page, 'text-4-pages', 'Delete everywhere');
+  await item.getByRole('button', { name: 'Delete everywhere' }).click();
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
+});
+
+for (const width of [390, 320]) {
+  test.describe(`on a ${width} px phone`, () => {
+    test.use({ viewport: { width, height: 760 }, hasTouch: true, isMobile: true });
+
+    test(
+      'three covers a row, nothing sideways, and 44 px targets',
+      { tag: '@touch-device' },
+      async ({ page }) => {
+        for (const file of ['basic-3-pages.pdf', 'text-4-pages.pdf', 'outline-12-pages.pdf']) {
+          await importBook(page, file);
+        }
+        await backToLibrary(page);
+        const tops = await shelf(page)
+          .locator('.br-book__cover')
+          .evaluateAll((covers) => covers.map((cover) => cover.getBoundingClientRect().top));
+        expect(new Set(tops.map(Math.round)).size).toBe(1);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width,
+        );
+        for (const target of [
+          ...(await page.getByRole('group', { name: 'Show' }).getByRole('button').all()),
+          ...(await shelf(page)
+            .getByRole('button', { name: /^More for / })
+            .all()),
+        ]) {
+          const box = await target.boundingBox();
+          expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(43.5);
+        }
+        // The first card's menu stays on screen.
+        await shelf(page)
+          .getByRole('button', { name: /^More for / })
+          .first()
+          .tap();
+        const menu = await page.getByRole('menu').boundingBox();
+        expect(menu?.x ?? -1).toBeGreaterThanOrEqual(0);
+        expect((menu?.x ?? 0) + (menu?.width ?? 0)).toBeLessThanOrEqual(width);
+      },
+    );
+  });
+}

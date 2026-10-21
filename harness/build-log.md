@@ -1949,3 +1949,37 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Contract item 12 now has its evidence (local verify PASS at 3517cbb, entry above; CI green). Item 13, the user's
   device check, is the one item left.
 - Noted: local `phase-20-panels-and-sheets` (b86cf33) is ahead of origin's (4d8203b); not pushed, not touched.
+
+### 2026-10-21 17:40 EDT | Phase 22 | Claude Code (Opus 5.5) | Built (library shelf redesign); focused checks PASS
+- Standing instruction of 2026-10-21 (HANDOFF): plan, contract and context written and approved by the agent
+  (harness/build/phase-22-library-shelf.md, contracts/phase-22-contract.md, context/phase-22-library-shelf-context.md).
+  Branch `phase-22-library-shelf` from `phase-21-highlight-colours`.
+- Built: `shelfStatus`, `shelfCounts`, `filterByStatus`, `ShelfView` (src/core/shelf.ts); `cleanAuthor`
+  (src/core/library.ts); `PdfDoc.author()` (Info Author, else XMP dc:creator); the cover record keeps `author`
+  (absent = drawn before phase 22, so the background worker draws it again once); shelf view preference;
+  Chip and Badge (controls.tsx); BookCard.tsx (grid card or row, typographic cover, one badge, More menu with
+  in-card confirmations); Library.tsx (title-xl heading, chips with counts, Sort and View segmented controls, title
+  filter drawn as the design's search field); RowMenu opens rightwards when there is no room to its left.
+- Red first: unit tests for status, counts, the status filter, views, `cleanAuthor` and the view preference (10 seen
+  failing, then green). Seen in the browser: only one card showed an author after a reload, because the IndexedDB
+  cover store dropped the new field; a cover-store unit test was written and seen failing, then fixed. The Library
+  unit tests and the new e2e cases were written alongside the UI (not red first).
+- Found and fixed while checking: (1) the new `.br-search` rules restyled the Search panel (it already used that
+  class): the filter's styles are now scoped to `.library-filter`. (2) WebKit 100-book filter: phase 22 reached
+  118–122 ms in 3 of 10 runs (phase 21 never above 66 ms; probe on both branches). Cause: every keystroke
+  re-rendered 100 cards. BookCard is now memoized with stable handlers; after: phase 22 15–79 ms, phase 21 8–90 ms
+  (10 runs each, one worker). (3) Grid/List options 42 px wide on touch: 44 px now. (4) A card's More menu ran off
+  the left edge at 320 px.
+- Earlier specs changed (controls moved; no check loosened): book removal goes through "More for <title>" → menu
+  item → the same confirm button (bookmarks, design, library, notes, sync/files, sync/sync, library-view); the empty
+  library is the heading "Your library is empty" (design-system, pwa, library, bookmarks, sync specs, App.test);
+  library-view: "Not started" → the New badge, the Sort combobox → the Sort radio group, the grid shows "50%" and
+  the list view "Page 151 of 300 · 50%"; the 100-book test's last line checks the book is listed (seeded books
+  have no file, so they show In cloud instead of progress); Library.test removal cases use the More menu.
+- Checks (scope per the standing instruction): `npm run test:unit` 420 passed; lint, format, types clean;
+  `npm run test:e2e` 361 passed + 2 skipped, then the 3 failures fixed or shown flaky: design (44 px, fixed) and
+  comfort "right after scrolling" on WebKit (8/8 alone; passed in the first full run) → `-- design comfort` 66
+  passed; `npm run test:sync` 29 passed. Not run: `scripts/verify.sh` and perf (no change on the reading path; the
+  cover worker runs only while the library shows), CI (deferred by the user).
+- Visual check (dev server): grid and list at 800 px, grid at 375 px in Dark (three covers a row, no sideways
+  scroll, chips and More 44 px), 320 px (every card's menu on screen).

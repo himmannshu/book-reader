@@ -57,20 +57,22 @@ test('removing a book asks first, then deletes it for good', async ({ page }) =>
 
   // Cancelling keeps the book.
   await bookItem(page, 'basic-3-pages')
-    .getByRole('button', { name: 'Remove basic-3-pages' })
+    .getByRole('button', { name: 'More for basic-3-pages' })
     .click();
+  await page.getByRole('menuitem', { name: 'Delete everywhere' }).click();
   await bookItem(page, 'basic-3-pages').getByRole('button', { name: 'Cancel' }).click();
   await expect(bookItem(page, 'basic-3-pages')).toHaveCount(1);
 
   await bookItem(page, 'basic-3-pages')
-    .getByRole('button', { name: 'Remove basic-3-pages' })
+    .getByRole('button', { name: 'More for basic-3-pages' })
     .click();
+  await page.getByRole('menuitem', { name: 'Delete everywhere' }).click();
   await bookItem(page, 'basic-3-pages').getByRole('button', { name: 'Delete everywhere' }).click();
-  await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
   expect(await storedCounts(page)).toEqual({ books: 0, files: 0 });
 
   await page.reload();
-  await expect(page.getByText('No books yet. Open a PDF to start.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your library is empty' })).toBeVisible();
 });
 
 test('the list shows the most recently opened book first', async ({ page }) => {
