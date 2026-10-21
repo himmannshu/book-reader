@@ -5,7 +5,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (paused by the user mid phase 21).
+- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (resumed 14:00; running the phase 21 recheck).
 - Local baseline: verify on main (fea67a5) failed 9 WebKit tests on macOS (first WebKit run on a
   Mac). Fixed on branch `mac-webkit-baseline` (6a30927, not pushed): verify PASS there, WebKit and
   perf included. Causes: harness/context/mac-webkit-baseline-context.md. One real app change:
@@ -69,8 +69,10 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
       814f19d with tests seen red first; also N1 (docked panel), N4 (colour pressed mid-save), N5 (stale width).
     - `scripts/verify.sh` PASS at 814f19d (unit 404, browser 352 + 2 skipped, sync 29, perf 10). Only harness
       docs changed since.
-  - Not done: the evaluator RECHECK. It was started and then stopped when the user paused; it wrote nothing
-    (the review file has no appendix yet).
+    - 14:00 session: verify at de3e7c0 failed only WebKit steady-scroll p95 (52, then 41 ms alone). Four alternating
+      perf runs against phase 20 all passed with the same spread (p20 32/38 ms, p21 38/32 ms): noise, not phase 21
+      (build log 14:00 entry).
+  - Not done: the evaluator RECHECK (started 14:00 this session; the review file has no appendix yet).
   - Left as they are (for the user's device check): N2 bookmark rows' More menu holds only Remove bookmark;
     N3 Add note on a fresh selection then Cancel keeps the yellow highlight (recorded judgment call).
 
@@ -84,8 +86,9 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
    (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
    the lists and More menus, the export, N3).
 3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–21 and the Mac WebKit fix).
-4. Watch: WebKit steady-scroll p95 near its budget in some full runs (32 ms now), one ~2.4 s freeze sample on every
-   run (also on the baseline); WebKit whole-book search now ~1390–1405 ms (was ~900; not budgeted, worth a look).
+4. Watch: WebKit steady-scroll p95 swings 32–52 ms on this Mac, on phase 20 as much as 21 (budget 40); a miss means
+   rerun perf alone and check no other worktree is running perf. One ~2.4 s freeze sample on every run (also on the
+   baseline). WebKit whole-book search ~1400 ms on phase 20 and 21 alike (was ~900; not budgeted, worth a look).
 
 ## Decisions worth remembering
 
@@ -134,17 +137,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 11:28 EDT
+Snapshot 2026-10-21 14:00 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: c7e1c64 phase 21: review fixes recorded; verify PASS
-- Uncommitted files: 1
-- Last verify: FAIL at 2026-10-21 11:24 EDT (commit c7e1c64)
+- HEAD: de3e7c0 handoff: Claude Code 2026-10-21
+- Uncommitted files: 2
+- Last verify: FAIL at 2026-10-21 13:33 EDT (commit de3e7c0)
 - Recent commits:
+    de3e7c0 handoff: Claude Code 2026-10-21
     c7e1c64 phase 21: review fixes recorded; verify PASS
     814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
     fab20ab phase 21: built; verify PASS (build log)
     53ed3aa wip: phase 21: two-device test for a colour change
-    b936df2 wip: phase 21: earlier specs updated for the colour menu and row More menus
 - Changed files:
      M harness/HANDOFF.md
+     M harness/build-log.md
 <!-- AUTO:END -->

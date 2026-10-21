@@ -1896,3 +1896,17 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - The user paused the session. The evaluator recheck had started and was stopped before writing anything.
 - Last verify: PASS at 814f19d (entry above); since then only harness docs changed. Not rerun for the handoff.
 - Next: the evaluator recheck, then (with the user's approval) push and full CI, then the device check (HANDOFF).
+
+### 2026-10-21 14:00 EDT | Phase 21 | Claude Code (Opus 5.5) | Session start; WebKit scroll p95 miss traced to noise
+- Session start: `scripts/verify.sh` at de3e7c0 (only harness docs changed since the 814f19d PASS) → FAIL on one check:
+  unit 404; browser 352 passed + 2 skipped; sync 29; perf 9 of 10: WebKit steady scrolling p95 52 ms against 40.
+  Every other perf number within budget (webkit first 142, jump 78, search 891; chromium p95 16.7).
+- `npm run test:perf` alone, nothing heavy running, port 4174 free → WebKit p95 41 ms, FAIL again (others pass).
+- Comparison on the same machine: four `npm run test:perf` runs back to back, alternating a temporary detached worktree
+  of `phase-20-panels-and-sheets` (b86cf33) with this branch (de3e7c0). All four PASS:
+  - WebKit steady-scroll p95: phase 20 32 ms and 38 ms; phase 21 38 ms and 32 ms. Chromium p95 16.7–16.8 on all.
+  - WebKit whole-book search ~1400–1430 ms on both branches, so its rise from ~900 ms predates phase 21 (not budgeted).
+- Conclusion: phase 21 adds no scrolling cost; the 52 and 41 ms readings were machine noise. WebKit headroom is thin on
+  phase 20 too (38 ms). A second worktree (`perf-first-page-investigation`) exists in .claude/worktrees; a perf run
+  there at the same time would explain the misses, but that could not be confirmed. Budgets unchanged. The temporary
+  worktree was removed.
