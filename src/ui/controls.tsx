@@ -2,17 +2,16 @@
 // (harness/context/design-system/components/). Class names follow the design's `br-` prefix.
 import {
   useSyncExternalStore,
-  type ButtonHTMLAttributes,
   type KeyboardEvent,
   type ComponentProps,
   type ReactNode,
-  type Ref,
 } from 'react';
 import { THEMES, validTheme, type Theme } from '../core/reading-state';
 import { Icon, type IconName } from './icons';
 import { THEME_LABELS } from './theme';
 
-/** Below this width the reader shows icons only, and theme and zoom move into a Display menu. */
+/** Below this width the reader's toolbar is compact (panels under More, phase 19) and Reading
+ * settings is a bottom sheet. */
 export const NARROW_QUERY = '(max-width: 699px)';
 
 /** Whether a media query matches, following changes (for example rotating an iPad). */
@@ -28,39 +27,6 @@ export function useMediaQuery(query: string): boolean {
     },
     () => supported && window.matchMedia(query).matches,
     () => false,
-  );
-}
-
-/**
- * A toolbar button with an icon and a label. The label is hidden on narrow screens (CSS), but
- * stays the button's accessible name.
- */
-export function ToolButton({
-  icon,
-  label,
-  filled = false,
-  ref,
-  className = '',
-  title,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  icon: IconName;
-  label: string;
-  filled?: boolean;
-  ref?: Ref<HTMLButtonElement>;
-}) {
-  return (
-    // The label is a tooltip too, for when only the icon shows (phase 14 review).
-    <button
-      ref={ref}
-      type="button"
-      className={`tool-button ${className}`}
-      title={title ?? label}
-      {...props}
-    >
-      <Icon name={icon} filled={filled} />
-      <span className="tool-label">{label}</span>
-    </button>
   );
 }
 
