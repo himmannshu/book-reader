@@ -1891,3 +1891,8 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` at 814f19d → PASS: unit 404; browser 352 passed + 2 skipped; sync 29; perf 10 (chromium first
   201 ms, jump 16, p95 16.7, canvas 67.1, search 876; webkit first 146, jump 74, p95 32, canvas 67.1, search 1390 (not
   budgeted); blank 0 / 1 %). Budgets unchanged.
+
+### 2026-10-21 11:28 EDT | Phase 21 | Claude Code (Opus 5.5) | Paused by the user; handoff
+- The user paused the session. The evaluator recheck had started and was stopped before writing anything.
+- Last verify: PASS at 814f19d (entry above); since then only harness docs changed. Not rerun for the handoff.
+- Next: the evaluator recheck, then (with the user's approval) push and full CI, then the device check (HANDOFF).

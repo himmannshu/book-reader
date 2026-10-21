@@ -5,7 +5,7 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 
 ## Status
 
-- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-20.
+- Last agent: Claude Code (Opus 5.5), local session on the user's Mac, 2026-10-21 (paused by the user mid phase 21).
 - Local baseline: verify on main (fea67a5) failed 9 WebKit tests on macOS (first WebKit run on a
   Mac). Fixed on branch `mac-webkit-baseline` (6a30927, not pushed): verify PASS there, WebKit and
   perf included. Causes: harness/context/mac-webkit-baseline-context.md. One real app change:
@@ -13,6 +13,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
   is the user's call (pushing main deploys).
 - Phases 00–18 Complete. Phase 18 (design foundations) and the test-suite trim were merged into
   main by fast-forward on 2026-10-20 (CI green: runs 39477809896, 39483921300).
+- Phases 19 and 20 Complete (user-checked, CI green) on stacked branches, not merged into main.
+- Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Not pushed.
 - Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
   (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
 - Branch `docs-readme` holds the new README alone; merge it when the demo GIF is ready.
@@ -55,22 +57,35 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 21 (Highlight colours) on `phase-21-highlight-colours` (plan approved 2026-10-21: every highlight in the
-  Notes tab; Voice note kept in the menu until phase 23). Built: colour model, HighlightMenu (swatches, note, copy,
-  share, listen from here, voice note, remove; above/below placement), per-colour fills, export colour lines, Notes
-  rows for every highlight (`annotationRows`) with a row More menu (src/ui/RowMenu.tsx; also on bookmark rows),
-  Notes count including highlights, a two-device recolour test. Earlier specs updated (build log lists each change).
-  Fixed on the way: a save finishing after Escape brought the menu back and cleared a newer selection.
-- Review FAIL (B1–B4) fixed in 814f19d, verify PASS. Left: evaluator recheck review, CI (the push needs the user's approval), the user's device check.
+- Phase 21 (Highlight colours), plan approved 2026-10-21 (every highlight in the Notes tab; Voice note kept in the
+  menu until phase 23). Everything in the contract is built; nothing is half done in the code. HEAD c7e1c64.
+  - Done this session (evidence in harness/build-log.md, the two 2026-10-21 Phase 21 entries):
+    - Notes rows for every highlight (`annotationRows`, src/core/notes.ts) with a row More menu
+      (src/ui/RowMenu.tsx, also on bookmark rows); Notes count includes highlights (46d23fe).
+    - Earlier specs updated for the Yellow swatch and the More menus, each change listed (b936df2).
+    - Two-device recolour test, e2e/sync/sync.spec.ts (53ed3aa).
+    - Evaluator review (harness/code_review/phase-21-review.md) FAIL at fab20ab: B1 menu too wide on phones,
+      B2 Listen from here across a page break, B3 voice rows broken, B4 no Share on page notes. All fixed in
+      814f19d with tests seen red first; also N1 (docked panel), N4 (colour pressed mid-save), N5 (stale width).
+    - `scripts/verify.sh` PASS at 814f19d (unit 404, browser 352 + 2 skipped, sync 29, perf 10). Only harness
+      docs changed since.
+  - Not done: the evaluator RECHECK. It was started and then stopped when the user paused; it wrote nothing
+    (the review file has no appendix yet).
+  - Left as they are (for the user's device check): N2 bookmark rows' More menu holds only Remove bookmark;
+    N3 Add note on a fresh selection then Cancel keeps the yellow highlight (recorded judgment call).
 
 ## Next action
 
-1. User: merge into main when ready (pushing main deploys production; a fast-forward to
-   `phase-20-panels-and-sheets` brings the Mac WebKit fix and phases 19–20).
-2. Phase 21: evaluator review, then CI (push needs the user's approval), then the user's device check.
-3. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
-   freeze on every run (also on the baseline: worth a look of its own); load-sensitive tests (voice-notes chromium,
-   library-view 100 books, design zoomed reopen); WebKit whole-book search measured 1391 ms once (not budgeted).
+1. Phase 21: run the evaluator recheck (fresh `evaluator` subagent; diff `git diff phase-20-panels-and-sheets...HEAD`,
+   fixes `git diff fab20ab..HEAD`; it appends a marked appendix to harness/code_review/phase-21-review.md). Fix
+   any blocker it finds, then verify.
+2. Then ask the user before pushing `phase-21-highlight-colours` (a preview deploy) and running
+   `gh workflow run verify.yml --ref phase-21-highlight-colours`; record the run. Then the user's device check
+   (add phase 21 to harness/USER-CHECKLIST.md: menu and recolour with a thumb, mid-selection, colours per theme,
+   the lists and More menus, the export, N3).
+3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–21 and the Mac WebKit fix).
+4. Watch: WebKit steady-scroll p95 near its budget in some full runs (32 ms now), one ~2.4 s freeze sample on every
+   run (also on the baseline); WebKit whole-book search now ~1390–1405 ms (was ~900; not budgeted, worth a look).
 
 ## Decisions worth remembering
 
@@ -87,6 +102,10 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   prevention for desktop and use offeredRange for touch/keyboard focus changes.
 - Ranges move when nodes are removed. The create-offer observer keeps the original endpoint nodes
   and disconnects on dismissal; it adds no observer/layout work to idle scrolling.
+- Phase 21: 'Delete' in a row's More menu removes the note; 'Remove highlight' removes the highlight (and asks
+  when it has a note). The HighlightMenu stays open for a new highlight; a save finishing after Escape must not
+  bring it back (useHighlights checks `shownAction` is unchanged). Specs set viewports with `test.use`, never in a
+  beforeEach (that overrode the phone sizes and hid B1).
 - Fixture drawText uses unkerned Tj advances; sum individual glyph widths for the manifest. pdf-lib's
   whole-string width includes kerning that its PDF output does not apply.
 
@@ -115,18 +134,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 11:20 EDT
+Snapshot 2026-10-21 11:28 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
-- Uncommitted files: 2
-- Last verify: PASS at 2026-10-21 11:19 EDT (commit 814f19d)
+- HEAD: c7e1c64 phase 21: review fixes recorded; verify PASS
+- Uncommitted files: 1
+- Last verify: FAIL at 2026-10-21 11:24 EDT (commit c7e1c64)
 - Recent commits:
+    c7e1c64 phase 21: review fixes recorded; verify PASS
     814f19d phase 21: review fixes (B1 menu fits phones and docked panels, B2 listen across a page break, B3 voice rows, B4 share page notes, N4, N5)
     fab20ab phase 21: built; verify PASS (build log)
     53ed3aa wip: phase 21: two-device test for a colour change
     b936df2 wip: phase 21: earlier specs updated for the colour menu and row More menus
-    46d23fe wip: phase 21: Notes rows for every highlight, row More menus, save/dismiss race fixed
 - Changed files:
      M harness/HANDOFF.md
-     M harness/build-log.md
 <!-- AUTO:END -->
