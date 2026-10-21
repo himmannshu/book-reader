@@ -313,14 +313,14 @@ body {
   min-width: 0;
 }
 
-/* A list row's More menu (phase 21), at the row's end. */
-.note-row {
+/* A Notes row with a More menu (phase 21), at the row's end. Voice note rows stay stacked. */
+.annotation-row {
   display: flex;
   align-items: flex-start;
   gap: 4px;
 }
 
-.note-row .note-jump {
+.annotation-row .note-jump {
   flex: 1;
   min-width: 0;
 }
@@ -369,8 +369,21 @@ body {
     0 0 0 1px var(--line);
 }
 
-.br-hlmenu__swatches {
+.br-hlmenu__swatches,
+.br-hlmenu__actions {
   display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+/* Where one row doesn't fit (a phone, or beside a docked panel): colours above, actions below. */
+.br-hlmenu--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.br-hlmenu--stacked .br-hlmenu__sep {
+  display: none;
 }
 
 .br-hlmenu__sep {

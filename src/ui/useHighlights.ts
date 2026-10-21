@@ -13,8 +13,6 @@ import type { SelectionAction } from './SelectionActions';
 export const HIGHLIGHT_UNSAVED_REASON = 'Highlights need this book saved on this device.';
 export const HIGHLIGHTS_UNREADABLE = "This book's highlights couldn't be read.";
 
-/** Rough width of the menu, to keep it inside the reader. */
-const BUTTON_WIDTH = 170;
 const MARGIN = 8;
 
 /** The screen span the menu must not cover: a selection or a highlight (CSS px). */
@@ -30,9 +28,9 @@ interface Anchor {
  */
 function spot(anchor: Anchor, gap: number, area: DOMRect | undefined) {
   if (!area) return { left: anchor.left, top: anchor.bottom + gap, above: anchor.top - gap };
-  const maxLeft = Math.max(MARGIN, area.width - BUTTON_WIDTH - MARGIN);
+  // The menu keeps itself inside the pages once it knows its own size (SelectionActions).
   return {
-    left: Math.min(Math.max(anchor.left - area.left, MARGIN), maxLeft),
+    left: Math.max(anchor.left - area.left, MARGIN),
     top: anchor.bottom - area.top + gap,
     above: anchor.top - area.top - gap,
   };
@@ -89,6 +87,8 @@ export function useHighlights({
   const offeredRange = useRef<Range | null>(null);
   // Synchronous guard: a second activation can arrive before React renders the pending save.
   const saving = useRef(false);
+  // A colour pressed while that save runs: applied to the new highlight once it is saved.
+  const pendingColor = useRef<HighlightColor | null>(null);
   // Read by the scroll listener, which must cost nothing while no button is showing.
   const shownAction = useRef<SelectionAction | null>(null);
   useEffect(() => {
@@ -189,7 +189,10 @@ export function useHighlights({
    * note can follow. Resolves to the new highlight's id, or null when nothing was saved.
    */
   async function highlightSelection(color: HighlightColor = 'yellow'): Promise<string | null> {
-    if (saving.current) return null;
+    if (saving.current) {
+      pendingColor.current = color;
+      return null;
+    }
     const range = pageTextSelection(viewer.current) ?? offeredRange.current;
     if (bookId === null || !items || !range) return null;
     const rects = viewer.current?.selectionRects(range);
@@ -211,11 +214,15 @@ export function useHighlights({
     const shown = shownAction.current;
     saving.current = true;
     onError(null);
+    pendingColor.current = null;
     try {
       await store.put(highlight);
+      const later = pendingColor.current;
+      const saved = later && later !== color ? { ...highlight, color: later } : highlight;
+      if (saved !== highlight) await store.put(saved);
       setLoaded((shown) =>
         shown?.bookId === bookId && 'items' in shown
-          ? { bookId, items: sortByPosition([...shown.items, highlight]) }
+          ? { bookId, items: sortByPosition([...shown.items, saved]) }
           : shown,
       );
       offeredRange.current = null;
@@ -231,6 +238,7 @@ export function useHighlights({
       return null;
     } finally {
       saving.current = false;
+      pendingColor.current = null;
     }
   }
 

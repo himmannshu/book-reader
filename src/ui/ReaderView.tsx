@@ -1177,6 +1177,7 @@ export function ReaderView({
           }
           noteUnavailableReason={written.unavailableReason}
           removeUnavailableReason={written.unavailableReason}
+          bounds={scrollerRef}
         />
       </div>
       {settingsOpen && (

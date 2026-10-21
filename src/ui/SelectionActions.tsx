@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, type KeyboardEvent, type SyntheticEvent } from 'react';
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type RefObject,
+  type SyntheticEvent,
+} from 'react';
 import { HIGHLIGHT_COLORS, type HighlightColor } from '../core/highlights';
 import { IconButton } from './controls';
 
@@ -38,7 +45,13 @@ interface SelectionActionsProps {
   onVoiceNote?(id: string): void;
   noteUnavailableReason?: string | null;
   removeUnavailableReason?: string | null;
+  /** The pages, which the menu stays inside (not over a docked panel). Default: its whole area. */
+  bounds?: RefObject<HTMLElement | null>;
 }
+
+const MARGIN = 8;
+/** The one-row menu's padding, gaps and separator around its two parts (app.css). */
+const ONE_ROW_EXTRA = 2 * 4 + 2 * 2 + 1 + 2 * 4;
 
 // Keep desktop selections on mouse press. Touch pointerdown must remain uncancelled so WebKit
 // dispatches the tap's click; useHighlights keeps a range copy if touch focus clears selection.
@@ -62,21 +75,40 @@ export function SelectionActions({
   onVoiceNote,
   noteUnavailableReason = null,
   removeUnavailableReason = null,
+  bounds,
 }: SelectionActionsProps) {
   const ref = useRef<HTMLDivElement>(null);
+  // Two rows (the colours, then the actions) where one row doesn't fit, as on a phone.
+  const [stacked, setStacked] = useState(false);
   const reason =
     action?.kind === 'create' ? unsavedReason : noteUnavailableReason || removeUnavailableReason;
   useLayoutEffect(() => {
     const element = ref.current;
     const area = element?.offsetParent;
     if (!action || !element || !(area instanceof HTMLElement)) return;
+    const areaBox = area.getBoundingClientRect();
+    const pages = bounds?.current?.getBoundingClientRect() ?? areaBox;
+    const minLeft = Math.max(MARGIN, pages.left - areaBox.left + MARGIN);
+    const maxRight = Math.min(area.clientWidth, pages.right - areaBox.left) - MARGIN;
+    const room = Math.max(0, maxRight - minLeft);
+    // The one-row width, from its parts (they keep their natural width in either layout).
+    const menu = element.querySelector<HTMLElement>('.br-hlmenu');
+    const [swatches = 0, actions = 0] = ['.br-hlmenu__swatches', '.br-hlmenu__actions'].map(
+      (part) => menu?.querySelector<HTMLElement>(part)?.scrollWidth ?? 0,
+    );
+    const oneRow = swatches + actions + ONE_ROW_EXTRA;
+    if (oneRow > room !== stacked) {
+      setStacked(oneRow > room);
+      return;
+    }
+    element.style.maxWidth = `${room}px`;
     // Above the selection when it fits, else below: never over the selected words. Measure the
-    // actual menu (with any reason under it) so it stays inside the reader.
+    // actual menu (with any reason under it) so it stays inside the pages.
     const box = element.getBoundingClientRect();
-    const top = action.above - box.height >= 8 ? action.above - box.height : action.top;
-    element.style.left = `${Math.max(8, Math.min(action.left, area.clientWidth - box.width - 8))}px`;
-    element.style.top = `${Math.max(8, Math.min(top, area.clientHeight - box.height - 8))}px`;
-  }, [action, reason, noteLabel, color]);
+    const top = action.above - box.height >= MARGIN ? action.above - box.height : action.top;
+    element.style.left = `${Math.max(minLeft, Math.min(action.left, maxRight - box.width))}px`;
+    element.style.top = `${Math.max(MARGIN, Math.min(top, area.clientHeight - box.height - MARGIN))}px`;
+  }, [action, reason, noteLabel, color, stacked, bounds]);
   if (!action) return null;
 
   const existing = action.kind === 'remove';
@@ -100,7 +132,11 @@ export function SelectionActions({
       style={{ left: action.left, top: action.top }}
       onMouseDown={keepSelection}
     >
-      <div className="br-hlmenu" role="toolbar" aria-label="Highlight">
+      <div
+        className={`br-hlmenu${stacked ? ' br-hlmenu--stacked' : ''}`}
+        role="toolbar"
+        aria-label="Highlight"
+      >
         <div className="br-hlmenu__swatches" role="radiogroup" aria-label="Highlight colour">
           {HIGHLIGHT_COLORS.map((option, index) => {
             const chosen = existing && color === option;
@@ -124,33 +160,35 @@ export function SelectionActions({
           })}
         </div>
         <span className="br-hlmenu__sep" aria-hidden="true" />
-        {onNote && (
-          <IconButton
-            icon="note"
-            label={noteLabel}
-            disabled={(existing ? noteUnavailableReason : unsavedReason) !== null}
-            onClick={onNote}
-          />
-        )}
-        {existing && onVoiceNote && (
-          <IconButton
-            icon="mic"
-            label="Voice note"
-            disabled={noteUnavailableReason !== null}
-            onClick={() => onVoiceNote(action.id)}
-          />
-        )}
-        {onCopy && <IconButton icon="copy" label="Copy" onClick={onCopy} />}
-        {onShare && <IconButton icon="share" label="Share" onClick={onShare} />}
-        {onListen && <IconButton icon="listen" label="Listen from here" onClick={onListen} />}
-        {existing && (
-          <IconButton
-            icon="delete"
-            label="Remove highlight"
-            disabled={removeUnavailableReason !== null}
-            onClick={() => onRemove(action.id)}
-          />
-        )}
+        <div className="br-hlmenu__actions">
+          {onNote && (
+            <IconButton
+              icon="note"
+              label={noteLabel}
+              disabled={(existing ? noteUnavailableReason : unsavedReason) !== null}
+              onClick={onNote}
+            />
+          )}
+          {existing && onVoiceNote && (
+            <IconButton
+              icon="mic"
+              label="Voice note"
+              disabled={noteUnavailableReason !== null}
+              onClick={() => onVoiceNote(action.id)}
+            />
+          )}
+          {onCopy && <IconButton icon="copy" label="Copy" onClick={onCopy} />}
+          {onShare && <IconButton icon="share" label="Share" onClick={onShare} />}
+          {onListen && <IconButton icon="listen" label="Listen from here" onClick={onListen} />}
+          {existing && (
+            <IconButton
+              icon="delete"
+              label="Remove highlight"
+              disabled={removeUnavailableReason !== null}
+              onClick={() => onRemove(action.id)}
+            />
+          )}
+        </div>
       </div>
       {reason && <p className="selection-note">{reason}</p>}
     </div>

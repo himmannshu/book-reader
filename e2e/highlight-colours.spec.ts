@@ -95,9 +95,11 @@ const token = (page: Page, colour: string) =>
     return value;
   }, colour);
 
+// A viewport per describe (not set in beforeEach, which would override the phone sizes below).
+test.use({ viewport: { width: 1280, height: 800 } });
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(standIns);
-  await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await importBook(page, 'text-4-pages.pdf');
 });
@@ -156,6 +158,21 @@ test('on a highlight: its colour is ringed, another recolours it, and it is kept
     .getByRole('button', { name: 'text-4-pages', exact: true })
     .click();
   await expect(boxes(page).first()).toHaveClass(/highlight-box--blue/);
+});
+
+test('a colour pressed while the highlight is saving is the one it gets', async ({ page }) => {
+  await select(page, 'Charlie three');
+  // Both presses land before the asynchronous save can finish.
+  await swatches(page).evaluate((group) => {
+    group.querySelector<HTMLButtonElement>('[aria-label="Yellow"]')?.click();
+    group.querySelector<HTMLButtonElement>('[aria-label="Blue"]')?.click();
+  });
+  await expect(swatches(page).getByRole('radio', { name: 'Blue' })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
+  await expect(boxes(page)).toHaveCount(1);
+  await expect(page.locator('.highlight-box--blue')).toHaveCount(1);
 });
 
 test('the menu sits above the selection, below it near the top, and never covers it', async ({
@@ -273,6 +290,35 @@ test('Copy, Share and Listen from here', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.heard[0] ?? '')).toMatch(/^Charlie three/);
 });
 
+test('Listen from here on a passage across a page break starts where it starts', async ({
+  page,
+}) => {
+  // Show the foot of page 1 and the top of page 2 together.
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  await page.getByTestId('reader').evaluate((reader) => {
+    const first = reader.querySelector<HTMLElement>('[data-page-index="0"]');
+    reader.scrollTop = (first?.offsetTop ?? 0) + (first?.offsetHeight ?? 0) - 250;
+  });
+  const tail = page.locator('[data-page-index="0"] .textLayer span', { hasText: 'India nine' });
+  const head = page.locator('[data-page-index="1"] .textLayer span', { hasText: 'and Juliet ten' });
+  await expect(tail).toHaveCount(1);
+  await expect(head).toHaveCount(1);
+  await page.evaluate(() => {
+    const spans = [...document.querySelectorAll('.textLayer span')];
+    const from = spans.find((span) => span.textContent?.startsWith('India nine'));
+    const to = spans.find((span) => span.textContent?.startsWith('and Juliet ten'));
+    if (!from?.firstChild || !to?.firstChild) throw new Error('no text');
+    const range = document.createRange();
+    range.setStart(from.firstChild, 0);
+    range.setEnd(to.firstChild, 'and Juliet ten'.length);
+    document.getSelection()?.removeAllRanges();
+    document.getSelection()?.addRange(range);
+  });
+  await expect(menu(page)).toBeVisible();
+  await menu(page).getByRole('button', { name: 'Listen from here' }).click();
+  await expect.poll(() => page.evaluate(() => window.heard[0] ?? '')).toMatch(/^India nine/);
+});
+
 test('Notes lists every highlight with its colour, and each row has a More menu', async ({
   page,
 }) => {
@@ -321,7 +367,20 @@ test('Notes lists every highlight with its colour, and each row has a More menu'
   await expect(rows).toHaveCount(2);
   await expect(page.locator('.highlight-box--blue')).toHaveCount(0);
 
-  // A page note's More menu: Edit note and Delete, no colour.
+  // A page note's More menu: Share (its text), Copy, Edit note and Delete; no colour.
+  await rows.nth(0).getByRole('button', { name: 'More actions' }).click();
+  await page
+    .getByRole('menu', { name: 'More actions' })
+    .getByRole('menuitem', { name: 'Share' })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => window.shared.at(-1)?.text ?? ''))
+    .toContain('About page one');
+  await rows.nth(0).getByRole('button', { name: 'More actions' }).click();
+  await expect(
+    page.getByRole('menu', { name: 'More actions' }).getByRole('menuitem', { name: 'Delete' }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
   await rows.nth(0).getByRole('button', { name: 'More actions' }).click();
   await expect(
     page.getByRole('menu', { name: 'More actions' }).getByRole('menuitemradio'),
@@ -346,20 +405,58 @@ test('the export names each highlight’s colour', async ({ page }) => {
   expect(markdown).toContain('> Charlie three\n\n*Green highlight*\n');
 });
 
-test.describe('on a phone', () => {
-  const { defaultBrowserType: _ignored, ...iphone } = devices['iPhone 13'];
-  void _ignored;
-  test.use({ ...iphone });
+/** Every target in the menu is at least `size` px and inside `left`…`right` (CSS px). */
+async function expectTargetsWithin(page: Page, left: number, right: number, size: number) {
+  const targets = [
+    ...(await menu(page).getByRole('button').all()),
+    ...(await swatches(page).getByRole('radio').all()),
+  ];
+  expect(targets.length).toBeGreaterThan(0);
+  for (const target of targets) {
+    const box = await target.boundingBox();
+    if (!box) throw new Error('a menu target has no box');
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(size - 0.5);
+    expect(box.x).toBeGreaterThanOrEqual(left);
+    expect(box.x + box.width).toBeLessThanOrEqual(right);
+  }
+}
 
-  test('the menu’s targets are 44 px for a thumb', { tag: '@touch-device' }, async ({ page }) => {
+test.describe('at 760 px', () => {
+  test.use({ viewport: { width: 760, height: 800 } });
+
+  test('beside a docked panel the menu stays over the pages, in two rows', async ({ page }) => {
+    await openPanel(page, 'Notes');
+    const pages = await page.getByTestId('reader').boundingBox();
+    if (!pages) throw new Error('no pages');
     await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
     await select(page, 'Charlie three');
-    for (const target of [
-      ...(await menu(page).getByRole('button').all()),
-      ...(await swatches(page).getByRole('radio').all()),
-    ]) {
-      const box = await target.boundingBox();
-      expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(43.5);
-    }
+    await swatches(page).getByRole('radio', { name: 'Green' }).click();
+    await expect(menu(page).getByRole('button', { name: 'Remove highlight' })).toBeVisible();
+    await expectTargetsWithin(page, pages.x, pages.x + pages.width, 40);
+    await expect(page.locator('.br-hlmenu--stacked')).toHaveCount(1);
   });
 });
+
+for (const width of [390, 320]) {
+  test.describe(`on a ${width} px phone`, () => {
+    const { defaultBrowserType: _ignored, ...iphone } = devices['iPhone 13'];
+    void _ignored;
+    test.use({ ...iphone, viewport: { width, height: 700 } });
+
+    test(
+      'the menu’s targets are 44 px for a thumb, and all on screen',
+      { tag: '@touch-device' },
+      async ({ page }) => {
+        await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+        await select(page, 'Charlie three');
+        await expectTargetsWithin(page, 0, width, 44);
+        // Over the new highlight the menu has more actions (Voice note, Remove highlight).
+        await swatches(page).getByRole('radio', { name: 'Green' }).tap();
+        await expect(menu(page).getByRole('button', { name: 'Remove highlight' })).toBeVisible();
+        await expectTargetsWithin(page, 0, width, 44);
+        await menu(page).getByRole('button', { name: 'Remove highlight' }).tap();
+        await expect(boxes(page)).toHaveCount(0);
+      },
+    );
+  });
+}

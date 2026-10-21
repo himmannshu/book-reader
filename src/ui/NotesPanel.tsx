@@ -150,26 +150,28 @@ export function NotesPanel({
     const note = row.note;
     const busy = notes.changing || notes.unavailableReason !== null;
     if (row.kind === 'note') {
-      const quote = quoteFor(row.note.target);
-      return [
+      // A page note (or one whose highlight is gone) hands on its own text, or the passage.
+      const passage = {
+        quote: quoteFor(row.note.target) ?? row.note.text,
+        pageIndex: row.note.target.pageIndex,
+      };
+      const items: RowMenuItem[] = [
         {
           label: 'Edit note',
           icon: 'note',
           disabled: busy,
           onSelect: () => onOpen(row.note.target),
         },
-        ...(onCopy
-          ? [
-              {
-                label: 'Copy',
-                icon: 'copy' as const,
-                onSelect: () =>
-                  onCopy({ quote: quote ?? row.note.text, pageIndex: row.note.target.pageIndex }),
-              },
-            ]
-          : []),
-        { label: 'Delete', icon: 'delete', disabled: busy, onSelect: () => notes.remove(row.note) },
       ];
+      if (onShare) items.push({ label: 'Share', icon: 'share', onSelect: () => onShare(passage) });
+      if (onCopy) items.push({ label: 'Copy', icon: 'copy', onSelect: () => onCopy(passage) });
+      items.push({
+        label: 'Delete',
+        icon: 'delete',
+        disabled: busy,
+        onSelect: () => notes.remove(row.note),
+      });
+      return items;
     }
     const highlight = row.highlight;
     const passage = { quote: highlight.quote, pageIndex: highlight.pageIndex };
@@ -265,7 +267,7 @@ export function NotesPanel({
             return (
               <li
                 key={row.kind === 'note' ? row.note.id : row.highlight.id}
-                className="note-row"
+                className="note-row annotation-row"
                 data-note-id={note?.id}
                 data-highlight-id={row.kind === 'highlight' ? row.highlight.id : undefined}
               >

@@ -109,9 +109,13 @@ export function sentenceAt(sentences: readonly Sentence[], length: number, share
   return index >= 0 ? index : Math.max(0, sentences.length - 1);
 }
 
+/** The fewest characters of a passage's start that count as finding it on a page. */
+const MIN_PART = 3;
+
 /**
  * The sentence where a passage starts on its page (phase 21, Listen from here). The passage is a
- * highlight's quote, whitespace collapsed; the page text has line breaks. 0 when it is not found.
+ * highlight's quote, whitespace collapsed; the page text has line breaks. A passage that runs on
+ * to the next page is found by its part on this page. 0 when it is not found.
  */
 export function passageSentence(text: string, passage: string): number {
   // The page text with whitespace collapsed, and where each kept character came from.
@@ -128,8 +132,17 @@ export function passageSentence(text: string, passage: string): number {
     from.push(i);
   }
   const wanted = passage.replace(/\s+/g, ' ').trim();
-  const at = wanted ? collapsed.indexOf(wanted) : -1;
-  if (at < 0) return 0;
+  // A passage that runs on to the next page is on this page only in part: find the longest start
+  // of it that is (found once, so are all shorter starts; a binary search finds the longest).
+  let low = Math.min(MIN_PART, wanted.length);
+  let high = wanted.length;
+  if (!wanted || !collapsed.includes(wanted.slice(0, low))) return 0;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (collapsed.includes(wanted.slice(0, middle))) low = middle;
+    else high = middle - 1;
+  }
+  const at = collapsed.indexOf(wanted.slice(0, low));
   const offset = from[at] ?? 0;
   const index = splitSentences(text).findIndex((sentence) => sentence.end > offset);
   return Math.max(0, index);

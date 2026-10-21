@@ -65,6 +65,14 @@ describe('passageSentence', () => {
     expect(passageSentence(text, 'ends here. Bravo')).toBe(0);
   });
 
+  it('finds a passage that runs on to the next page by the part on this page', () => {
+    // Selected from the foot of this page into the top of the next (review finding B2).
+    expect(passageSentence(text, 'Charlie three is last. Delta four starts the next page')).toBe(2);
+    expect(passageSentence(text, 'is last. Delta four')).toBe(2);
+    // The longest part on the page wins over an earlier, shorter match.
+    expect(passageSentence('One a b. Two a b c. Three.', 'a b c. And more')).toBe(1);
+  });
+
   it('starts at the top when the passage is not found in the page text', () => {
     expect(passageSentence(text, 'Not on this page')).toBe(0);
     expect(passageSentence('', 'anything')).toBe(0);
