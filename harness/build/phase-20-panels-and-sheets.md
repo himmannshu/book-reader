@@ -1,6 +1,6 @@
 # Phase 20: Panels and sheets
 
-- Status: Planned (awaiting the user's approval, 2026-10-20)
+- Status: In progress (plan approved by the user, 2026-10-20)
 - Branch: phase-20-panels-and-sheets (cut from `phase-19-reader-chrome`; main has neither yet)
 - Depends on: 19
 

@@ -3,7 +3,8 @@
 Agreed definition of done, written before any code. The author drafts it. The user or the
 reviewing agent approves it. After approval, only append clearly marked amendments.
 
-- Approved by: (pending: posted to the user for approval on 2026-10-20)
+- Approved by: the user, 2026-10-20 ("Approved: phase 20 as planned, with rows keeping today's actions and the
+  AnnotationRow More menu in phase 21"). Judgment calls: harness/context/phase-20-panels-and-sheets-context.md.
 
 ## Checkable items
 

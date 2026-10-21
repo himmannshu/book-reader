@@ -1,9 +1,9 @@
 # Phase 20 context: panels and sheets
 
 Material decisions only. Plan and contract: harness/build/phase-20-panels-and-sheets.md,
-harness/contracts/phase-20-contract.md. Plan posted to the user on 2026-10-20; not yet approved.
+harness/contracts/phase-20-contract.md. Plan approved by the user on 2026-10-20, rows keeping today's actions.
 
-## Judgment calls (proposed)
+## Judgment calls
 
 - Branch cut from `phase-19-reader-chrome`, since main has neither the Mac WebKit fix nor phase 19.
 - The panel's title is the open tab's name (the design's SidePanel has a title; the tabs sit under it).
