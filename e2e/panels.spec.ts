@@ -129,6 +129,22 @@ test.describe('one tabbed panel', () => {
   });
 });
 
+test('on a wide screen too, opening a panel with nothing to focus puts focus in it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  // No table of contents in this book.
+  await importBook(page, 'basic-3-pages.pdf');
+  await openContents(page);
+  await expect(page.getByText('This book has no table of contents.')).toBeVisible();
+  expect(
+    await page.evaluate(() =>
+      document.querySelector('.br-panel')?.contains(document.activeElement),
+    ),
+  ).toBe(true);
+});
+
 test.describe('contents tree', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
@@ -350,6 +366,43 @@ test.describe('phones: bottom sheets', () => {
     for (let i = 0; i < 14; i++) {
       await page.keyboard.press(`${option}Shift+Tab`);
       expect(await inSheet(), `Shift+Tab ${i + 1}`).toBe(true);
+    }
+  });
+
+  test('a panel with nothing in it still takes focus, and Tab never leaves the sheet', async ({
+    page,
+    browserName,
+  }) => {
+    const inSheet = () =>
+      page.evaluate(() => document.querySelector('.br-panel')?.contains(document.activeElement));
+    // No bookmarks yet: the Bookmarks tab has nothing to focus.
+    await openContents(page);
+    await tabs(page)
+      .getByRole('tab', { name: /^Bookmarks/ })
+      .click();
+    await page.keyboard.press('Escape');
+    await expect(anyPanel(page)).toHaveCount(0);
+    await openContents(page);
+    await expect(panel(page, 'Bookmarks')).toBeVisible();
+    expect(await inSheet()).toBe(true);
+    const option = browserName === 'webkit' ? 'Alt+' : '';
+    for (let i = 0; i < 6; i++) {
+      await page.keyboard.press(`${option}Tab`);
+      expect(await inSheet(), `Tab ${i + 1}`).toBe(true);
+    }
+    await page.keyboard.press('Escape');
+
+    // Safari's own Tab (no Option) skips buttons: from the search field it must not reach the
+    // pages under the scrim either.
+    await toolbar(page).getByRole('button', { name: 'More' }).click();
+    await page
+      .getByRole('menu', { name: 'More' })
+      .getByRole('menuitem', { name: 'Search' })
+      .click();
+    await expect(page.getByRole('searchbox', { name: 'Search in book' })).toBeFocused();
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Tab');
+      expect(await inSheet(), `plain Tab ${i + 1}`).toBe(true);
     }
   });
 

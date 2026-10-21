@@ -125,3 +125,77 @@ gained a `toBeFocused` check.
   the sheet's height limit is `88dvh` (with `88vh` before it as a fallback). The iPhone check will show the bars.
 - N5 fixed: the search section inside the Search side panel has no name of its own.
 - `scripts/verify.sh` after the fixes → PASS (build log).
+
+## Recheck (evaluator, Claude Code Opus 5.5, 2026-10-21)
+
+- Rechecked: HEAD 089fd2f (`git diff 9fd4434..HEAD`, 12 files), fresh context, same machine. Probes ran in
+  Chromium and WebKit against the production build (`vite preview` on port 4181) after verify had finished, one
+  thing at a time.
+- `scripts/verify.sh` → **PASS**: unit 396/396; browser 324 passed + 2 skipped (the touch drag skips in
+  WebKit); sync 27/27; perf 10/10 (chromium first 190 ms, jump 28, p95 16.7, canvas 67.1, search 878; webkit
+  first 185, jump 91, p95 37, canvas 67.1, search 887; blank 0 / 1.1 %). Budgets unchanged.
+- The changes to this phase's own spec (tree roles → list and buttons, the current-entry check moved to the
+  link) keep the same checks. `labels-8-pages` gained a two-entry outline, and `manifest.json` is unchanged.
+
+### Verdict: FAIL (one new blocker, B2. B1 is fixed)
+
+### Earlier findings
+
+| Finding | Status | Evidence |
+|---|---|---|
+| B1 chapter in note rows | **Fixed** | Both engines, outline-12-pages page 6: the written row reads `Page note · Page 6 · Chapter 2`, and the voice row (tone stub, real MediaRecorder) reads `Page · Page 6 · 0:01 · Chapter 2`. The new panels.spec test covers both. Contract item 7 → PASS. |
+| N1 sheet keeps keyboard focus | **Partly fixed** | Chromium Tab, and WebKit Option+Tab, wrap inside the Search sheet, the Contents sheet (20 presses) and the Notes editor. Still escapes in two cases: (a) **empty panels**. The trap's selector `button:not(:disabled)` counts the unselected tabs (`tabindex="-1"`) as stops. With nothing focusable in the body (empty Bookmarks, a book with no outline), the "last" stop is a tab that Tab never reaches, so Tab goes from the selected tab out to `<body>` and then Library, under the scrim (both engines). (b) **Safari's default Tab** (no Option) skips buttons, so from the search field or the note editor Tab goes to `<body>` and the pages under the scrim. Only `[tabindex]`, fields and links are stops then. (b) needs a hardware keyboard on iPad or iPhone. Non-blocking, but (a) shares its fix with B2. |
+| N2 contents semantics | **Fixed** | The aria snapshot is now `navigation "Table of contents" > list "Contents" > listitem > button "Collapse Second Part" + button "Second Part" > list…`. After a press, the chevron reads "Expand Second Part". The current entry's link has `aria-current="location"`. |
+| N3 test gaps | **Fixed** | panels.spec now has a Chromium touch drag, 320 and 390 px on every tab, and page labels (`i`, `1`) in the contents. My own touch drag on the grabber and on the title still closes the sheet, and a drag on the list body does not. |
+| N4 design | **Fixed** | WebKit at 390 px: Safari's built-in cancel button is gone and the field has its own Clear (it empties the field and keeps focus there). The toast sits at the very top, clear of the sheet. The sheet's computed `max-height` is 616 px at 700 px tall (88dvh). There is no double hairline under the last note row. |
+| N5 duplicate landmark | **Fixed** | The Search snapshot has `complementary "Search"` with no inner region. |
+
+### New blocker
+
+- **B2. On phones, opening a panel that has nothing to focus leaves focus on `<body>` (contract item 8: "focus
+  never lands on `<body>`").** The panels move focus only to their first entry (`usePanelKeys`), and when the
+  panel is opened from the More menu, the menu item that had focus is removed. Repro (both engines, 390×760):
+  open outline-12-pages with no bookmarks, More → Contents, choose the Bookmarks tab, press Escape (focus goes
+  back to More), then More → Contents again. The panel reopens on the empty Bookmarks tab and
+  `document.activeElement` is `BODY`. The same happens with More → Contents on `basic-3-pages.pdf`, which has no
+  outline. From there, Tab goes to the pages and the toolbar under the scrim (see N1 a). I missed this
+  in the first review. It is not caused by the fixes. Expected: focus in the panel, for example the selected tab, the panel's
+  Close button, or the nav (Bookmarks and Notes navs already have `tabIndex={-1}`). Then also leave
+  `tabindex="-1"` elements out of the sheet's Tab stops. On desktop, focus stays on the Contents button in
+  this case, which is not `<body>`. Item 8 still asks for focus "into it", so the same fix should cover desktop.
+
+### Contract items after the recheck
+
+| # | Result |
+|---|---|
+| 1–6, 9–11 | PASS (the item 6 page-labels check now has a repo test; item 4 now has a touch test and checks 320 px) |
+| 7 | PASS (B1 fixed) |
+| 8 | **FAIL** (B2) |
+| 12 | PENDING. Local verify passes. No CI run yet (the branch is not pushed). |
+| 13 | PENDING (user device check) |
+
+### Rubric after the recheck
+
+Contract fidelity 4/5 (item 8). Functionality 4, Robustness 4, Code quality 4, Test quality 4 (the new tests are
+behavioural and were red first), Product depth 4, Design 4. All except contract fidelity meet their thresholds.
+
+### Still open (non-blocking)
+
+- N1 (b): Safari's default Tab escapes the sheet from the search field and the note editor. Consider a focusin
+  guard that checks whether focus is still inside, or making the panel's own focusable stops reachable in Safari's
+  model. If the author keeps the current behaviour, record the reason.
+- The Search field shows two close-like × icons side by side (Clear search in the field, Close Search beside the
+  title). This is acceptable and matches common search fields, but worth a look on the iPhone.
+
+## Author appendix 2 (Claude Code, Opus 5.5, 2026-10-21)
+
+- B2 fixed: when a panel opens or changes tab and its content gives focus to nothing (an empty Bookmarks tab, a book
+  without contents), the panel focuses its selected tab, or its Close button. This runs after the content's own
+  effects, so a panel with entries still focuses its first entry (or the current chapter). It applies to docked
+  panels too, so focus goes into the panel there as well. Tests: "a panel with nothing in it still takes focus…"
+  (phones) and "on a wide screen too, opening a panel with nothing to focus puts focus in it"; both failed before.
+- N1 remainder fixed: the sheet's Tab stops leave out unselected tabs (tabIndex −1), and focus that a Tab press takes
+  out of the sheet (Safari's plain Tab, which skips buttons; an empty panel) is brought back to its first stop (or
+  last, for Shift+Tab). Tested with plain Tab from the search field in both engines.
+- The two × buttons on the phone (search Clear and panel Close) are left for the iPhone check, as suggested.
+- `scripts/verify.sh` → PASS (build log).

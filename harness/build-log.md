@@ -1803,3 +1803,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - `scripts/verify.sh` → PASS: unit 396; browser 324 passed + 2 skipped (the touch drag skips in WebKit); sync 27;
   perf 10 (chromium first 187 ms, jump 20, p95 16.8, canvas 67.1, search 888; webkit first 142, jump 54, p95 31
   [samples 31, 2435, 31], canvas 67.1, search 878; blank 0 / 1.1 %). Budgets unchanged.
+
+### 2026-10-21 01:30 EDT | Phase 20 | Claude Code (Opus 5.5) | Recheck FAIL (B2) fixed; verify PASS
+- Recheck at 089fd2f: B1 and N2–N5 fixed; new blocker B2 (contract item 8: an empty panel on a phone left focus on
+  <body>) and an N1 remainder (Tab escaping an empty sheet, Safari's plain Tab). Fixes in the review's appendix 2.
+- Tests added (red first, both engines): empty-panel focus on phones with Tab staying in the sheet, plain Tab from
+  the search field; focus into a docked panel with no contents.
+- `scripts/verify.sh` → PASS: unit 396; browser 328 passed + 2 skipped; sync 27; perf 10 (chromium first 184 ms,
+  jump 16, p95 16.8, canvas 67.1, search 869; webkit first 142, jump 53, p95 33 [samples 31, 2411, 33], canvas 67.1,
+  search 1391 (not budgeted; ~900 in earlier runs, to watch); blank 0 / 1.1 %). Budgets unchanged.

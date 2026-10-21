@@ -1,10 +1,12 @@
 // Shared controls (phase 14), restyled and extended from the Book Reader design system in phase 18
 // (harness/context/design-system/components/). Class names follow the design's `br-` prefix.
 import {
+  useEffect,
   useRef,
   useSyncExternalStore,
-  type KeyboardEvent,
   type ComponentProps,
+  type FocusEvent,
+  type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react';
@@ -397,17 +399,38 @@ export function SidePanel({
     if (event.type === 'pointerup' && current.by >= SHEET_CLOSE_DRAG_PX) onClose();
   }
 
-  // A sheet covers the reader: Tab (and Shift+Tab) wrap around inside it, so the keyboard never
-  // reaches the controls under the scrim (phase 20 review N1).
+  // Opening (or switching tab), focus goes into the panel. Its content focuses its first entry
+  // itself (effects run child first); a panel with nothing to focus gives it to the selected tab,
+  // or the Close button, never leaving it on the page body (phase 20 review B2).
+  useEffect(() => {
+    const element = panel.current;
+    if (!element || element.contains(document.activeElement)) return;
+    const target =
+      element.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]') ??
+      element.querySelector<HTMLElement>('.br-panel__head button');
+    target?.focus({ preventScroll: true });
+  }, [title]);
+
+  /** The Tab stops inside the panel, in order (unselected tabs are not stops). */
+  function stops(): HTMLElement[] {
+    return [
+      ...(panel.current?.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input, textarea, select, audio[controls], [tabindex]',
+      ) ?? []),
+    ].filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0);
+  }
+
+  // A sheet covers the reader: Tab and Shift+Tab wrap around inside it, so the keyboard never
+  // reaches the controls under the scrim (review N1). Safari's own Tab skips buttons and so can
+  // still step out from a field: focus that a Tab press takes out of the sheet comes back.
+  const tabbing = useRef<'forward' | 'back' | null>(null);
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (!sheet || event.key !== 'Tab' || !panel.current) return;
-    const focusable = [
-      ...panel.current.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), input, textarea, select, audio[controls], [tabindex]:not([tabindex="-1"])',
-      ),
-    ].filter((element) => element.getClientRects().length > 0);
-    const first = focusable[0];
-    const last = focusable.at(-1);
+    if (!sheet || event.key !== 'Tab') return;
+    tabbing.current = event.shiftKey ? 'back' : 'forward';
+    setTimeout(() => (tabbing.current = null), 0);
+    const all = stops();
+    const first = all[0];
+    const last = all.at(-1);
     if (!first || !last) return;
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
@@ -416,6 +439,18 @@ export function SidePanel({
       event.preventDefault();
       first.focus();
     }
+  }
+
+  function onBlur(event: FocusEvent<HTMLElement>) {
+    const direction = tabbing.current;
+    if (!sheet || !direction) return;
+    const to = event.relatedTarget;
+    if (to instanceof Node && panel.current?.contains(to)) return;
+    setTimeout(() => {
+      if (panel.current?.contains(document.activeElement)) return;
+      const all = stops();
+      (direction === 'forward' ? all[0] : all.at(-1))?.focus();
+    }, 0);
   }
 
   const dragHandlers = sheet
@@ -436,6 +471,7 @@ export function SidePanel({
         className={cx('br-panel', `br-panel--${presentation}`)}
         aria-label={title}
         onKeyDown={onKeyDown}
+        onBlur={onBlur}
       >
         {sheet && <span className="br-panel__grabber" aria-hidden="true" {...dragHandlers} />}
         <div className="br-panel__head" {...dragHandlers}>
