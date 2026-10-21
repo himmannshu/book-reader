@@ -2011,3 +2011,10 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Checks (scope per the standing instruction): unit 425 passed; lint, format, types clean; `npm run test:e2e` 376
   passed + 2 skipped. Not run: `scripts/verify.sh`, perf and sync (no viewer, rendering or sync change; voice notes
   are local), CI (deferred by the user).
+
+### 2026-10-21 19:20 EDT | Phases 22–23 | Claude Code (Opus 5.5) | Pushed for preview deploys
+- With the user's approval, pushed `phase-22-library-shelf` (debbf88) and `phase-23-listen-bar-voice-notes`
+  (8b65a10) for Cloudflare preview deploys; no full CI run (the user's choice). Quick-check runs started:
+  39690556156 (22) and 39690555973 (23).
+- Not asked for: the same command also pushed `phase-21-highlight-colours` 5749740..1c85911 (two harness-doc
+  commits: the CI record and the checklist). It made one more preview build and quick-check run 39690558149.

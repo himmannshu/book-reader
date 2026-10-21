@@ -204,7 +204,7 @@ ask the agent to push when you want to check it on devices.
 ## Phase 23: Listen bar and voice notes (branch `phase-23-listen-bar-voice-notes`)
 
 Reading aloud gets the designed floating bar; voice notes get the designed strip with a waveform. Not pushed
-yet (no preview); ask the agent to push when you want to check it on devices.
+yet when written; pushed 2026-10-21, so its preview is in the Cloudflare dashboard.
 
 - [ ] Listen (headphones in the toolbar): a bar floats at the bottom with "Reading aloud", the page and chapter,
       previous sentence, a big play/pause, next sentence, the speed (1×) and ×. On iPhone only the controls show.

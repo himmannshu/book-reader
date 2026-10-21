@@ -18,7 +18,8 @@ with no memory of earlier sessions. Keep it short and current. Replace, do not a
 - Phase 21 In progress on `phase-21-highlight-colours` (stacked on `phase-20-panels-and-sheets`). Pushed 2026-10-21;
   full CI green (run 39664582126). Only the user's device check (contract item 13) is left.
 - Phase 22 (library shelf) built on `phase-22-library-shelf` (from 21) and phase 23 (listen bar and voice notes) on
-  `phase-23-listen-bar-voice-notes` (from 22). Both local only (not pushed); only their device checks are left.
+  `phase-23-listen-bar-voice-notes` (from 22). Both pushed 2026-10-21 for previews (no full CI); only their device
+  checks are left.
 - Phases 19–23 planned (PLANS.md) from the user's Claude Design system "Book Reader"
   (https://claude.ai/artifact/5EuNHSDvWfNx3LnfyLzi7Z; copy in harness/context/design-system/).
 - Branch `docs-readme` holds the new README alone; merge it when the demo GIF is ready.
@@ -91,8 +92,8 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## Next action
 
-1. User: device checks for phases 21, 22 and 23 (harness/USER-CHECKLIST.md, with their questions). Phases 22 and 23
-   need a push first for a preview (ask before pushing: each push deploys a preview and runs quick CI).
+1. User: device checks for phases 21, 22 and 23 (harness/USER-CHECKLIST.md, with their questions). All three are
+   pushed; previews in the Cloudflare dashboard (Deployments, newest per branch).
 2. When the user wants to merge: run `scripts/verify.sh` on `phase-23-listen-bar-voice-notes` (it holds 19–23) and
    the full CI run on it, since 22 and 23 ran focused checks only. Optionally an evaluator review of 22 and 23.
 3. User: merge into main when ready (pushing main deploys production; main lacks phases 19–23 and the Mac WebKit fix
