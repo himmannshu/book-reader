@@ -55,23 +55,23 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 19 built and reviewed on `phase-19-reader-chrome` (stacked on `mac-webkit-baseline`; neither pushed).
-  Review: FAIL (B1, B2) → fixed → recheck PASS conditional on CI (harness/code_review/phase-19-review.md).
-  `scripts/verify.sh` PASS at 7a039dc (author and reviewer). Contract item 12 needs the full CI run; item 13 is the
-  user's device check (USER-CHECKLIST, phase 19). PLANS row 19 stays In progress; F-021 stays failing until then.
+- Phase 19 done except the user's device check: review PASS after fixes, `scripts/verify.sh` PASS at 7a039dc,
+  full CI green (run 39533163830 on c240000). `phase-19-reader-chrome` is pushed (preview built); it is stacked on
+  `mac-webkit-baseline`, so it carries that fix too. PLANS row 19 stays In progress until the user's check; F-021
+  passing (device check noted). The record commit after c240000 is local (not pushed; every push deploys).
 - Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
   at once. Close heavy browser tabs before verify: WebKit tests stall under load (2026-10-20, load average 82).
 
 ## Next action
 
-1. With the user's approval: push `phase-19-reader-chrome` (a preview deploy; it also carries the
-   `mac-webkit-baseline` commits), then `gh workflow run verify.yml --ref phase-19-reader-chrome`; record the run.
-2. Then mark item 12, PLANS row 19 and F-021 as evidence allows; item 13 waits on the user.
-3. The user decides on merging `mac-webkit-baseline` (and later phase 19) into main (pushing main deploys).
-4. Watch: WebKit steady-scroll p95 hit its 40 ms budget once in a full run (31 alone) and one of its three samples
-   is a ~2.4 s freeze on every run (also on the baseline: worth a look of its own); chromium first page 235 of 250 in
-   full runs (186–190 alone); load-sensitive tests (voice-notes chromium, library-view 100 books, design zoomed
-   reopen) fail now and then under full-suite load.
+1. User: device checks for phase 19 (USER-CHECKLIST), and deciding the merges into main (`mac-webkit-baseline`,
+   then phase 19; pushing main deploys production).
+2. Then phase 20 (Panels and sheets): write its phase file and contract, post the plan, wait for approval.
+3. Watch: WebKit steady-scroll p95 hit its 40 ms budget once in a full local run (31 alone) and one of its three
+   samples is a ~2.4 s freeze on every run (also on the baseline: worth a look of its own); chromium first page
+   235 of 250 in two full local runs (186–190 alone); load-sensitive tests (voice-notes chromium, library-view
+   100 books, design zoomed reopen) fail now and then under full-suite load. Review R1: on iPhone the sync badge is
+   an icon only (no tooltip on iOS); phase 20 could make it tappable.
 
 ## Decisions worth remembering
 
@@ -116,19 +116,20 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 21:13 EDT
+Snapshot 2026-10-20 22:44 EDT
 - Branch: phase-19-reader-chrome
-- HEAD: 7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
-- Uncommitted files: 3
+- HEAD: c240000 phase 19: review recheck PASS (conditional on CI); user checklist; handoff
+- Uncommitted files: 4
 - Last verify: PASS at 2026-10-20 21:12 EDT (commit 7a039dc)
 - Recent commits:
+    c240000 phase 19: review recheck PASS (conditional on CI); user checklist; handoff
     7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
     0d6bddc phase 19: verify passes locally (WebKit and perf included)
     2abcef8 wip: phase 19: remove the unused ToolButton; NARROW_QUERY comment
     5cfceac wip: phase 19: designed toolbar, Reading settings and page pill
-    0b9279c phase 19: plan, contract and context (approved by the user)
 - Changed files:
      M harness/HANDOFF.md
-     M harness/USER-CHECKLIST.md
+     M harness/build-log.md
      M harness/code_review/phase-19-review.md
+     M harness/features.json
 <!-- AUTO:END -->

@@ -1743,3 +1743,14 @@ Contract evidence from this final canonical run (contract unchanged after approv
   jump 27, p95 16.7, canvas 67.1, search 877; webkit first 159, jump 54, p95 40 [samples 40, 2429, 31], canvas 67.1,
   search 888; blank 0 / 1.1 %). Budgets unchanged. WebKit p95 sits on its budget and chromium first page at 235
   of 250 in full runs (190 when perf runs alone, reviewer): watch both.
+
+### 2026-10-20 22:45 EDT | Phase 19 | Claude Code (Opus 5.5) | Pushed with the user's approval; full CI green
+- The user approved pushing `phase-19-reader-chrome` (a preview deploy; it carries the `mac-webkit-baseline`
+  commits too). Pushed c240000 (new branch on origin).
+- Full CI https://github.com/himmannshu/book-reader/actions/runs/39533163830 (workflow_dispatch) on c240000 → success,
+  02:27:59Z–02:43:28Z (15.5 min wall): `verify (chromium)` 8.0 min (unit 392, browser 152, sync 15, perf 5),
+  `verify (webkit)` 15.4 min (browser 140, sync 12, perf 5); no test needed a retry. Push run 39533159975: quick
+  checks success. Cloudflare Pages preview build on c240000: success.
+- Contract items 1–12 have evidence (item 12: local verify PASS at 7a039dc by the author and the evaluator, and this
+  CI run). Item 13 (devices) waits on the user (USER-CHECKLIST, phase 19). F-021 → passing with that note; PLANS row
+  19 stays In progress until the user's check.

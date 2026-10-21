@@ -152,8 +152,8 @@
       "id": "F-021",
       "phase": "19",
       "description": "The reader has the designed toolbar (title and chapter, tools in order, compact on phones, fading while scrolling), a Reading settings popover for theme, zoom and fit, and a page pill",
-      "status": "failing",
-      "evidence": ""
+      "status": "passing",
+      "evidence": "2026-10-20 e2e/reader-chrome.spec.ts (toolbar order and names, chapter, compact More menu at 320/390, fading and holds, Reading settings theme/zoom/fit/focus/bottom sheet, page pill and page labels, sync badge) and unit tests (SegmentedControl, page labels, fit modes, first-draw callback) pass locally (scripts/verify.sh PASS at 7a039dc, author and evaluator) and in full CI run https://github.com/himmannshu/book-reader/actions/runs/39533163830 (chromium+webkit) on c240000. Review PASS after fixes (harness/code_review/phase-19-review.md). Real-device check pending (USER-CHECKLIST, phase 19)."
     }
   ]
 }

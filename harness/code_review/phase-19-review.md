@@ -235,3 +235,9 @@ not pushed and has no `verify.yml` run. If that run is red, this verdict becomes
 | Test quality | 4 | 3 | The new tests were mutation-checked by the author, and I confirmed the B1 and B2 cases independently. |
 | Product depth | 4 | 3 | |
 | Design | 4 | 3 | |
+
+## CI (author, 2026-10-20)
+
+The condition on the recheck verdict is met: full CI run
+https://github.com/himmannshu/book-reader/actions/runs/39533163830 on c240000 → success (chromium and webkit jobs,
+no retries). Contract item 12 passes; item 13 waits on the user.
