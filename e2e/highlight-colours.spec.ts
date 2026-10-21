@@ -175,6 +175,55 @@ test('a colour pressed while the highlight is saving is the one it gets', async 
   await expect(page.locator('.highlight-box--blue')).toHaveCount(1);
 });
 
+test('Add note pressed while a colour is saving keeps that colour and opens the note', async ({
+  page,
+}) => {
+  await select(page, 'Charlie three');
+  // Add note lands before the green highlight's save can finish.
+  await menu(page).evaluate((toolbar) => {
+    toolbar.querySelector<HTMLButtonElement>('[aria-label="Green"]')?.click();
+    [...toolbar.querySelectorAll('button')]
+      .find((button) => (button.getAttribute('aria-label') ?? button.textContent) === 'Add note')
+      ?.click();
+  });
+  const editor = page.getByRole('textbox', { name: 'Note text' });
+  await expect(editor).toBeVisible();
+  await editor.fill('Kept green');
+  await page.getByRole('button', { name: 'Save note', exact: true }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(boxes(page)).toHaveCount(1);
+  await expect(page.locator('.highlight-box--green')).toHaveCount(1);
+});
+
+test('the menu is never left off screen when the window narrows (a phone rotating)', async ({
+  page,
+}) => {
+  // Over a highlight, which moves with the pages: the menu closes, as when scrolling.
+  await select(page, 'Charlie three');
+  await swatches(page).getByRole('radio', { name: 'Green' }).click();
+  await expect(menu(page).getByRole('button', { name: 'Remove highlight' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 700 });
+  await expect(menu(page)).toHaveCount(0);
+
+  // Over a selection: it follows the selection, or closes when the relayout removes it.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(pageSlot(page, 0)).toHaveAttribute('data-state', 'rendered');
+  await select(page, 'Delta four');
+  await page.setViewportSize({ width: 390, height: 700 });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const shown = document.querySelector('.selection-actions');
+        if (!shown) return true;
+        return [...shown.querySelectorAll('button')].every((target) => {
+          const box = target.getBoundingClientRect();
+          return box.left >= 0 && box.right <= innerWidth;
+        });
+      }),
+    )
+    .toBe(true);
+});
+
 test('the menu sits above the selection, below it near the top, and never covers it', async ({
   page,
 }) => {

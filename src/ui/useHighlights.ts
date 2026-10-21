@@ -89,6 +89,8 @@ export function useHighlights({
   const saving = useRef(false);
   // A colour pressed while that save runs: applied to the new highlight once it is saved.
   const pendingColor = useRef<HighlightColor | null>(null);
+  // That save, so Add note pressed meanwhile can wait for its highlight instead of making one.
+  const inFlight = useRef<Promise<string | null> | null>(null);
   // Read by the scroll listener, which must cost nothing while no button is showing.
   const shownAction = useRef<SelectionAction | null>(null);
   useEffect(() => {
@@ -127,7 +129,8 @@ export function useHighlights({
   }, [items, viewer]);
 
   // Offer "Highlight" while text in the pages is selected, following the selection as it changes
-  // and as the pages scroll. Scrolling drops "Remove highlight", whose highlight has moved.
+  // and as the pages scroll or the window resizes (a phone rotating). Either drops the menu over a
+  // highlight, whose highlight has moved.
   useEffect(() => {
     const follow = () => {
       const range = pageTextSelection(viewer.current);
@@ -145,7 +148,7 @@ export function useHighlights({
         setAction((shown) => (shown?.kind === 'create' ? null : shown));
       }
     };
-    const onScroll = () => {
+    const onMove = () => {
       const shown = shownAction.current;
       if (!shown) return;
       if (shown.kind === 'remove') setAction(null);
@@ -153,10 +156,12 @@ export function useHighlights({
     };
     const element = scroller.current;
     document.addEventListener('selectionchange', follow);
-    element?.addEventListener('scroll', onScroll, { passive: true });
+    element?.addEventListener('scroll', onMove, { passive: true });
+    window.addEventListener('resize', onMove);
     return () => {
       document.removeEventListener('selectionchange', follow);
-      element?.removeEventListener('scroll', onScroll);
+      element?.removeEventListener('scroll', onMove);
+      window.removeEventListener('resize', onMove);
     };
   }, [viewer, scroller, body]);
 
@@ -188,11 +193,25 @@ export function useHighlights({
    * Highlights the selection in `color` (phase 21). The menu stays, now for the new highlight, so a
    * note can follow. Resolves to the new highlight's id, or null when nothing was saved.
    */
-  async function highlightSelection(color: HighlightColor = 'yellow'): Promise<string | null> {
+  function highlightSelection(color: HighlightColor = 'yellow'): Promise<string | null> {
     if (saving.current) {
       pendingColor.current = color;
-      return null;
+      return Promise.resolve(null);
     }
+    const saved = saveSelection(color);
+    inFlight.current = saved;
+    return saved;
+  }
+
+  /**
+   * The highlight a note on the selection belongs to: the one being saved when a colour was just
+   * pressed (its colour kept), else a new yellow one. Resolves to its id, or null.
+   */
+  function highlightForNote(): Promise<string | null> {
+    return saving.current && inFlight.current ? inFlight.current : highlightSelection('yellow');
+  }
+
+  async function saveSelection(color: HighlightColor): Promise<string | null> {
     const range = pageTextSelection(viewer.current) ?? offeredRange.current;
     if (bookId === null || !items || !range) return null;
     const rects = viewer.current?.selectionRects(range);
@@ -331,6 +350,7 @@ export function useHighlights({
     action,
     unavailableReason,
     highlightSelection,
+    highlightForNote,
     recolour,
     selectedPassage,
     removeHighlight,

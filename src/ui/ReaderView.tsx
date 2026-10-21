@@ -1145,9 +1145,9 @@ export function ReaderView({
                 });
               return;
             }
-            // A note needs a highlight to belong to: make a yellow one first.
+            // A note needs a highlight to belong to: the one a colour is saving, else a yellow one.
             const passage = marked.selectedPassage();
-            void marked.highlightSelection('yellow').then((id) => {
+            void marked.highlightForNote().then((id) => {
               if (id && passage)
                 openNote({ kind: 'highlight', pageIndex: passage.pageIndex, highlightId: id });
             });
