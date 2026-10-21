@@ -185,8 +185,8 @@ design's highlight menu. The Notes tab now lists every highlight. Preview: the p
 ## Phase 22: Library shelf redesign (branch `phase-22-library-shelf`)
 
 The library becomes the designed shelf: a big "Library" heading, filter chips with counts, Sort and
-Grid/List controls, and a card per book with its author and one status badge. Not pushed yet (no preview);
-ask the agent to push when you want to check it on devices.
+Grid/List controls, and a card per book with its author and one status badge. Pushed 2026-10-21: its
+preview is in the Cloudflare dashboard.
 
 - [ ] Mac, iPad and iPhone: the shelf shows covers at a book's shape (2:3) with the title under them, the
       author when the PDF has one, and either a progress bar or one badge (New, Finished, In cloud,
@@ -203,8 +203,8 @@ ask the agent to push when you want to check it on devices.
 
 ## Phase 23: Listen bar and voice notes (branch `phase-23-listen-bar-voice-notes`)
 
-Reading aloud gets the designed floating bar; voice notes get the designed strip with a waveform. Not pushed
-yet when written; pushed 2026-10-21, so its preview is in the Cloudflare dashboard.
+Reading aloud gets the designed floating bar; voice notes get the designed strip with a waveform. Pushed
+2026-10-21: its preview is in the Cloudflare dashboard.
 
 - [ ] Listen (headphones in the toolbar): a bar floats at the bottom with "Reading aloud", the page and chapter,
       previous sentence, a big play/pause, next sentence, the speed (1×) and ×. On iPhone only the controls show.
