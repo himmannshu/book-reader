@@ -1722,3 +1722,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   on 8 cores, 3.2 GB swap; two Chrome renderer processes at 92 % and 65 % CPU, spindump and other system services).
   Not a code failure: the same specs passed earlier on a quiet machine (both engines, 147 passed in 1.5 min; sync 27).
   No passing full verify on this branch yet; to be rerun on a quiet machine.
+- After the user closed the heavy Chrome tabs: verify run 5 → FAIL at one test, chromium voice-notes "a page voice
+  note is recorded … kept after a reload" ("The recording is empty" in the trace: the synthetic tone gave
+  MediaRecorder no data). Seen twice on this branch, only in full runs (both engines at once). Six full Chromium-only
+  runs (3 branch, 3 baseline) all pass; 24 parallel repeats show another load effect (duration 0:04–0:05, not 0:01).
+  Load-sensitive test setup, not changed; watch it in CI.
+- `scripts/verify.sh` run 6 on 2abcef8 → PASS: unit 391; browser 285 passed + 1 skipped; sync 27; perf 10
+  (heavy-600-v1: chromium first 235 ms, jump 26, p95 16.8, canvas 67.1, search 874; webkit first 150, jump 83, p95 31
+  [samples 31, 2419, 30], canvas 67.1, search 914; blank 0 / 1 %). Budgets unchanged. Chromium first page 235 against
+  250 is closer than this branch's run 2 (186) and the baseline (194): for the reviewer to check.
