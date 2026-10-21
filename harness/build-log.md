@@ -1754,3 +1754,8 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Contract items 1–12 have evidence (item 12: local verify PASS at 7a039dc by the author and the evaluator, and this
   CI run). Item 13 (devices) waits on the user (USER-CHECKLIST, phase 19). F-021 → passing with that note; PLANS row
   19 stays In progress until the user's check.
+
+### 2026-10-20 23:00 EDT | Phase 19 | Claude Code (Opus 5.5) | User device check; Complete
+- User, on their devices: "Did the manual verification, looks good to me". Contract item 13 has its evidence, so
+  every item does: PLANS row 19 → Complete (user-checked 2026-10-20; not merged). USER-CHECKLIST phase 19 ticked,
+  with no changes asked for on its two questions. F-021 evidence notes the user check.

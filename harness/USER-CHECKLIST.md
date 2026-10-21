@@ -122,16 +122,19 @@ The look changes; the layout does not (the new toolbar, panels and library come 
 
 The reader gets the designed toolbar, Reading settings (Aa) and a page pill.
 
-- [ ] Mac, iPad and iPhone: open a book. The toolbar reads Library, Contents, Bookmarks, Notes | title and
+Checked by the user on 2026-10-20: "Did the manual verification, looks good to me". No changes asked for
+on the two questions below (Open PDF in the library only; the icon-only sync badge on iPhone).
+
+- [x] Mac, iPad and iPhone: open a book. The toolbar reads Library, Contents, Bookmarks, Notes | title and
       chapter | Search, Listen, Aa, Bookmark. On iPhone, Contents, Bookmarks, Notes and Search are under More (…).
-- [ ] Scroll with a finger or the trackpad: the toolbar fades. Tap the page or where the bar was: it comes back.
+- [x] Scroll with a finger or the trackpad: the toolbar fades. Tap the page or where the bar was: it comes back.
       It stays while a panel, Reading settings or the highlight menu is open.
-- [ ] Aa: switch Light, Sepia and Dark (pages and chrome change together); zoom in and out; Fit Width, Page and
+- [x] Aa: switch Light, Sepia and Dark (pages and chrome change together); zoom in and out; Fit Width, Page and
       Custom. On iPhone it rises from the bottom; check it clears the home indicator.
-- [ ] The page pill ("Page 12 of 300 · 4%") shows while scrolling or jumping and fades a second later. A book with
+- [x] The page pill ("Page 12 of 300 · 4%") shows while scrolling or jumping and fades a second later. A book with
       roman-numbered front pages shows "Page iv".
-- [ ] Open PDF is now only in the library. Is that fine while reading?
-- [ ] iPhone: when sync needs you (signed out, offline), the toolbar shows only an icon (no room for words; the
+- [x] Open PDF is now only in the library. Is that fine while reading?
+- [x] iPhone: when sync needs you (signed out, offline), the toolbar shows only an icon (no room for words; the
       library shows the full line with Retry). Should tapping it explain (phase 20 could add that)?
 
 <!-- Later phases append their sections below. -->

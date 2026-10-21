@@ -55,23 +55,22 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 19 done except the user's device check: review PASS after fixes, `scripts/verify.sh` PASS at 7a039dc,
-  full CI green (run 39533163830 on c240000). `phase-19-reader-chrome` is pushed (preview built); it is stacked on
-  `mac-webkit-baseline`, so it carries that fix too. PLANS row 19 stays In progress until the user's check; F-021
-  passing (device check noted). The record commit after c240000 is local (not pushed; every push deploys).
+- Nothing running. Phase 19 Complete (user-checked 2026-10-20: "looks good to me"; full CI run 39533163830 green).
+  `phase-19-reader-chrome` is pushed up to c240000; the record commits after it are local (every push deploys).
+  It is stacked on `mac-webkit-baseline`; neither is merged into main.
 - Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
   at once. Close heavy browser tabs before verify: WebKit tests stall under load (2026-10-20, load average 82).
 
 ## Next action
 
-1. User: device checks for phase 19 (USER-CHECKLIST), and deciding the merges into main (`mac-webkit-baseline`,
-   then phase 19; pushing main deploys production).
-2. Then phase 20 (Panels and sheets): write its phase file and contract, post the plan, wait for approval.
+1. User: merge `mac-webkit-baseline`, then `phase-19-reader-chrome`, into main when ready (pushing main deploys
+   production; a fast-forward works, phase 19 contains the baseline).
+2. Phase 20 (Panels and sheets): write its phase file and contract, post the plan, wait for approval. Cut its
+   branch from `phase-19-reader-chrome` (or main once merged). Consider review R1 there (a tappable sync badge).
 3. Watch: WebKit steady-scroll p95 hit its 40 ms budget once in a full local run (31 alone) and one of its three
    samples is a ~2.4 s freeze on every run (also on the baseline: worth a look of its own); chromium first page
    235 of 250 in two full local runs (186–190 alone); load-sensitive tests (voice-notes chromium, library-view
-   100 books, design zoomed reopen) fail now and then under full-suite load. Review R1: on iPhone the sync badge is
-   an icon only (no tooltip on iOS); phase 20 could make it tappable.
+   100 books, design zoomed reopen) fail now and then under full-suite load.
 
 ## Decisions worth remembering
 
@@ -116,20 +115,21 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-20 22:44 EDT
+Snapshot 2026-10-20 22:56 EDT
 - Branch: phase-19-reader-chrome
-- HEAD: c240000 phase 19: review recheck PASS (conditional on CI); user checklist; handoff
-- Uncommitted files: 4
+- HEAD: f58fbea phase 19: full CI green (run 39533163830); F-021 passing; device check pending
+- Uncommitted files: 5
 - Last verify: PASS at 2026-10-20 21:12 EDT (commit 7a039dc)
 - Recent commits:
+    f58fbea phase 19: full CI green (run 39533163830); F-021 passing; device check pending
     c240000 phase 19: review recheck PASS (conditional on CI); user checklist; handoff
     7a039dc phase 19: review fixes (badge overflow at 320 px, focus after an outside click, N2-N8)
     0d6bddc phase 19: verify passes locally (WebKit and perf included)
     2abcef8 wip: phase 19: remove the unused ToolButton; NARROW_QUERY comment
-    5cfceac wip: phase 19: designed toolbar, Reading settings and page pill
 - Changed files:
+     M PLANS.md
      M harness/HANDOFF.md
+     M harness/USER-CHECKLIST.md
      M harness/build-log.md
-     M harness/code_review/phase-19-review.md
      M harness/features.json
 <!-- AUTO:END -->
