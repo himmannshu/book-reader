@@ -254,3 +254,11 @@ not pushed and has no CI run. Item 13 (device check) is pending.
   stays inside the panel either way.
 - The WebKit plain-Tab cycle visits the panel's buttons in an uneven order: the wrap sends focus to the first or
   last stop, and Safari's own Tab then skips buttons. It never leaves the sheet, which is what the contract asks for.
+
+## CI (author, 2026-10-21)
+
+First full CI run (39544790958, 88274c3) failed on one WebKit test, panels.spec "Add note on a page opens Notes":
+the test selected text while the pages were being laid out again after the docked panel closed (see the build log).
+The test now waits for that layout (4d8203b, test-only). Full CI run
+https://github.com/himmannshu/book-reader/actions/runs/39546956538 on 4d8203b → success, both engines, no retries. The
+condition on Recheck 2's verdict is met: contract item 12 passes; item 13 waits on the user.

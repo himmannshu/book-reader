@@ -1824,3 +1824,12 @@ Contract evidence from this final canonical run (contract unchanged after approv
   on CI's slow WebKit the new text layer replaced the selected text. Not reproduced on the Mac (24/24 under load
   before and after). Fix: wait for the full page width and a text layer of that width before selecting. panels.spec
   passes in both engines locally. Needs another push and CI run (user's approval).
+
+### 2026-10-21 01:20 EDT | Phase 20 | Claude Code (Opus 5.5) | Pushed the test fix with the user's approval; full CI green
+- Pushed 4d8203b (user's approval). Full CI https://github.com/himmannshu/book-reader/actions/runs/39546956538 →
+  success (04:58:35Z–05:16:14Z): `verify (chromium)` unit 396, browser 169, sync 15, perf 5; `verify (webkit)` browser
+  156 (the Add-note test passed this time), sync 12, perf 5; no retries. Push run 39546951608: quick checks success;
+  Cloudflare Pages preview built.
+- Contract items 1–12 have evidence (item 12: local verify PASS at d966d2b by the author and the evaluator, the test
+  fix since then is test-only, and this CI run). Item 13 (devices) waits on the user (USER-CHECKLIST, phase 20).
+  F-022 added as passing with that note; PLANS row 20 stays In progress until the user's check.

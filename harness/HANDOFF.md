@@ -55,19 +55,17 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 20 built on `phase-20-panels-and-sheets` (stacked on `phase-19-reader-chrome`; not pushed). Review: FAIL (B1)
-  → fixed → recheck FAIL (B2) → fixed → recheck 2 PASS, conditional on CI (harness/code_review/phase-20-review.md).
-  `scripts/verify.sh` PASS at d966d2b (author and evaluator). Waiting on the user's approval to push (a preview
-  deploy) and run `gh workflow run verify.yml --ref phase-20-panels-and-sheets`; then item 13 (devices,
-  USER-CHECKLIST phase 20).
-- Phase 19 Complete (user-checked), not merged; `mac-webkit-baseline` not merged either.
+- Phase 20 done except the user's device check: review PASS after fixes; `scripts/verify.sh` PASS at d966d2b; full CI
+  green (run 39546956538 on 4d8203b, after a test-race fix). `phase-20-panels-and-sheets` is pushed up to 4d8203b
+  (preview built); the record commit after it is local. PLANS row 20 In progress until the user's check; F-022
+  passing (device check noted). It is stacked on phase 19 and `mac-webkit-baseline`; none is merged into main.
 - Local machine notes: `npm ci && npx playwright install chromium webkit` (Node 24). Never run perf in two places
   at once. Close heavy browser tabs before verify: WebKit tests stall under load.
 
 ## Next action
 
-1. With the user's approval: push `phase-20-panels-and-sheets`, run the full CI workflow on it, record the run.
-2. User: device checks for phase 20; merges into main (pushing main deploys production).
+1. User: device checks for phase 20 (USER-CHECKLIST); merges into main (pushing main deploys production; a
+   fast-forward to `phase-20-panels-and-sheets` brings the baseline fix and phases 19–20).
 3. Then phase 21 (Highlight colours): plan and contract for approval. It includes the AnnotationRow More menu
    (Change colour, Share, Copy) deferred from phase 20 by the user's choice.
 4. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
@@ -118,19 +116,20 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 00:29 EDT
+Snapshot 2026-10-21 01:17 EDT
 - Branch: phase-20-panels-and-sheets
-- HEAD: d966d2b phase 20: focus goes into a panel even when it is empty; Tab stays in phone sheets
-- Uncommitted files: 3
+- HEAD: 4d8203b tests: phase 20 Add-note test waits for the relayout after the panel closes (CI WebKit)
+- Uncommitted files: 4
 - Last verify: PASS at 2026-10-21 00:27 EDT (commit d966d2b)
 - Recent commits:
+    4d8203b tests: phase 20 Add-note test waits for the relayout after the panel closes (CI WebKit)
+    88274c3 phase 20: review recheck 2 PASS (conditional on CI); user checklist; handoff
     d966d2b phase 20: focus goes into a panel even when it is empty; Tab stays in phone sheets
     089fd2f phase 20: review fixes (chapter in note rows; sheet keeps keyboard focus; contents as lists; N3-N5)
     9fd4434 phase 20: tabbed panel, search panel, docked and sheet panels, contents tree
-    7d953c1 phase 20: plan approved by the user
-    c978ac1 phase 20: plan, contract and context (awaiting the user's approval)
 - Changed files:
      M harness/HANDOFF.md
-     M harness/USER-CHECKLIST.md
+     M harness/build-log.md
      M harness/code_review/phase-20-review.md
+     M harness/features.json
 <!-- AUTO:END -->
