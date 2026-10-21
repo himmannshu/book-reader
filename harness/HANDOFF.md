@@ -66,9 +66,9 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 1. User: device checks for phase 20 (USER-CHECKLIST); merges into main (pushing main deploys production; a
    fast-forward to `phase-20-panels-and-sheets` brings the baseline fix and phases 19–20).
-3. Then phase 21 (Highlight colours): plan and contract for approval. It includes the AnnotationRow More menu
+2. Then phase 21 (Highlight colours): plan and contract for approval. It includes the AnnotationRow More menu
    (Change colour, Share, Copy) deferred from phase 20 by the user's choice.
-4. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
+3. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
    freeze on every run (also on the baseline: worth a look of its own); load-sensitive tests (voice-notes chromium,
    library-view 100 books, design zoomed reopen); WebKit whole-book search measured 1391 ms once (893 in the
    evaluator's run; not budgeted).
