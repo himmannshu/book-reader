@@ -55,26 +55,19 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
 
 ## In flight
 
-- Phase 21 (Highlight colours) in progress on `phase-21-highlight-colours` (plan approved 2026-10-21: every highlight
-  in the Notes tab; Voice note kept in the menu until phase 23). Stopped mid-build (usage limit), committed as wip.
-  Done: colour model (`highlightColor`, `HIGHLIGHT_COLORS`), export colour lines, `passageSentence` + read-aloud
-  `startAt`, `copyText`, the HighlightMenu (SelectionActions.tsx: swatches, note, copy, share, listen, voice note,
-  remove; above/below placement), recolour and colour-on-create in useHighlights, per-colour fills (viewer class +
-  CSS), `.br-mark--*` and swatch CSS, `annotationRows` in src/core/notes.ts (unit-tested). e2e/highlight-colours.spec:
-  7 of 8 pass in Chromium; the Notes-list test is red (lists not built yet).
-- NOT done: NotesPanel rows from `annotationRows` (highlight rows with `br-mark--<colour>`, note text; a More menu
-  per row: Add/Edit note, colour radios, Share, Copy, Delete (the note), Remove highlight; page notes: Edit note,
-  Copy, Delete); bookmark rows' More menu; notes count to include highlights; a sync e2e test for a recolour;
-  updating existing specs that press the old "Highlight" button (now the "Yellow" radio) and row buttons now in
-  More (record each); full verify; evaluator; CI (push needs the user's approval); device check.
-- Note: in e2e/highlight-colours.spec "Notes lists every highlight…" expects 'Delete' on a highlight row without a
-  note; change it to 'Remove highlight' (decided: 'Delete' removes the note, 'Remove highlight' the highlight).
+- Phase 21 (Highlight colours) on `phase-21-highlight-colours` (plan approved 2026-10-21: every highlight in the
+  Notes tab; Voice note kept in the menu until phase 23). Built: colour model, HighlightMenu (swatches, note, copy,
+  share, listen from here, voice note, remove; above/below placement), per-colour fills, export colour lines, Notes
+  rows for every highlight (`annotationRows`) with a row More menu (src/ui/RowMenu.tsx; also on bookmark rows),
+  Notes count including highlights, a two-device recolour test. Earlier specs updated (build log lists each change).
+  Fixed on the way: a save finishing after Escape brought the menu back and cleared a newer selection.
+- Verify PASS (build log). Left: evaluator review, CI (the push needs the user's approval), the user's device check.
 
 ## Next action
 
 1. User: merge into main when ready (pushing main deploys production; a fast-forward to
    `phase-20-panels-and-sheets` brings the Mac WebKit fix and phases 19–20).
-2. Finish phase 21 from "NOT done" above (In flight).
+2. Phase 21: evaluator review, then CI (push needs the user's approval), then the user's device check.
 3. Watch: WebKit steady-scroll p95 near its budget in some full runs, and one of its three samples is a ~2.4 s
    freeze on every run (also on the baseline: worth a look of its own); load-sensitive tests (voice-notes chromium,
    library-view 100 books, design zoomed reopen); WebKit whole-book search measured 1391 ms once (not budgeted).
@@ -122,31 +115,18 @@ next phase" for this run only. Everything else in AGENTS.md still holds.
   failure under load). An occasional ~2.4 s scroll freeze is pre-existing (phase-03 context file).
 
 <!-- AUTO:BEGIN -->
-Snapshot 2026-10-21 01:45 EDT
+Snapshot 2026-10-21 10:56 EDT
 - Branch: phase-21-highlight-colours
-- HEAD: 896ab97 phase 21: plan approved by the user
-- Uncommitted files: 18
-- Last verify: PASS at 2026-10-21 00:27 EDT (commit d966d2b)
+- HEAD: 53ed3aa wip: phase 21: two-device test for a colour change
+- Uncommitted files: 2
+- Last verify: PASS at 2026-10-21 10:55 EDT (commit 53ed3aa)
 - Recent commits:
+    53ed3aa wip: phase 21: two-device test for a colour change
+    b936df2 wip: phase 21: earlier specs updated for the colour menu and row More menus
+    46d23fe wip: phase 21: Notes rows for every highlight, row More menus, save/dismiss race fixed
+    49ed62e wip: phase 21: colour model, highlight menu, fills, export, listen from here; lists not yet
     896ab97 phase 21: plan approved by the user
-    921a4da phase 21: plan, contract and context (awaiting the user's approval)
-    b86cf33 phase 20: complete (user-checked on devices)
-    9e606a4 wip: handoff numbering
-    3fdcc64 phase 20: full CI green (run 39546956538); F-022 passing; device check pending
 - Changed files:
      M harness/HANDOFF.md
-     M src/core/export.test.ts
-     M src/core/export.ts
-     M src/core/highlights.test.ts
-     M src/core/highlights.ts
-     M src/core/notes.test.ts
-     M src/core/notes.ts
-     M src/core/read-aloud.test.ts
-     M src/core/read-aloud.ts
-     M src/ui/ReaderView.tsx
-     M src/ui/SelectionActions.test.tsx
-     M src/ui/SelectionActions.tsx
-     M src/ui/app.css
-     M src/ui/share.ts
-     M src/ui/useHighlights.ts
+     M harness/build-log.md
 <!-- AUTO:END -->

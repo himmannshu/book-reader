@@ -1838,3 +1838,35 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - User, on their devices: "did the manual check, looks good". Contract item 13 has its evidence, so every item does:
   PLANS row 20 → Complete (user-checked 2026-10-21; not merged). USER-CHECKLIST phase 20 ticked, no change asked for
   on the search sheet's two × buttons. F-022 evidence notes the user check.
+
+### 2026-10-21 10:56 EDT | Phase 21 | Claude Code (Opus 5.5) | Built; verify PASS
+- Built per the approved plan (harness/build/phase-21-highlight-colours.md): colour on highlights (absent or unknown
+  reads yellow), the HighlightMenu (SelectionActions.tsx), per-colour fills, export colour lines, passageSentence and
+  Listen from here, Copy, Notes rows for every highlight (`annotationRows`) with a row More menu (new
+  src/ui/RowMenu.tsx, also on bookmark rows), the Notes tab count including highlights.
+- Bug found by the new spec and fixed: a highlight save finishing after Escape brought the menu back (the next colour
+  press then recoloured the old highlight), and its clearing of the selection could drop a newer selection. The save
+  now applies both only while the menu is still the one it was made from (useHighlights.ts; dismiss updates the ref
+  at once).
+- Tests added: unit (colour default, export colours, annotationRows order, passageSentence, HighlightMenu);
+  e2e/highlight-colours.spec (menu, colour on create, recolour kept after reload, placement above/below, fills in
+  Light/Sepia/Dark, old records yellow, Copy/Share/Listen, Notes rows and More menu, export, 44 px on iPhone); sync
+  "a highlight's colour, and a later change of colour, reach the other device" (both engines).
+- Earlier tests changed only for moved or renamed controls (contract item 10), no check loosened:
+  - The "Highlight" button is now the "Yellow" swatch: design-system, export, highlights, notes, panels,
+    reader-chrome, share, voice-notes specs and e2e/sync/devices.ts (highlightText takes a colour, default Yellow).
+  - The menu stays for a new highlight (contract item 1), so highlights.spec checks the Yellow swatch is checked and
+    Remove highlight shown where it checked the button had gone (exact-text, repeated presses, touch tap); its
+    `highlight()` helper closes the menu with Escape; the keyboard test checks focus stays on the swatch, then
+    Escape hides the menu and focus goes to the pages; the "click elsewhere" spot moved below the highlight (the
+    menu now sits above it, where the old spot was).
+  - Stored highlight keys include `color` (highlights.spec).
+  - Row actions moved into More: notes.spec Edit note and Delete via a `rowAction` helper (click and tap); the
+    keyboard test reaches More with the arrow keys, opens it with Enter, End to Delete. bookmarks.spec "Remove
+    bookmark <label>" → More → Remove bookmark (keyboard: More is the entry after each bookmark).
+  - notes.spec note-only deletion: after deleting the note, the highlight now keeps its row (user's decision 1), so
+    "No notes yet." became one highlight row without note text.
+  - src/core/export.test: expectations gain the "*Yellow highlight*" line (contract item 9).
+- `scripts/verify.sh` at 53ed3aa → PASS: unit 403; browser 345 passed + 2 skipped; sync 29; perf 10 (chromium first
+  185 ms, jump 16, p95 16.8, canvas 67.1, search 869; webkit first 143, jump 64, p95 32, canvas 67.1, search 1405
+  (not budgeted); blank 0 / 1.1 %). Budgets unchanged.
