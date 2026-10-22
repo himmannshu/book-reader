@@ -5,25 +5,31 @@ iPhone. Books open natively, with no conversion step, and reading stays fast eve
 Books and annotations live on the device first, and a private Cloudflare copy carries them
 between devices.
 
-<!-- Demo GIF goes here, for example: ![Book Reader demo](docs/demo.gif) -->
+![Book Reader demo: the library shelf, opening a book, highlighting a passage in green, reading aloud, the Notes panel and the dark theme](docs/demo.gif)
+
+<sub>The demo uses three short books generated for it, with original text.</sub>
 
 ## Features
 
 - **Reading:** continuous scroll, where only the pages near the view are drawn. Each book reopens
-  where you left off.
+  where you left off. A designed toolbar fades while you read, and a page pill shows where you are.
 - **Comfort:** light, sepia and dark themes; zoom levels from 25% to 400%, plus fit width and fit
-  page; pinch to zoom on iPad.
-- **Navigation:** the book's table of contents, and full-text search with every match listed and
-  marked on the page.
-- **Annotations:** bookmarks, highlights and notes. Highlights are stored in PDF coordinates, so
-  they stay in place at any zoom.
-- **Voice notes:** record a spoken note on a page or a highlight and play it back from the Notes
-  panel. They stay on the device for now and are not synced.
+  page; pinch to zoom on iPad. All in one Reading settings popover.
+- **Navigation:** the book's table of contents, which folds and shows the current chapter, and
+  full-text search with every match listed and marked on the page. Panels dock beside the page on
+  Mac and iPad and rise as bottom sheets on iPhone.
+- **Annotations:** bookmarks, highlights in four colours, and notes on a highlight or a page.
+  Highlights are stored in PDF coordinates, so they stay in place at any zoom. A menu over the
+  selection offers the colours, a note, copy, share and listen from here.
+- **Voice notes:** record a spoken note on a page or a highlight and play it back, with a waveform
+  of the recording. They stay on the device and are not synced.
 - **Listen:** the book is read aloud from where you are, using the browser's built-in speech. The
-  sentence being read is marked on the page, and you can pause, resume and change the speed.
+  sentence being read is marked on the page, and a floating bar has previous and next sentence,
+  pause and resume, and the speed.
 - **Share and export:** share a highlighted passage, with the book title, to another app, or
-  export a book's highlights and notes to a Markdown file.
-- **Library:** a shelf with covers and reading progress, which you can sort and filter.
+  export a book's highlights and notes, with their colours, to a Markdown file.
+- **Library:** a shelf of book cards with covers, authors (from the PDF's metadata), reading
+  progress and status badges, filter chips with counts, sort, and a grid or list view.
 - **Sync:** books, bookmarks, highlights and notes reach your other devices. It works offline once
   installed.
 
@@ -56,7 +62,7 @@ is a reader that works on one device.
 | Command | What it does |
 |---|---|
 | `scripts/verify.sh` | Everything, in order: lint, format, types, unit, browser, sync, perf |
-| `npm run test:unit` | Unit tests (Vitest, jsdom) |
+| `npm run test:unit` | Unit tests (Vitest; jsdom for the UI) |
 | `npm run test:e2e` | Browser tests on the production build (Chromium and WebKit) |
 | `npm run test:sync` | Two-device sync tests against local D1 and R2 (`wrangler pages dev`) |
 | `npm run test:perf` | Speed and memory budgets (`e2e/perf/budgets.json`) |
@@ -70,7 +76,8 @@ cloud.
 ## Performance
 
 Speed is a feature, and budgets enforce it. A change that breaks one fails verify, even when
-every other test passes. Measured on an Apple M2 (Chromium):
+every other test passes. Measured on a 600-page test book on an Apple M2 (Chromium; WebKit has its
+own, looser budgets in `e2e/perf/budgets.json`):
 
 | Measure | Budget |
 |---|---|
@@ -93,7 +100,8 @@ functions/    Cloudflare Pages Functions (sync and files APIs)
 e2e/          Playwright tests and performance benchmarks
 tests/        Test PDFs (generated) and config tests
 docs/         Guides, such as deploy.md
-harness/      Agent workflow: phase plans, contracts, reviews, build log, handoff
+harness/      Agent workflow: phase plans, contracts, reviews, build log, handoff, and a copy of
+              the Book Reader design system (harness/context/design-system)
 ```
 
 ## Deploying
