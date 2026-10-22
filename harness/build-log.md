@@ -299,8 +299,8 @@ Template:
 - F-003 → passing. Phase 02 stays In progress until item 11.
 
 ### 2026-10-19 04:20 EDT | Phase 02 | Claude Code (Opus 5.5) | Item 11: real-book benchmark; phase complete
-- User gave the folder /Users/himanshu/Documents/Books and asked the agent to run the benchmark. Chose the
-  longest book there, "Designing Data Intensive Applications by Martin Kleppmann.pdf" (24 MB). Read in place;
+- User gave a folder of their own books and asked the agent to run the benchmark. Chose the longest book
+  there, the user's book (24 MB; title withheld). Read in place;
   nothing copied into the repo.
 - `PERF_BOOK=… npm run test:perf` (report-only) → 8 passed. Results (median of samples):
   chromium firstPage 462 [469,462,460], jump 31 [31,11,100], p95 frame 16.7, blank 0, canvas 68 MB;
@@ -409,9 +409,9 @@ Template:
 ### 2026-10-19 00:40 EDT | After phase 02 | Claude Code (Opus 5.5) | First-page investigation on a real book; viewer fix
 - Branch perf-first-page-investigation (from phase-02-performance-baseline). Baseline `scripts/verify.sh` → PASS
   (heavy firstPage chromium 142, webkit 134).
-- Reproduced on DDIA (24 MB, 613 pages, read in place, not copied): `PERF_BOOK=… playwright -g "first page"` →
+- Reproduced on the user's book (24 MB, 613 pages, read in place, not copied): `PERF_BOOK=… playwright -g "first page"` →
   chromium 469 [468,469,469], webkit 393 [408,393,382].
-- In-app marks (dev build, 3 runs): DDIA chromium opened@154–200, p1@522–600, p0@540–621; heavy opened@183–199,
+- In-app marks (dev build, 3 runs): the user's book chromium opened@154–200, p1@522–600, p0@540–621; heavy opened@183–199,
   p0@221–242. Opening is not the difference. Page 0 finishes after its overscan neighbour.
 - Ad-hoc PDF.js script (scratchpad, not committed), chromium/webkit medians: arrayBuffer 10/10, getDocument 144/162,
   page 1 alone 23–31/35–41, page 2 alone 311/252, page 2 operator list only 308/253 (worker-bound; DPR 1: 333/263),
@@ -419,7 +419,7 @@ Template:
   (`pdfimages -list`). Cover's 6841×5203 CCITT masks are not the cost.
 - Fix (test-first): viewer starts overscan pages after the visible ones finish. src/viewer/viewer.test.ts: 2 of 3
   new tests failed before the change, all pass after; `vitest run` 28 passed.
-- After (production `npm run test:perf`): DDIA chromium firstPage 133 [133,135,123], webkit 129 [130,129,120];
+- After (production `npm run test:perf`): the user's book chromium firstPage 133 [133,135,123], webkit 129 [130,129,120];
   heavy chromium 142, webkit 123.
 - Scroll check: first interleaved A/B (6 pairs, hot machine) looked worse for the fix (webkit p95 before 32–36,
   after 27–57). Changed the resume call to fire only while overscan is held. Clean interleaved A/B, 8 pairs,
@@ -431,7 +431,7 @@ Template:
 - The phase-03 session reported its perf runs overlapped mine (about 23:54–00:40 EDT). It held off while I
   re-ran from 00:41. Each run's exit code was checked, and so was the result JSON's mtime against the run's start
   (earlier A/B loops read the JSON without checking, so a failed run could have repeated a stale value).
-- DDIA first page (fix): chromium 136 [133,136,138], webkit 142 [142,164,124].
+- the user's book first page (fix): chromium 136 [133,136,138], webkit 142 [142,164,124].
 - WebKit steady p95, 8 interleaved pairs (alternating order): before 30,33,31,29,32,28,44,31 (median 31; one
   over-budget rc=1); fixed 40,51,29,34,29,31,37,34 (median 34; one over-budget rc=1).
 - Scratch settle spec (scratchpad; temporary config removed), 6 pairs: scroll right after the jump before
@@ -1099,23 +1099,23 @@ Contract evidence from this final canonical run (contract unchanged after approv
   check logged-out requests reach Access (item 11), merge/push main (production), user install + offline check (12).
 
 ### 2026-10-19 20:06 EDT | Phase 08 | Claude Code (Opus 5.5) | Hosted URL check; login method; branch pushed
-- User set up Cloudflare Pages: production URL https://book-reader-cpi.pages.dev/ (project book-reader-cpi).
+- User set up Cloudflare Pages: production URL https://<project>.pages.dev/ (project <project>).
 - Logged-out checks (curl, no credentials, read-only): `/` and `/sw.js` → HTTP 302 to
-  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/book-reader-cpi.pages.dev (www-authenticate:
-  Cloudflare-Access). https://main.book-reader-cpi.pages.dev/ → 404 (no alias for the production branch).
+  <team>.cloudflareaccess.com/cdn-cgi/access/login/<project>.pages.dev (www-authenticate:
+  Cloudflare-Access). https://main.<project>.pages.dev/ → 404 (no alias for the production branch).
 - The Access login page shows "Log in to *" and only "Sign in with: Cloudflare" (Cloudflare-account login, likely
   the Pages built-in access policy), not the agreed email one-time PIN. Private, but not the planned method.
 - User decision: switch to the email one-time code (user changing Zero Trust settings: add One-time PIN, enable it on
-  the application, policy Emails = the user's address, add *.book-reader-cpi.pages.dev for previews).
+  the application, policy Emails = the user's address, add *.<project>.pages.dev for previews).
 - User authorized pushing the branch: pushed phase-08-installable-and-hosted at bc2b12f (CI + preview deploy).
   Watching CI and probing the preview alias logged-out.
 
 ### 2026-10-19 20:07 EDT | Phase 08 | Claude Code (Opus 5.5) | Preview deploy is public; headers work when hosted
-- Preview https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ (branch alias truncated to 28 chars)
+- Preview https://phase-08-installable-and-hos.<project>.pages.dev/ (branch alias truncated to 28 chars)
   answered a logged-out GET with HTTP 200 and no redirect: previews are NOT behind Access yet. It serves the phase 08
   build (title "Book Reader", manifest link /manifest.webmanifest, apple-touch-icon). Exposure: the app code only;
   books and annotations live in each browser's IndexedDB, never on the server. User told to add
-  *.book-reader-cpi.pages.dev to the Access application (item 11 not yet met for previews).
+  *.<project>.pages.dev to the Access application (item 11 not yet met for previews).
 - Item 8 (hosted): GET /sw.js on the preview → 200 with "cache-control: no-cache" (from public/_headers).
 - CI run 39345677490 on bc2b12f in progress (the first watch attempt failed only because it looked up the run id
   before GitHub registered it).
@@ -1128,9 +1128,9 @@ Contract evidence from this final canonical run (contract unchanged after approv
 
 ### 2026-10-19 20:19 EDT | Phase 08 | Claude Code (Opus 5.5) | Item 11: production and previews behind the email-code login
 - User reports: added One-time PIN, enabled the preview access policy, set the email policy.
-- Logged-out checks (curl, no credentials): https://book-reader-cpi.pages.dev/ and /sw.js, and
-  https://phase-08-installable-and-hos.book-reader-cpi.pages.dev/ and /sw.js → all HTTP 302 to
-  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/<host>. Both login pages now read "Log in to
+- Logged-out checks (curl, no credentials): https://<project>.pages.dev/ and /sw.js, and
+  https://phase-08-installable-and-hos.<project>.pages.dev/ and /sw.js → all HTTP 302 to
+  <team>.cloudflareaccess.com/cdn-cgi/access/login/<host>. Both login pages now read "Log in to
   book-reader - Cloudflare Pages | Email | Send login code" (One-time PIN), no longer "Sign in with: Cloudflare".
 - Item 11 observed for production and previews (the user's own email-code login is theirs to confirm in item 12).
 - CI run 39345677490 on bc2b12f still in progress at the verify step.
@@ -1260,10 +1260,10 @@ Contract evidence from this final canonical run (contract unchanged after approv
   with the user's earlier agreement ("tell me when it's done and I'll push").
 - CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39358742684 → success
   (02:24:35Z–02:34:50Z UTC).
-- Cloudflare Pages check on 27f0197: success (preview alias phase-09a-sync-library-and-a.book-reader-cpi.pages.dev).
+- Cloudflare Pages check on 27f0197: success (preview alias phase-09a-sync-library-and-a.<project>.pages.dev).
 - Logged-out curl against the preview: GET /, GET /api/sync and POST /api/sync each → 302 to
-  gentle-pond-af51.cloudflareaccess.com/cdn-cgi/access/login/... so the API is behind Access (item 8, deployed
-  side). The login redirect names the preview application's audience tag beginning 498b4e00; the preview's
+  <team>.cloudflareaccess.com/cdn-cgi/access/login/... so the API is behind Access (item 8, deployed
+  side). The login redirect names the preview application's audience tag beginning <aud prefix>; the preview's
   ACCESS_AUD must equal it (not checked from here: agents don't read dashboard settings).
 - Not yet observed: a signed-in sync against the real D1 (needs the user's browser) and item 13 (two real devices).
 
@@ -1276,7 +1276,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   (chromium first 174, jump 16, p95 16.8; webkit first 151, jump 44, p95 32; canvas 67.1). Budgets unchanged.
 - Pushed main. CI https://github.com/himmannshu/book-reader/actions/runs/39360795702 → success; Cloudflare Pages
   check on a5100f5 → success. Logged-out curl to production / and /api/sync → 302 to the Access login.
-- Finding: production's login redirect names the same Access audience (starts 498b4e00) as the preview, so one
+- Finding: production's login redirect names the same Access audience (starts <aud prefix>) as the preview, so one
   Access application covers both; ACCESS_AUD must be that tag in BOTH environments.
 - Phase 09a stays In progress until the user reports the annotation part of item 13 (can be checked on
   production now).
@@ -1359,7 +1359,7 @@ Contract evidence from this final canonical run (contract unchanged after approv
   and Preview) and asked to push. Pushed phase-09b-sync-book-files at 98f0915.
 - CI (item 12): https://github.com/himmannshu/book-reader/actions/runs/39367480019 → success
   (04:02:52Z–04:19:32Z UTC). Cloudflare Pages check on 98f0915 → success.
-- Item 9, deployed side: logged-out curl to https://phase-09b-sync-book-files.book-reader-cpi.pages.dev —
+- Item 9, deployed side: logged-out curl to https://phase-09b-sync-book-files.<project>.pages.dev —
   GET and HEAD /api/files/<id> and POST /api/files/<id>/uploads → 302 to the Access login.
 - Not yet observed: a signed-in upload/download against real R2 (item 13, the user's two-device check).
 
@@ -2029,3 +2029,19 @@ Contract evidence from this final canonical run (contract unchanged after approv
 - Full CI on main's push: run 39692207309 (https://github.com/himmannshu/book-reader/actions/runs/39692207309),
   head 1bef9d9: success, `verify (chromium)` and `verify (webkit)` both passed (finished 23:31 UTC). This is the
   first full check of phases 22 and 23, which ran focused checks only before.
+
+### 2026-10-21 21:50 EDT | Repo going public | Claude Code (Opus 5.5) | README with demo GIF; redaction; MIT licence
+- README (branch `docs-readme-gif`, from main): the draft from `docs-readme` brought up to date for phases 19–23, with
+  docs/demo.gif (28 s, 800 px, 3.2 MB). Recorded with a throwaway Playwright spec (not committed) from three demo
+  books generated for it with original text and pdf-lib (not committed), fake speech engine; ffmpeg to GIF.
+- Sensitive scan of the whole history (git log -p --all, every branch): no keys, tokens, `.env` files, account ids
+  or private PDFs; only generated fixtures. Found and, at the user's request, replaced in the current files (history
+  not rewritten): the production Pages URL and project name, the Access team domain, the Access audience prefix, the
+  user's books folder path and their book's title (also its abbreviation). Placeholders: `<project>.pages.dev`,
+  `<team>.cloudflareaccess.com`, `<aud prefix>`, "the user's book"; tests use example names. phase-04's contract got
+  a marked amendment for its example title. The user's email stays (commit metadata, docs/deploy.md); it is public
+  on their GitHub profile already.
+- Added LICENSE (MIT, 2026, Himanshu Sharma), `"license": "MIT"` in package.json and the lockfile root, and a License
+  section in the README.
+- Checks: unit 425 passed (auth and library tests changed), lint, format, types clean; `npm ci --dry-run` accepts the
+  lockfile. No browser, sync or perf run: no app code changed.

@@ -3,8 +3,8 @@ import { cleanAuthor, sortByRecentlyOpened, titleFromFileName } from './library'
 
 describe('titleFromFileName', () => {
   it('drops the .pdf extension, in any case', () => {
-    expect(titleFromFileName('Designing Data Intensive Applications.pdf')).toBe(
-      'Designing Data Intensive Applications',
+    expect(titleFromFileName('A Long Book About Distributed Systems.pdf')).toBe(
+      'A Long Book About Distributed Systems',
     );
     expect(titleFromFileName('NOTES.PDF')).toBe('NOTES');
   });

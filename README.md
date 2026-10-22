@@ -124,3 +124,7 @@ Claude Code and Codex build the project in turns, one phase at a time:
 - `harness/` holds the plans, contracts, reviews, build log and handoff, so either agent can pick
   up where the other stopped.
 - `AGENTS.md` has the rules every agent follows.
+
+## License
+
+[MIT](LICENSE)

@@ -3,7 +3,7 @@
 import { createRemoteJWKSet, jwtVerify, type JWTVerifyGetKey } from 'jose';
 
 export interface AuthEnv {
-  /** Team domain, e.g. "gentle-pond-af51.cloudflareaccess.com". */
+  /** Team domain, e.g. "<team>.cloudflareaccess.com". */
   ACCESS_TEAM_DOMAIN?: string;
   /** The Access application's Audience (AUD) tag. */
   ACCESS_AUD?: string;

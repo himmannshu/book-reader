@@ -82,7 +82,7 @@ preview can never change your real data.
    - Preview: `book-reader-preview`
 3. **Add two variables** (Pages project → **Settings** → **Variables and Secrets**, type *Text*),
    for **Production** and for **Preview**:
-   - `ACCESS_TEAM_DOMAIN` = your team domain, e.g. `gentle-pond-af51.cloudflareaccess.com`
+   - `ACCESS_TEAM_DOMAIN` = your team domain, e.g. `<team>.cloudflareaccess.com`
    - `ACCESS_AUD` = the **Application Audience (AUD) tag** of the Access application that
      protects that environment. Find it in Zero Trust → Access → Applications → the application
      → Overview (or Basic information). If one Access application covers both production and

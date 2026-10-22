@@ -3,7 +3,7 @@ import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair, type JWTVerifyG
 import { beforeAll, describe, expect, it } from 'vitest';
 import { AuthError, identify } from './auth';
 
-const TEAM = 'gentle-pond-af51.cloudflareaccess.com';
+const TEAM = 'example-team.cloudflareaccess.com';
 const AUD = 'audience-tag-123';
 const env = { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD };
 
@@ -32,7 +32,7 @@ async function token(
     .sign(opts.key ?? privateKey);
 }
 
-function request(jwt?: string, url = 'https://book-reader-cpi.pages.dev/api/sync') {
+function request(jwt?: string, url = 'https://book-reader-example.pages.dev/api/sync') {
   return new Request(url, { headers: jwt ? { 'cf-access-jwt-assertion': jwt } : {} });
 }
 
@@ -90,7 +90,7 @@ describe('identify', () => {
       headers: { 'x-dev-user': 'Test-1@Local' },
     });
     expect(await identify(local, dev)).toBe('test-1@local');
-    const remote = new Request('https://book-reader-cpi.pages.dev/api/sync', {
+    const remote = new Request('https://book-reader-example.pages.dev/api/sync', {
       headers: { 'x-dev-user': 'someone@else' },
     });
     expect(await status(identify(remote, dev))).toBe(401);
@@ -98,7 +98,7 @@ describe('identify', () => {
 
   it('ignores the dev user header outside dev mode', async () => {
     const jwt = await token({ email: 'me@example.com' });
-    const req = new Request('https://book-reader-cpi.pages.dev/api/sync', {
+    const req = new Request('https://book-reader-example.pages.dev/api/sync', {
       headers: { 'cf-access-jwt-assertion': jwt, 'x-dev-user': 'attacker@example.com' },
     });
     expect(await identify(req, env, jwks)).toBe('me@example.com');
@@ -113,7 +113,9 @@ describe('identify', () => {
       'dev@local',
     );
     expect(
-      await status(identify(request(undefined, 'https://book-reader-cpi.pages.dev/api/sync'), dev)),
+      await status(
+        identify(request(undefined, 'https://book-reader-example.pages.dev/api/sync'), dev),
+      ),
     ).toBe(401);
   });
 });

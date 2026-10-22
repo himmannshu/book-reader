@@ -42,7 +42,7 @@ Material decisions only. Measurements are in harness/build-log.md.
 
 ## Findings to carry forward
 
-- On a real 24 MB book (DDIA), first page took 462 ms in Chromium and 384 ms in WebKit, against
+- On a real 24 MB book (the user's own), first page took 462 ms in Chromium and 384 ms in WebKit, against
   the 400 ms product target and about 3× the heavy fixture. Jump, scroll and memory matched the
   fixture. Investigated and fixed afterwards: harness/context/first-page-investigation-context.md
   (an overscan neighbour's slow image decode blocked page 1 in the single PDF.js worker).

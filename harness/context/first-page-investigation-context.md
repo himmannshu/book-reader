@@ -1,6 +1,6 @@
 # First-page investigation (after phase 02)
 
-Why a real book (DDIA, 24 MB, 613 pages) showed its first page in 462 ms (Chromium) / 384 ms
+Why a real book (the user's own, 24 MB, 613 pages) showed its first page in 462 ms (Chromium) / 384 ms
 (WebKit) while the generated heavy fixture takes ~145 ms. Measured on the M2 (8 GB), Playwright
 headless, device scale factor 2, 1280×720 viewport. Raw runs are in harness/build-log.md.
 
@@ -14,20 +14,20 @@ again after 00:41 on a quiet machine, with exit codes and result-file freshness 
 Time from `book:open-start`, median of 3, in the real app (dev build, so ~40 ms slower than the
 production benchmark but the split is the same):
 
-| Stage | Heavy fixture (Chromium) | DDIA (Chromium) | DDIA (WebKit) |
+| Stage | Heavy fixture (Chromium) | User's book (Chromium) | User's book (WebKit) |
 |---|---|---|---|
 | `book:opened` (read file + `getDocument` + page 1 size) | 188 | 156 | 180 |
 | page 0 drawn | 227 | 554 | 553 |
 | page 1 (overscan) drawn | 229 | 537 | 543 |
 
-Opening is not the problem: DDIA reaches `book:opened` as fast as the fixture. The extra
+Opening is not the problem: the user's book reaches `book:opened` as fast as the fixture. The extra
 ~380 ms is all between `opened` and page 0 drawn, and page 0 finishes *after* its overscan
 neighbour (page index 1).
 
 Each stage on its own (ad-hoc script driving PDF.js directly, same scale as the app,
 3.57 device px per PDF point):
 
-| Step (DDIA) | Chromium | WebKit |
+| Step (user's book) | Chromium | WebKit |
 |---|---|---|
 | `file.arrayBuffer()` of 24 MB | 10 ms | 10 ms |
 | `getDocument` (includes worker start) | 144 ms | 162 ms |
@@ -42,7 +42,7 @@ Each stage on its own (ad-hoc script driving PDF.js directly, same scale as the 
 
 ## Cause
 
-- Page 2 of DDIA holds the book's only CMYK JPEG with an ICC profile (2100×2756, 2 MB;
+- Page 2 of the user's book holds the book's only CMYK JPEG with an ICC profile (2100×2756, 2 MB;
   `pdfimages -list`: `image icc 4 jpeg`). PDF.js decodes and colour-converts it in its worker,
   taking ~250–310 ms. The cost is all in the worker (operator list ≈ full draw time) and does not
   depend on the output resolution.
@@ -68,7 +68,7 @@ this session's baseline; "after" is the quiet re-run:
 
 | | Chromium | WebKit |
 |---|---|---|
-| DDIA first page | 469 → 136 ms | 393 → 142 ms |
+| User's book first page | 469 → 136 ms | 393 → 142 ms |
 | Heavy fixture first page | 142 → 144 ms | 134 → 125 ms |
 | Heavy fixture jump | 30 → 18 ms | 107 → 74 ms |
 

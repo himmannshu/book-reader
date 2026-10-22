@@ -21,7 +21,7 @@ Every browser check runs in both Chromium and WebKit.
 | 8 | Outline mapping is unit-tested: explicit page reference, named destination, numeric page, broken destination, web link, nesting | `npm run test:unit` | |
 | 9 | Speed budgets still pass, because the outline loads only when the panel opens | `npm run test:perf` | |
 | 10 | `scripts/verify.sh` passes locally, and CI is green | Local run; GitHub run URL | |
-| 11 | User-checked: on a real book (for example DDIA), Contents shows its chapters and jumps to the right pages | User checks and reports | |
+| 11 | User-checked: on a real book (for example one of the user's own), Contents shows its chapters and jumps to the right pages | User checks and reports | |
 
 ## Out of scope for this contract
 
@@ -33,4 +33,5 @@ Every browser check runs in both Chromium and WebKit.
 
 ## Amendments
 
-(none)
+- Amendment (2026-10-21, before the repo went public): item 11's example book title replaced with a generic
+  phrase at the user's request. The item's meaning is unchanged.
